@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-cream: #F5F0E8;
+    --bg-surface: #FAF6F0;
+    --bg-card: #FFFFFF;
+    --color-green-dark: #064E3B;
+    --color-green-primary: #1B4D3E;
+    --color-green-accent: #059669;
+    --color-gold: #C9A84C;
+    --color-gold-hover: #B59339;
+    --color-text-main: #1C2826;
+    --color-text-muted: #657571;
+  }
+
+  body {
+    background-color: var(--bg-cream);
+    color: var(--color-text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Custom UI Utilities matching reference image */
+.sadi-sidebar {
+  background: linear-gradient(180deg, #064E3B 0%, #04392B 100%);
+  box-shadow: 4px 0px 24px rgba(6, 78, 59, 0.15);
+}
+
+.sadi-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0px 4px 20px rgba(27, 77, 62, 0.05);
+  border: 1px solid rgba(201, 168, 76, 0.12);
+  transition: all 0.25s ease-in-out;
+}
+
+.sadi-card:hover {
+  box-shadow: 0px 8px 30px rgba(27, 77, 62, 0.08);
+}
+
+.sadi-nav-item {
+  color: #D1FAE5;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.sadi-nav-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+}
+
+.sadi-nav-item.active {
+  background: linear-gradient(90deg, #C9A84C 0%, #E2C268 100%);
+  color: #064E3B;
+  font-weight: 700;
+  box-shadow: 0px 4px 14px rgba(201, 168, 76, 0.35);
+}
+
+.sadi-badge-success {
+  background-color: #D1FAE5;
+  color: #065F46;
+}
+
+.sadi-badge-warning {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.sadi-badge-danger {
+  background-color: #FEE2E2;
+  color: #991B1B;
+}
+
+.sadi-badge-info {
+  background-color: #DBEAFE;
+  color: #1E40AF;
+}
+
+.sadi-badge-purple {
+  background-color: #F3E8FF;
+  color: #6B21A8;
+}

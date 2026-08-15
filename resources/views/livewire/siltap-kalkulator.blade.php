@@ -38,7 +38,6 @@
                         <th class="py-3.5 px-4 text-center">Rekap Absen</th>
                         <th class="py-3.5 px-4 text-right">Siltap Bruto</th>
                         <th class="py-3.5 px-4 text-right">Potongan Alpa</th>
-                        <th class="py-3.5 px-4 text-right">Potongan Terlambat</th>
                         <th class="py-3.5 px-4 text-right">Siltap Neto</th>
                     </tr>
                 </thead>
@@ -51,7 +50,6 @@
                             </td>
                             <td class="py-3 px-4 text-center">
                                 <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">H: {{ $r->total_hadir }}</span>
-                                <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">T: {{ $r->total_terlambat }} ({{ $r->total_menit_terlambat }}m)</span>
                                 <span class="px-2 py-0.5 rounded bg-red-100 text-red-800 text-[10px] font-bold">A: {{ $r->total_alpa }}</span>
                             </td>
                             <td class="py-3 px-4 text-right font-mono font-bold text-slate-700">
@@ -60,16 +58,13 @@
                             <td class="py-3 px-4 text-right font-mono font-bold text-red-600">
                                 - Rp {{ number_format($r->potongan_alpa, 0, ',', '.') }}
                             </td>
-                            <td class="py-3 px-4 text-right font-mono font-bold text-amber-600">
-                                - Rp {{ number_format($r->potongan_terlambat, 0, ',', '.') }}
-                            </td>
                             <td class="py-3 px-4 text-right font-mono font-extrabold text-[#064E3B] text-sm bg-emerald-50/50">
                                 Rp {{ number_format($r->siltap_neto, 0, ',', '.') }}
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-8 text-center text-slate-400 italic">
+                            <td colspan="5" class="py-8 text-center text-slate-400 italic">
                                 Belum ada rekap Siltap yang digenerate untuk bulan ini. Klik tombol "Kalkulasi Ulang Siltap" di atas.
                             </td>
                         </tr>

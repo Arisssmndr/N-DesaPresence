@@ -17,7 +17,7 @@ class ManualAttendanceOverride extends Component
     public string $tanggal = '';
     public string $jam_masuk = '08:00';
     public string $jam_pulang = '15:30';
-    public string $status = 'Tepat Waktu';
+    public string $status = 'Hadir';
     public string $keterangan = '';
 
     public function mount()
@@ -30,7 +30,7 @@ class ManualAttendanceOverride extends Component
         return [
             'pegawai_id' => 'required|exists:pegawais,id',
             'tanggal' => 'required|date',
-            'status' => 'required|in:Tepat Waktu,Terlambat,Izin,Sakit,Dinas Luar,Alpa',
+            'status' => 'required|in:Hadir,Izin,Sakit,Dinas Luar,Alpa',
             'keterangan' => 'required|string|min:5|max:255',
         ];
     }

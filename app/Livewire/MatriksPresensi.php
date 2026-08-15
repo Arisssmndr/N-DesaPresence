@@ -35,7 +35,7 @@ class MatriksPresensi extends Component
                 ->get()
                 ->keyBy(fn($k) => $k->tanggal->format('Y-m-d'));
 
-            $pSummary = ['H' => 0, 'T' => 0, 'A' => 0, 'I' => 0, 'D' => 0, 'L' => 0];
+            $pSummary = ['H' => 0, 'A' => 0, 'I' => 0, 'D' => 0, 'L' => 0];
 
             for ($d = 1; $d <= $daysInMonth; $d++) {
                 $dateStr = sprintf("%04d-%02d-%02d", $this->tahun, $this->bulan, $d);
@@ -44,8 +44,7 @@ class MatriksPresensi extends Component
                 if (isset($kehadirans[$dateStr])) {
                     $status = $kehadirans[$dateStr]->status;
                     $code = match ($status) {
-                        'Tepat Waktu' => 'H',
-                        'Terlambat' => 'T',
+                        'Hadir', 'Tepat Waktu', 'Terlambat' => 'H',
                         'Izin', 'Sakit' => 'I',
                         'Dinas Luar' => 'D',
                         default => 'A',

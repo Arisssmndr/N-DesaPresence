@@ -28,9 +28,7 @@ class Dashboard extends Component
         $totalPegawai = Pegawai::where('status_aktif', true)->count();
         $kehadiranHariIni = Kehadiran::where('tanggal', $today)->get();
 
-        $hadirCount = $kehadiranHariIni->whereIn('status', ['Tepat Waktu', 'Terlambat'])->count();
-        $tepatCount = $kehadiranHariIni->where('status', 'Tepat Waktu')->count();
-        $terlambatCount = $kehadiranHariIni->where('status', 'Terlambat')->count();
+        $hadirCount = $kehadiranHariIni->whereIn('status', ['Hadir', 'Tepat Waktu', 'Terlambat'])->count();
         $izinSakitCount = $kehadiranHariIni->whereIn('status', ['Izin', 'Sakit'])->count();
         $dinasLuarCount = $kehadiranHariIni->where('status', 'Dinas Luar')->count();
         $alpaCount = $kehadiranHariIni->where('status', 'Alpa')->count();
@@ -41,8 +39,6 @@ class Dashboard extends Component
             'statistik' => [
                 'totalPegawai' => $totalPegawai,
                 'hadir' => $hadirCount,
-                'tepat' => $tepatCount,
-                'terlambat' => $terlambatCount,
                 'izinSakit' => $izinSakitCount,
                 'dinasLuar' => $dinasLuarCount,
                 'alpa' => $alpaCount,

@@ -58,7 +58,7 @@ class DefaultUserSeeder extends Seeder
 
         // 3. User Admin Desa (Sekdes)
         User::updateOrCreate(
-            ['username' => 'admin'],
+            ['username' => 'admin'git branch -m master main],
             [
                 'pegawai_id' => $pegawaiSekdes->id,
                 'name' => 'Admin Desa (Sekdes)',

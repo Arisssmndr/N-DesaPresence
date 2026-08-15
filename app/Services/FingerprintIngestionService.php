@@ -144,12 +144,10 @@ class FingerprintIngestionService
 
     /**
      * Compute initial attendance status
+     * Catatan: Tidak ada jam keterlambatan - absensi desa bersifat fleksibel.
      */
     private function buildKehadiranData(Pegawai $pegawai, Carbon $waktu): array
     {
-        $shift = $pegawai->shiftKerja;
-        $jamMasukStandar = $shift?->jam_masuk ?? '08:00:00';
-        $toleransi = $shift?->toleransi_menit ?? 15;
         $jamScan = $waktu->format('H:i:s');
 
         // Check active Surat Perintah Tugas (SPT)
@@ -167,15 +165,11 @@ class FingerprintIngestionService
             ];
         }
 
-        $batasTerlambat = Carbon::parse($jamMasukStandar)->addMinutes($toleransi)->format('H:i:s');
-        $terlambatMenit = $jamScan > $batasTerlambat
-            ? Carbon::parse($jamMasukStandar)->diffInMinutes(Carbon::parse($jamScan))
-            : 0;
-
+        // Tidak ada pengecekan keterlambatan - semua scan absen masuk = Hadir
         return [
             'jam_masuk' => $jamScan,
-            'status' => $terlambatMenit > 0 ? 'Terlambat' : 'Tepat Waktu',
-            'terlambat_menit' => $terlambatMenit,
+            'status' => 'Hadir',
+            'terlambat_menit' => 0,
             'sumber_data' => 'fingerprint',
         ];
     }

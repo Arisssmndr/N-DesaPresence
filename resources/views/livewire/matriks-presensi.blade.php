@@ -33,7 +33,6 @@
 
         <div class="flex flex-wrap items-center gap-3 text-[11px] font-bold text-slate-700">
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-600"></span> H: Hadir</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500"></span> T: Terlambat</span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-600"></span> A: Alpa</span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-purple-600"></span> I: Izin/Sakit</span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-600"></span> D: Dinas Luar</span>
@@ -52,7 +51,6 @@
                             <th class="py-2 px-1 w-7 font-mono border-r border-emerald-800/40 text-[11px]">{{ $d }}</th>
                         @endfor
                         <th class="py-2 px-1 bg-emerald-900 border-r border-emerald-800 text-emerald-200">H</th>
-                        <th class="py-2 px-1 bg-emerald-900 border-r border-emerald-800 text-amber-300">T</th>
                         <th class="py-2 px-1 bg-emerald-900 border-r border-emerald-800 text-purple-300">I</th>
                         <th class="py-2 px-1 bg-emerald-900 border-r border-emerald-800 text-blue-300">D</th>
                         <th class="py-2 px-1 bg-emerald-900 border-r border-emerald-800 text-red-300">A</th>
@@ -80,7 +78,6 @@
                                 </td>
                             @endfor
                             <td class="py-2 px-1 bg-emerald-50 text-emerald-800 border-r border-slate-200 font-extrabold">{{ $summary[$p->id]['H'] ?? 0 }}</td>
-                            <td class="py-2 px-1 bg-amber-50 text-amber-800 border-r border-slate-200 font-extrabold">{{ $summary[$p->id]['T'] ?? 0 }}</td>
                             <td class="py-2 px-1 bg-purple-50 text-purple-800 border-r border-slate-200 font-extrabold">{{ $summary[$p->id]['I'] ?? 0 }}</td>
                             <td class="py-2 px-1 bg-blue-50 text-blue-800 border-r border-slate-200 font-extrabold">{{ $summary[$p->id]['D'] ?? 0 }}</td>
                             <td class="py-2 px-1 bg-red-50 text-red-800 border-r border-slate-200 font-extrabold">{{ $summary[$p->id]['A'] ?? 0 }}</td>

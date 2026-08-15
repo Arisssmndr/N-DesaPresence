@@ -56,15 +56,15 @@
             </div>
         </div>
 
-        <!-- Terlambat -->
+        <!-- Belum Masuk -->
         <div class="sadi-card p-6 flex items-center justify-between relative overflow-hidden">
             <div class="relative z-10">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Terlambat</p>
-                <p class="font-outfit text-3xl font-extrabold text-amber-700 mt-1">{{ $statistik['terlambat'] }}</p>
-                <p class="text-[10px] text-amber-600 font-medium mt-1">Melewati batas toleransi shift</p>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Belum Masuk</p>
+                <p class="font-outfit text-3xl font-extrabold text-slate-500 mt-1">{{ $statistik['belumMasuk'] }}</p>
+                <p class="text-[10px] text-slate-400 font-medium mt-1">Pegawai belum melakukan scan</p>
             </div>
-            <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shadow-inner border border-amber-200 shrink-0">
-                <svg class="w-7 h-7 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center shadow-inner border border-slate-200 shrink-0">
+                <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
         </div>
 
@@ -145,8 +145,9 @@
                                 </td>
                                 <td class="py-3 px-3 text-right">
                                     @match ($a->status)
-                                        'Tepat Waktu' => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">Tepat Waktu</span>,
-                                        'Terlambat' => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">Terlambat (+{{ $a->terlambat_menit }}m)</span>,
+                                        'Hadir' => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">Hadir</span>,
+                                        'Tepat Waktu' => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">Hadir</span>,
+                                        'Terlambat' => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">Hadir</span>,
                                         'Dinas Luar' => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800">Dinas Luar</span>,
                                         'Izin' => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800">Izin</span>,
                                         'Sakit' => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800">Sakit</span>,

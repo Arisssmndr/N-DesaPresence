@@ -41,8 +41,7 @@
             <div>
                 <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">Status Kehadiran <span class="text-red-500">*</span></label>
                 <select wire:model="status" class="w-full px-3 py-2 text-xs rounded-xl border border-[#C9A84C]/40 focus:ring-2 focus:ring-[#C9A84C]">
-                    <option value="Tepat Waktu">Tepat Waktu</option>
-                    <option value="Terlambat">Terlambat</option>
+                    <option value="Hadir">Hadir</option>
                     <option value="Izin">Izin</option>
                     <option value="Sakit">Sakit</option>
                     <option value="Dinas Luar">Dinas Luar</option>

@@ -32,35 +32,31 @@ class SiltapKalkulator extends Component
                 ->whereMonth('tanggal', $this->bulan)
                 ->get();
 
-            $totalHadir = $kehadirans->where('status', 'Tepat Waktu')->count();
-            $totalTerlambat = $kehadirans->where('status', 'Terlambat')->count();
+            $totalHadir = $kehadirans->whereIn('status', ['Hadir', 'Tepat Waktu', 'Terlambat'])->count();
             $totalAlpa = $kehadirans->where('status', 'Alpa')->count();
             $totalIzin = $kehadirans->whereIn('status', ['Izin', 'Sakit'])->count();
             $totalDinasLuar = $kehadirans->where('status', 'Dinas Luar')->count();
-            $totalMenitTerlambat = $kehadirans->sum('terlambat_menit');
 
             $config = KonfigurasiSiltap::where('jabatan_id', $p->jabatan_id)->first();
             $bruto = $p->siltap_bruto > 0 ? (float) $p->siltap_bruto : ($config?->nominal_siltap ?? 2025000);
             $potonganAlpaPerHari = $config?->nilai_potongan_alpa ?? 100000;
-            $potonganTerlambatPerMenit = $config?->nilai_potongan_terlambat ?? 1000;
 
             $totalPotonganAlpa = $totalAlpa * $potonganAlpaPerHari;
-            $totalPotonganTerlambat = $totalMenitTerlambat * $potonganTerlambatPerMenit;
-            $neto = max(0, $bruto - $totalPotonganAlpa - $totalPotonganTerlambat);
+            $neto = max(0, $bruto - $totalPotonganAlpa);
 
             RekapSiltap::updateOrCreate(
                 ['pegawai_id' => $p->id, 'bulan' => $this->bulan, 'tahun' => $this->tahun],
                 [
                     'total_hari_kerja' => $daysInMonth,
                     'total_hadir' => $totalHadir,
-                    'total_terlambat' => $totalTerlambat,
+                    'total_terlambat' => 0,
                     'total_alpa' => $totalAlpa,
                     'total_izin' => $totalIzin,
                     'total_dinas_luar' => $totalDinasLuar,
-                    'total_menit_terlambat' => $totalMenitTerlambat,
+                    'total_menit_terlambat' => 0,
                     'siltap_bruto' => $bruto,
                     'potongan_alpa' => $totalPotonganAlpa,
-                    'potongan_terlambat' => $totalPotonganTerlambat,
+                    'potongan_terlambat' => 0,
                     'siltap_neto' => $neto,
                     'status' => 'draft',
                 ]

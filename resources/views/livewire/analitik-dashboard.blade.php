@@ -42,33 +42,7 @@
                             </div>
                         </div>
                         <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-200 text-emerald-900">
-                            {{ $p->tepat_count }}x Tepat Waktu
-                        </span>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-
-        <!-- Top 5 Sering Terlambat -->
-        <div class="sadi-card p-6">
-            <h3 class="font-outfit text-base font-bold text-amber-800 mb-4 flex items-center gap-2">
-                <span>⚠️ Perhatian Keterlambatan</span>
-            </h3>
-
-            <div class="space-y-3">
-                @foreach ($topLate as $idx => $p)
-                    <div class="p-3 rounded-xl bg-amber-50/70 border border-amber-100 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <span class="w-6 h-6 rounded-full bg-amber-700 text-white font-bold text-xs flex items-center justify-center">
-                                {{ $idx + 1 }}
-                            </span>
-                            <div>
-                                <p class="font-bold text-slate-800 text-xs">{{ $p->nama_lengkap }}</p>
-                                <p class="text-[10px] text-slate-500">{{ $p->jabatan->nama_jabatan ?? '' }}</p>
-                            </div>
-                        </div>
-                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-200 text-amber-900">
-                            {{ $p->terlambat_count }}x Terlambat
+                            {{ $p->hadir_count }}x Hadir
                         </span>
                     </div>
                 @endforeach

@@ -52,83 +52,100 @@ class IzinManager extends Component
     {
         $this->validate();
 
-        $lampiranPath = null;
-        if ($this->file_lampiran) {
-            $lampiranPath = $this->file_lampiran->store('izin-lampiran', 'public');
-        }
+        \Illuminate\Support\Facades\DB::transaction(function () {
+            $lampiranPath = null;
+            if ($this->file_lampiran) {
+                $lampiranPath = $this->file_lampiran->store('izin-lampiran', 'public');
+            }
 
-        $start = Carbon::parse($this->tanggal_mulai);
-        $end = Carbon::parse($this->tanggal_selesai);
-        $jumlahHari = $start->diffInDays($end) + 1;
+            $start = Carbon::parse($this->tanggal_mulai);
+            $end = Carbon::parse($this->tanggal_selesai);
+            $jumlahHari = $start->diffInDays($end) + 1;
 
-        $izin = IzinSakit::create([
-            'pegawai_id' => $this->pegawai_id,
-            'jenis' => $this->jenis,
-            'tanggal_mulai' => $this->tanggal_mulai,
-            'tanggal_selesai' => $this->tanggal_selesai,
-            'jumlah_hari' => $jumlahHari,
-            'keterangan' => $this->keterangan,
-            'file_lampiran' => $lampiranPath,
-            'status' => auth()->user()->isAdmin() ? 'disetujui' : 'menunggu',
-            'diproses_oleh' => auth()->user()->isAdmin() ? auth()->id() : null,
-        ]);
+            $isAutoApproved = (auth()->user()->isAdmin() || auth()->user()->isKades());
 
-        if ($izin->status === 'disetujui') {
-            $this->applyIzinAttendance($izin);
-        }
+            $izin = IzinSakit::create([
+                'pegawai_id' => $this->pegawai_id,
+                'jenis' => $this->jenis,
+                'tanggal_mulai' => $this->tanggal_mulai,
+                'tanggal_selesai' => $this->tanggal_selesai,
+                'jumlah_hari' => $jumlahHari,
+                'keterangan' => $this->keterangan,
+                'file_lampiran' => $lampiranPath,
+                'status' => $isAutoApproved ? 'disetujui' : 'menunggu',
+                'diproses_oleh' => $isAutoApproved ? auth()->id() : null,
+            ]);
 
-        $pegawai = Pegawai::find($this->pegawai_id);
+            if ($izin->status === 'disetujui') {
+                $this->applyIzinAttendance($izin);
+            }
 
-        AuditLog::create([
-            'user_id' => auth()->id(),
-            'user_name' => auth()->user()->name ?? 'User',
-            'role' => auth()->user()->role ?? 'Perangkat',
-            'aktivitas' => "Pengajuan Izin/Sakit {$this->jenis} untuk {$pegawai->nama_lengkap} ({$jumlahHari} hari)",
-            'modul' => 'Izin & Sakit',
-        ]);
+            $pegawai = Pegawai::find($this->pegawai_id);
 
-        session()->flash('success', "Pengajuan Izin/Sakit berhasil disimpan.");
-        $this->closeModal();
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'user_name' => auth()->user()->name ?? 'User',
+                'role' => auth()->user()->role ?? 'Perangkat',
+                'aktivitas' => "Pengajuan Izin/Sakit {$this->jenis} untuk {$pegawai->nama_lengkap} ({$jumlahHari} hari)",
+                'modul' => 'Izin & Sakit',
+            ]);
+
+            $msg = "Pengajuan Izin/Sakit berhasil disimpan.";
+            session()->flash('success', $msg);
+            $this->dispatch('notify', message: $msg, type: 'success');
+            $this->dispatch('refresh-notifications');
+            $this->closeModal();
+        });
     }
 
     public function approve(int $id)
     {
-        $izin = IzinSakit::findOrFail($id);
-        $izin->update([
-            'status' => 'disetujui',
-            'diproses_oleh' => auth()->id(),
-        ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+            $izin = IzinSakit::where('id', $id)->lockForUpdate()->firstOrFail();
+            $izin->update([
+                'status' => 'disetujui',
+                'diproses_oleh' => auth()->id(),
+            ]);
 
-        $this->applyIzinAttendance($izin);
+            $this->applyIzinAttendance($izin);
 
-        AuditLog::create([
-            'user_id' => auth()->id(),
-            'user_name' => auth()->user()->name ?? 'Admin',
-            'role' => auth()->user()->role ?? 'Admin',
-            'aktivitas' => "Menyetujui izin {$izin->jenis} untuk {$izin->pegawai->nama_lengkap}",
-            'modul' => 'Izin & Sakit',
-        ]);
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'user_name' => auth()->user()->name ?? 'Admin',
+                'role' => auth()->user()->role ?? 'Admin',
+                'aktivitas' => "Menyetujui izin {$izin->jenis} untuk {$izin->pegawai->nama_lengkap}",
+                'modul' => 'Izin & Sakit',
+            ]);
 
-        session()->flash('success', "Pengajuan Izin/Sakit telah disetujui.");
+            $msg = "Pengajuan Izin/Sakit telah disetujui.";
+            session()->flash('success', $msg);
+            $this->dispatch('notify', message: $msg, type: 'success');
+            $this->dispatch('refresh-notifications');
+        });
     }
 
     public function reject(int $id)
     {
-        $izin = IzinSakit::findOrFail($id);
-        $izin->update([
-            'status' => 'ditolak',
-            'diproses_oleh' => auth()->id(),
-        ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+            $izin = IzinSakit::where('id', $id)->lockForUpdate()->firstOrFail();
+            $izin->update([
+                'status' => 'ditolak',
+                'diproses_oleh' => auth()->id(),
+            ]);
 
-        AuditLog::create([
-            'user_id' => auth()->id(),
-            'user_name' => auth()->user()->name ?? 'Admin',
-            'role' => auth()->user()->role ?? 'Admin',
-            'aktivitas' => "Menolak izin {$izin->jenis} untuk {$izin->pegawai->nama_lengkap}",
-            'modul' => 'Izin & Sakit',
-        ]);
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'user_name' => auth()->user()->name ?? 'Admin',
+                'role' => auth()->user()->role ?? 'Admin',
+                'aktivitas' => "Menolak izin {$izin->jenis} untuk {$izin->pegawai->nama_lengkap}",
+                'modul' => 'Izin & Sakit',
+            ]);
 
-        session()->flash('success', "Pengajuan Izin/Sakit telah ditolak.");
+            $msg = "Pengajuan Izin/Sakit telah ditolak.";
+            session()->flash('success', $msg);
+            $this->dispatch('notify', message: $msg, type: 'info');
+            $this->dispatch('refresh-notifications');
+        });
     }
 
     private function applyIzinAttendance(IzinSakit $izin)
@@ -142,7 +159,8 @@ class IzinManager extends Component
                 ['pegawai_id' => $izin->pegawai_id, 'tanggal' => $start->toDateString()],
                 [
                     'status' => $statusAbsen,
-                    'sumber_data' => 'fingerprint',
+                    'sumber_data' => 'manual_admin',
+                    'diverifikasi_oleh' => $izin->diproses_oleh ?? auth()->id(),
                     'keterangan' => "Izin/Sakit (" . ucfirst(str_replace('_', ' ', $izin->jenis)) . "): {$izin->keterangan}"
                 ]
             );

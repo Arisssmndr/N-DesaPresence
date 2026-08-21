@@ -12,56 +12,309 @@ class DefaultUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $kadesJabatan = Jabatan::where('kode_jabatan', 'KADES')->first();
-        $sekdesJabatan = Jabatan::where('kode_jabatan', 'SEKDES')->first();
-        $kaurJabatan = Jabatan::where('kode_jabatan', 'KAUR_UMUM')->first();
-
-        // 1. Pegawai Kepala Desa
-        $pegawaiKades = Pegawai::updateOrCreate(
-            ['pin_fingerprint' => '001'],
+        // 14 Data Pegawai Resmi Desa Nangtang (Kepala Desa, Perangkat Desa, Staff Desa)
+        $pegawaiList = [
+            // KEPALA DESA
             [
-                'nipd' => '197501012005011001',
-                'nik' => '3201010101750001',
-                'nama_lengkap' => 'H. Ahmad Supriyadi, S.IP',
+                'pin' => '1',
+                'nipd' => '141.1/Kep.353-Pemdes/2019',
+                'nik' => '3206270107660001',
+                'nama' => 'DADAY DARYAT',
                 'tempat_lahir' => 'Tasikmalaya',
-                'tanggal_lahir' => '1975-01-01',
+                'tanggal_lahir' => '1966-07-01',
                 'jenis_kelamin' => 'L',
-                'jabatan_id' => $kadesJabatan->id,
-                'kategori_pegawai' => 'perangkat_tetap',
-                'shift_id' => 1,
-                'no_hp' => '081234567890',
-                'alamat' => 'Desa Nangtang RT 01 RW 02',
-                'siltap_bruto' => 3000000.00,
-                'status_aktif' => true,
-            ]
-        );
-
-        // 2. Pegawai Sekretaris Desa (Admin)
-        $pegawaiSekdes = Pegawai::updateOrCreate(
-            ['pin_fingerprint' => '002'],
+                'kode_jabatan' => 'KADES',
+                'kategori' => 'perangkat_tetap',
+                'no_hp' => '085310057397',
+                'alamat' => 'Desa Nangtang, Kec. Cigalontang, Kab. Tasikmalaya',
+                'siltap' => 3000000.00,
+                'username' => 'dadaydaryat',
+                'role' => 'kepala_desa',
+                'is_admin' => false,
+                'is_kades' => true,
+            ],
+            // PERANGKAT DESA
             [
-                'nipd' => '198205122010012002',
-                'nik' => '3201011205820002',
-                'nama_lengkap' => 'Hj. Nurlaila Rahmawati, S.AP',
+                'pin' => '2',
+                'nipd' => '141.1/KEP-01/DES/2020',
+                'nik' => '3206272909120014',
+                'nama' => 'SUSANTI, S.Pd',
                 'tempat_lahir' => 'Tasikmalaya',
-                'tanggal_lahir' => '1982-05-12',
+                'tanggal_lahir' => '1988-12-13',
                 'jenis_kelamin' => 'P',
-                'jabatan_id' => $sekdesJabatan->id,
-                'kategori_pegawai' => 'perangkat_tetap',
-                'shift_id' => 1,
-                'no_hp' => '081987654321',
-                'alamat' => 'Desa Nangtang RT 02 RW 01',
-                'siltap_bruto' => 2500000.00,
-                'status_aktif' => true,
-            ]
-        );
-
-        // 3. User Admin Desa (Sekdes)
-        User::updateOrCreate(
-            ['username' => 'admin'git branch -m master main],
+                'kode_jabatan' => 'SEKDES',
+                'kategori' => 'perangkat_tetap',
+                'no_hp' => '085224490103',
+                'alamat' => 'Desa Nangtang, Kec. Cigalontang, Kab. Tasikmalaya',
+                'siltap' => 2500000.00,
+                'username' => 'susanti',
+                'role' => 'admin',
+                'is_admin' => true,
+                'is_kades' => false,
+            ],
             [
-                'pegawai_id' => $pegawaiSekdes->id,
-                'name' => 'Admin Desa (Sekdes)',
+                'pin' => '3',
+                'nipd' => '141.1/KEP-02/DES/2020',
+                'nik' => '3206270309050012',
+                'nama' => 'MELA MARSELA, S.IP',
+                'tempat_lahir' => 'Tasikmalaya',
+                'tanggal_lahir' => '1994-10-18',
+                'jenis_kelamin' => 'P',
+                'kode_jabatan' => 'KAUR_KEU',
+                'kategori' => 'perangkat_tetap',
+                'no_hp' => '085222967617',
+                'alamat' => 'Desa Nangtang, Kec. Cigalontang, Kab. Tasikmalaya',
+                'siltap' => 2050000.00,
+                'username' => 'melamarsela',
+                'role' => 'perangkat',
+                'is_admin' => false,
+                'is_kades' => false,
+            ],
+            [
+                'pin' => '4',
+                'nipd' => '141.1/KEP-03/DES/2020',
+                'nik' => '3206270309050011',
+                'nama' => 'HERI GINANJAR',
+                'tempat_lahir' => 'Tasikmalaya',
+                'tanggal_lahir' => '1986-08-26',
+                'jenis_kelamin' => 'L',
+                'kode_jabatan' => 'KAUR_REN',
+                'kategori' => 'perangkat_tetap',
+                'no_hp' => '088218629799',
+                'alamat' => 'Desa Nangtang, Kec. Cigalontang, Kab. Tasikmalaya',
+                'siltap' => 2050000.00,
+                'username' => 'heriginanjar',
+                'role' => 'perangkat',
+                'is_admin' => false,
+                'is_kades' => false,
+            ],
+            [
+                'pin' => '5',
+                'nipd' => '141.1/KEP-04/DES/2020',
+                'nik' => '3206270207880001',
+                'nama' => 'DEDE SUMIRNA',
+                'tempat_lahir' => 'Tasikmalaya',
+                'tanggal_lahir' => '1988-07-02',
+                'jenis_kelamin' => 'L',
+                'kode_jabatan' => 'KAUR_TU',
+                'kategori' => 'perangkat_tetap',
+                'no_hp' => '085351045256',
+                'alamat' => 'Desa Nangtang, Kec. Cigalontang, Kab. Tasikmalaya',
+                'siltap' => 2050000.00,
+                'username' => 'dedesumirna',
+                'role' => 'perangkat',
+                'is_admin' => false,
+                'is_kades' => false,
+            ],
+            [
+                'pin' => '6',
+                'nipd' => '141.1/KEP-05/DES/2020',
+                'nik' => '3206270309052289',
+                'nama' => 'DADAH JUBAEDAH',
+                'tempat_lahir' => 'Tasikmalaya',
+                'tanggal_lahir' => '1976-03-06',
+                'jenis_kelamin' => 'P',
+                'kode_jabatan' => 'KASI_PEM',
+                'kategori' => 'perangkat_tetap',
+                'no_hp' => '085320642676',
+                'alamat' => 'Desa Nangtang, Kec. Cigalontang, Kab. Tasikmalaya',
+                'siltap' => 2050000.00,
+                'username' => 'dadahjubaedah',
+                'role' => 'perangkat',
+                'is_admin' => false,
+                'is_kades' => false,
+            ],
+            [
+                'pin' => '7',
+                'nipd' => '141.1/KEP-06/DES/2020',
+                'nik' => '3206270309051338',
+                'nama' => 'APIP MANSUR, S.Pd',
+                'tempat_lahir' => 'Tasikmalaya',
+                'tanggal_lahir' => '1977-03-15',
+                'jenis_kelamin' => 'L',
+                'kode_jabatan' => 'KASI_KESRA',
+                'kategori' => 'perangkat_tetap',
+                'no_hp' => '083818933481',
+                'alamat' => 'Desa Nangtang, Kec. Cigalontang, Kab. Tasikmalaya',
+                'siltap' => 2050000.00,
+                'username' => 'apipmansur',
+                'role' => 'perangkat',
+                'is_admin' => false,
+                'is_kades' => false,
+            ],
+            [
+                'pin' => '8',
+                'nipd' => '141.1/KEP-07/DES/2020',
+                'nik' => '3206272805120009',
+                'nama' => 'YAYAN TARYANA',
+                'tempat_lahir' => 'Tasikmalaya',
+                'tanggal_lahir' => '1968-06-08',
+                'jenis_kelamin' => 'L',
+                'kode_jabatan' => 'KASI_PEL',
+                'kategori' => 'perangkat_tetap',
+                'no_hp' => '082317345617',
+                'alamat' => 'Desa Nangtang, Kec. Cigalontang, Kab. Tasikmalaya',
+                'siltap' => 2050000.00,
+                'username' => 'yayantaryana',
+                'role' => 'perangkat',
+                'is_admin' => false,
+                'is_kades' => false,
+            ],
+            [
+                'pin' => '9',
+                'nipd' => '141.1/KEP-08/DES/2020',
+                'nik' => '3206270503111371',
+                'nama' => 'ZAILANI RAHMAT',
+                'tempat_lahir' => 'Tasikmalaya',
+                'tanggal_lahir' => '1988-12-30',
+                'jenis_kelamin' => 'L',
+                'kode_jabatan' => 'KADUS_NANGTANG',
+                'kategori' => 'perangkat_tetap',
+                'no_hp' => '081312234069',
+                'alamat' => 'Kedusunan Nangtang, Desa Nangtang',
+                'siltap' => 2050000.00,
+                'username' => 'zailanirahmat',
+                'role' => 'perangkat',
+                'is_admin' => false,
+                'is_kades' => false,
+            ],
+            [
+                'pin' => '10',
+                'nipd' => '141.1/KEP-09/DES/2020',
+                'nik' => '3206270503110211',
+                'nama' => 'RUKANDA',
+                'tempat_lahir' => 'Tasikmalaya',
+                'tanggal_lahir' => '1967-09-20',
+                'jenis_kelamin' => 'L',
+                'kode_jabatan' => 'KADUS_NANGKABONGKOK',
+                'kategori' => 'perangkat_tetap',
+                'no_hp' => '081393143395',
+                'alamat' => 'Kedusunan Nangkabongkok, Desa Nangtang',
+                'siltap' => 2050000.00,
+                'username' => 'rukanda',
+                'role' => 'perangkat',
+                'is_admin' => false,
+                'is_kades' => false,
+            ],
+            [
+                'pin' => '11',
+                'nipd' => '141.1/KEP-010/DES/2020',
+                'nik' => '3206270309051231',
+                'nama' => 'ABUN SUPARMAN',
+                'tempat_lahir' => 'Tasikmalaya',
+                'tanggal_lahir' => '1968-06-01',
+                'jenis_kelamin' => 'L',
+                'kode_jabatan' => 'KADUS_KAWUNGLANCAR',
+                'kategori' => 'perangkat_tetap',
+                'no_hp' => '085888013835',
+                'alamat' => 'Kedusunan Kawunglancar, Desa Nangtang',
+                'siltap' => 2050000.00,
+                'username' => 'abunsuparman',
+                'role' => 'perangkat',
+                'is_admin' => false,
+                'is_kades' => false,
+            ],
+            [
+                'pin' => '12',
+                'nipd' => '141.1/KEP-11/DES/2020',
+                'nik' => '3206272203160011',
+                'nama' => 'DEDI SUHERMAN',
+                'tempat_lahir' => 'Tasikmalaya',
+                'tanggal_lahir' => '1974-04-16',
+                'jenis_kelamin' => 'L',
+                'kode_jabatan' => 'KADUS_MAYANA',
+                'kategori' => 'perangkat_tetap',
+                'no_hp' => '082113644935',
+                'alamat' => 'Kedusunan Mayana, Desa Nangtang',
+                'siltap' => 2050000.00,
+                'username' => 'dedisuherman',
+                'role' => 'perangkat',
+                'is_admin' => false,
+                'is_kades' => false,
+            ],
+            // STAFF DESA
+            [
+                'pin' => '13',
+                'nipd' => '141.1/KEP-12/DES/2021',
+                'nik' => '3206272405930001',
+                'nama' => 'DEDE LISMAN',
+                'tempat_lahir' => 'Tasikmalaya',
+                'tanggal_lahir' => '1993-05-24',
+                'jenis_kelamin' => 'L',
+                'kode_jabatan' => 'STAFF_DESA',
+                'kategori' => 'staf',
+                'no_hp' => '081221260279',
+                'alamat' => 'Desa Nangtang, Kec. Cigalontang, Kab. Tasikmalaya',
+                'siltap' => 1750000.00,
+                'username' => 'dedelisman',
+                'role' => 'perangkat',
+                'is_admin' => false,
+                'is_kades' => false,
+            ],
+            [
+                'pin' => '14',
+                'nipd' => '141.1/KEP-13/DES/2022',
+                'nik' => '3206274906980001',
+                'nama' => 'ANGGI WIDIYANI',
+                'tempat_lahir' => 'Tasikmalaya',
+                'tanggal_lahir' => '1998-06-09',
+                'jenis_kelamin' => 'P',
+                'kode_jabatan' => 'STAFF_DESA',
+                'kategori' => 'staf',
+                'no_hp' => '085295547119',
+                'alamat' => 'Desa Nangtang, Kec. Cigalontang, Kab. Tasikmalaya',
+                'siltap' => 1750000.00,
+                'username' => 'anggiwidiyani',
+                'role' => 'perangkat',
+                'is_admin' => false,
+                'is_kades' => false,
+            ],
+        ];
+
+        // Insert / Update Pegawai & Akun Login Perangkat
+        foreach ($pegawaiList as $item) {
+            $jabatan = Jabatan::where('kode_jabatan', $item['kode_jabatan'])->first();
+
+            $pegawai = Pegawai::updateOrCreate(
+                ['nik' => $item['nik']],
+                [
+                    'pin_fingerprint' => $item['pin'],
+                    'nipd' => $item['nipd'],
+                    'nama_lengkap' => $item['nama'],
+                    'tempat_lahir' => $item['tempat_lahir'],
+                    'tanggal_lahir' => $item['tanggal_lahir'],
+                    'jenis_kelamin' => $item['jenis_kelamin'],
+                    'jabatan_id' => $jabatan?->id ?? 1,
+                    'kategori_pegawai' => $item['kategori'],
+                    'shift_id' => 1,
+                    'no_hp' => $item['no_hp'],
+                    'alamat' => $item['alamat'],
+                    'siltap_bruto' => $item['siltap'],
+                    'status_aktif' => true,
+                ]
+            );
+
+            // Buat akun staf untuk presensi (username-only)
+            User::updateOrCreate(
+                ['username' => $item['username']],
+                [
+                    'pegawai_id' => $pegawai->id,
+                    'name' => $item['nama'],
+                    'email' => $item['username'] . '@desanangtang.go.id',
+                    'password' => null, // Bebas password untuk login via portal staf
+                    'role' => $item['role'],
+                    'is_active' => true,
+                ]
+            );
+        }
+
+        // Akun Administrator Sekdes (Login Admin Panel Username + Password)
+        $pegawaiSekdes = Pegawai::where('nipd', '141.1/KEP-01/DES/2020')->first();
+        User::updateOrCreate(
+            ['username' => 'admin'],
+            [
+                'pegawai_id' => $pegawaiSekdes?->id,
+                'name' => 'SUSANTI, S.Pd (Sekretaris Desa / Admin)',
                 'email' => 'admin@desanangtang.go.id',
                 'password' => Hash::make('admin123'),
                 'role' => 'admin',
@@ -69,12 +322,13 @@ class DefaultUserSeeder extends Seeder
             ]
         );
 
-        // 4. User Kepala Desa
+        // Akun Kepala Desa (Login Admin Panel Username + Password)
+        $pegawaiKades = Pegawai::where('nipd', '141.1/Kep.353-Pemdes/2019')->first();
         User::updateOrCreate(
             ['username' => 'kades'],
             [
-                'pegawai_id' => $pegawaiKades->id,
-                'name' => 'Kepala Desa Nangtang',
+                'pegawai_id' => $pegawaiKades?->id,
+                'name' => 'DADAY DARYAT (Kepala Desa)',
                 'email' => 'kades@desanangtang.go.id',
                 'password' => Hash::make('kades123'),
                 'role' => 'kepala_desa',
@@ -82,12 +336,12 @@ class DefaultUserSeeder extends Seeder
             ]
         );
 
-        // 5. User Auditor Inspektorat
+        // Akun Auditor Inspektorat
         User::updateOrCreate(
             ['username' => 'auditor'],
             [
                 'pegawai_id' => null,
-                'name' => 'Auditor Inspektorat',
+                'name' => 'Auditor Inspektorat Kab. Tasikmalaya',
                 'email' => 'auditor@pemkab.go.id',
                 'password' => Hash::make('auditor123'),
                 'role' => 'auditor',

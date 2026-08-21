@@ -2,7 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\StafAuthController;
+use App\Http\Controllers\StafPortalController;
 use App\Http\Controllers\SpjReportController;
+use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\PortalAbsensiController;
+use App\Http\Controllers\PengajuanAbsenLuarController;
 use App\Livewire\Dashboard;
 use App\Livewire\PegawaiManager;
 use App\Livewire\ShiftManager;
@@ -15,36 +20,92 @@ use App\Livewire\PengumumanManager;
 use App\Livewire\MatriksPresensi;
 use App\Livewire\SiltapKalkulator;
 use App\Livewire\AnalitikDashboard;
+use App\Livewire\PusatLaporan;
+use App\Livewire\KonfigurasiWifiManager;
+use App\Livewire\KonfigurasiAbsensiManager;
+use App\Livewire\UserStafManager;
+use App\Livewire\PengajuanAbsenManager;
 
-// Redirect root to dashboard (or login)
+// Redirect root to staff portal if guest, or appropriate dashboard
 Route::get('/', function () {
-    return redirect()->route('dashboard');
+    if (auth()->check()) {
+        if (in_array(auth()->user()->role, ['admin', 'kepala_desa', 'auditor'])) {
+            return redirect()->route('dashboard');
+        }
+        return redirect()->route('staf.beranda');
+    }
+    return redirect()->route('staf.login');
 });
 
-// Authentication Routes
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTAL STAF DESA — Login Tanpa Password (Username-Only) & Presensi Mandiri
+// ─────────────────────────────────────────────────────────────────────────────
+Route::prefix('staf')->group(function () {
+    Route::get('/login', [StafAuthController::class, 'showLogin'])->name('staf.login');
+    Route::post('/login', [StafAuthController::class, 'login'])->middleware('throttle:15,1')->name('staf.login.post');
+    Route::post('/logout', [StafAuthController::class, 'logout'])->name('staf.logout');
+
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/beranda', [StafPortalController::class, 'beranda'])->name('staf.beranda');
+        Route::get('/absen/{jenis}', [StafPortalController::class, 'halamanAbsen'])->name('staf.absen.form');
+        Route::post('/absen/submit', [StafPortalController::class, 'submitAbsen'])->middleware('throttle:30,1')->name('staf.absen.submit');
+        Route::get('/riwayat', [StafPortalController::class, 'riwayat'])->name('staf.riwayat');
+        Route::get('/profil', [StafPortalController::class, 'profil'])->name('staf.profil');
+        Route::get('/profil/edit', [\App\Http\Controllers\StafEditProfilController::class, 'edit'])->name('staf.profil.edit');
+        Route::put('/profil', [\App\Http\Controllers\StafEditProfilController::class, 'update'])->name('staf.profil.update');
+
+        // ─── Pengajuan Absen Luar ─────────────────────────────────────────────
+        Route::get('/ajukan-absen', [PengajuanAbsenLuarController::class, 'form'])->name('staf.ajukan.form');
+        Route::post('/ajukan-absen', [PengajuanAbsenLuarController::class, 'store'])->middleware('throttle:15,1')->name('staf.ajukan.store');
+        Route::get('/riwayat-pengajuan', [PengajuanAbsenLuarController::class, 'riwayat'])->name('staf.riwayat.pengajuan');
+    });
+});
+
+// Alias route /absen langsung redirect ke portal staf
+Route::get('/absen', function () {
+    return redirect()->route('staf.beranda');
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADMIN & KEDINASAN PANEL — Autentikasi Username + Password
+// ─────────────────────────────────────────────────────────────────────────────
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:15,1')->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Authenticated Routes
+// Authenticated Admin / Kades / Auditor Routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
 
-    // Management & Kedinasan Routes
     Route::middleware(['role:admin,kepala_desa,auditor'])->group(function () {
         Route::get('/pegawai', PegawaiManager::class)->name('pegawai.index');
         Route::get('/shift', ShiftManager::class)->name('shift.index');
         Route::get('/hari-libur', HariLiburManager::class)->name('hari-libur.index');
-        Route::get('/import-absensi', AttendanceImporter::class)->name('attendance.import');
+        Route::get('/log-absensi', AttendanceImporter::class)->name('attendance.import');
         Route::get('/override-absensi', ManualAttendanceOverride::class)->name('attendance.override');
         Route::get('/spt', SptManager::class)->name('spt.index');
         Route::get('/izin', IzinManager::class)->name('izin.index');
         Route::get('/pengumuman', PengumumanManager::class)->name('pengumuman.index');
+        
+        // Pengajuan Absen Luar — Admin Approval
+        Route::get('/pengajuan-absen', PengajuanAbsenManager::class)->name('pengajuan-absen.index');
+
+        // Pengaturan Sistem
+        Route::get('/akun-staf', UserStafManager::class)->name('user-staf.index');
+        Route::get('/konfigurasi-absensi', KonfigurasiAbsensiManager::class)->name('konfigurasi-absensi.index');
+        Route::get('/konfigurasi-wifi', KonfigurasiWifiManager::class)->name('konfigurasi-wifi.index');
 
         // Phase 4 Routes (Matriks, Siltap, PDF SPJ, Analitik)
         Route::get('/matriks', MatriksPresensi::class)->name('matriks.index');
         Route::get('/siltap', SiltapKalkulator::class)->name('siltap.index');
         Route::get('/analitik', AnalitikDashboard::class)->name('analitik.index');
         Route::get('/spj-pdf', [SpjReportController::class, 'downloadPdf'])->name('spj.pdf');
+
+        // Phase 5 Routes (Pusat Laporan — Standar Nasional RI)
+        Route::get('/laporan', PusatLaporan::class)->name('laporan.index');
+        Route::get('/laporan/harian-pdf', [LaporanController::class, 'laporanHarian'])->name('laporan.harian');
+        Route::get('/laporan/bulanan-pdf', [LaporanController::class, 'laporanBulanan'])->name('laporan.bulanan');
+        Route::get('/laporan/tahunan-pdf', [LaporanController::class, 'laporanTahunan'])->name('laporan.tahunan');
+        Route::get('/laporan/siltap-pdf', [LaporanController::class, 'laporanSiltap'])->name('laporan.siltap');
     });
 });

@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\HariLibur;
 use App\Models\AuditLog;
+use App\Services\KalenderNasionalService;
 
 class HariLiburManager extends Component
 {
@@ -14,6 +15,14 @@ class HariLiburManager extends Component
     public string $tanggal = '';
     public string $nama_hari_libur = '';
     public string $jenis = 'nasional';
+
+    public int $filterTahun = 2026;
+    public string $search = '';
+
+    public function mount()
+    {
+        $this->filterTahun = (int) date('Y');
+    }
 
     protected function rules(): array
     {
@@ -28,6 +37,20 @@ class HariLiburManager extends Component
     {
         $this->resetForm();
         $this->showModal = true;
+    }
+
+    public function sinkronkanApi(KalenderNasionalService $service)
+    {
+        try {
+            $count = $service->sinkronkanKeDatabase($this->filterTahun);
+            $msg = "Berhasil menyinkronkan {$count} hari libur nasional & cuti bersama resmi RI tahun {$this->filterTahun} dari API!";
+            session()->flash('success', $msg);
+            $this->dispatch('notify', message: $msg, type: 'success');
+        } catch (\Throwable $e) {
+            $err = "Gagal menyinkronkan kalender nasional: " . $e->getMessage();
+            session()->flash('error', $err);
+            $this->dispatch('notify', message: $err, type: 'error');
+        }
     }
 
     public function save()
@@ -50,7 +73,9 @@ class HariLiburManager extends Component
             'modul' => 'Hari Libur',
         ]);
 
-        session()->flash('success', "Hari libur {$libur->nama_hari_libur} berhasil disimpan.");
+        $msg = "Hari libur {$libur->nama_hari_libur} berhasil disimpan.";
+        session()->flash('success', $msg);
+        $this->dispatch('notify', message: $msg, type: 'success');
         $this->closeModal();
     }
 
@@ -68,7 +93,9 @@ class HariLiburManager extends Component
             'modul' => 'Hari Libur',
         ]);
 
-        session()->flash('success', "Hari libur {$nama} berhasil dihapus.");
+        $msg = "Hari libur {$nama} berhasil dihapus.";
+        session()->flash('success', $msg);
+        $this->dispatch('notify', message: $msg, type: 'info');
     }
 
     public function closeModal()
@@ -88,8 +115,13 @@ class HariLiburManager extends Component
 
     public function render()
     {
+        $query = HariLibur::query()
+            ->when($this->filterTahun, fn($q) => $q->whereYear('tanggal', $this->filterTahun))
+            ->when($this->search, fn($q) => $q->where('nama_hari_libur', 'like', '%' . $this->search . '%'))
+            ->orderBy('tanggal', 'asc');
+
         return view('livewire.hari-libur-manager', [
-            'hariLiburs' => HariLibur::orderBy('tanggal', 'desc')->get(),
+            'hariLiburs' => $query->get(),
         ])->layout('layouts.app', ['title' => 'Hari Libur — Presence Desa']);
     }
 }

@@ -6,7 +6,7 @@
             <h1 class="font-outfit text-2xl font-bold text-[#064E3B] tracking-tight">Konfigurasi Shift Kerja</h1>
             <p class="text-xs text-slate-500 mt-1">Atur jam masuk, jam pulang, dan toleransi keterlambatan presensi</p>
         </div>
-        <button wire:click="openCreateModal" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#064E3B] to-[#1B4D3E] text-white font-bold text-xs tracking-wide shadow-lg hover:shadow-xl transition">
+        <button wire:click="openCreateModal" class="btn-sadi-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-xs tracking-wide shadow-lg transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             <span>Tambah Shift Baru</span>
         </button>

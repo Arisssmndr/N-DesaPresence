@@ -60,8 +60,35 @@ class PengumumanManager extends Component
             'modul' => 'Pengumuman',
         ]);
 
-        session()->flash('success', "Pengumuman {$p->judul} berhasil disimpan.");
+        $msg = "Pengumuman {$p->judul} berhasil disimpan.";
+        session()->flash('success', $msg);
+        $this->dispatch('notify', message: $msg, type: 'success');
         $this->closeModal();
+    }
+
+    public function edit(int $id)
+    {
+        $this->resetForm();
+        $this->pengumumanId = $id;
+        $p = Pengumuman::findOrFail($id);
+        $this->judul = $p->judul;
+        $this->isi = $p->isi;
+        $this->kategori = $p->kategori;
+        $this->is_pinned = (bool) $p->is_pinned;
+        $this->berlaku_hingga = $p->berlaku_hingga ? $p->berlaku_hingga->format('Y-m-d') : null;
+        $this->showModal = true;
+    }
+
+    public function togglePin(int $id)
+    {
+        $p = Pengumuman::findOrFail($id);
+        $p->is_pinned = !$p->is_pinned;
+        $p->save();
+
+        $status = $p->is_pinned ? 'disematkan' : 'dilepas dari sematan';
+        $msg = "Pengumuman '{$p->judul}' berhasil {$status}.";
+        session()->flash('success', $msg);
+        $this->dispatch('notify', message: $msg, type: 'info');
     }
 
     public function delete(int $id)
@@ -78,7 +105,9 @@ class PengumumanManager extends Component
             'modul' => 'Pengumuman',
         ]);
 
-        session()->flash('success', "Pengumuman {$judul} berhasil dihapus.");
+        $msg = "Pengumuman {$judul} berhasil dihapus.";
+        session()->flash('success', $msg);
+        $this->dispatch('notify', message: $msg, type: 'info');
     }
 
     public function closeModal()

@@ -6,12 +6,20 @@
     <!-- Top Greeting Banner -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
+            @php
+                $hour = (int) now()->format('H');
+                $greeting = match(true) {
+                    $hour >= 5 && $hour < 11  => 'Selamat Pagi',
+                    $hour >= 11 && $hour < 15 => 'Selamat Siang',
+                    $hour >= 15 && $hour < 18 => 'Selamat Sore',
+                    default                   => 'Selamat Malam',
+                };
+            @endphp
             <h1 class="font-outfit text-3xl font-bold text-[#064E3B] tracking-tight">SISTEM ABSENSI DESA NANGTANG</h1>
-            <p class="text-sm text-slate-600 mt-1 font-medium">Selamat Pagi, <span class="text-[#064E3B] font-bold">{{ auth()->user()->name }}</span> ({{ auth()->user()->role }})</p>
+            <p class="text-sm text-slate-600 mt-1 font-medium">{{ $greeting }}, <span class="text-[#064E3B] font-bold">{{ auth()->user()->name }}</span> ({{ auth()->user()->role }})</p>
         </div>
         <div class="flex items-center gap-2">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
                 FASE 1 — TERVERIFIKASI
             </span>
         </div>
@@ -25,8 +33,8 @@
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Hadir Hari Ini</p>
                 <p class="font-outfit text-3xl font-extrabold text-slate-800 mt-1">18</p>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xl shadow-inner">
-                ✓
+            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shadow-inner">
+                <svg class="w-6 h-6 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
             </div>
         </div>
 
@@ -36,8 +44,8 @@
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Terlambat</p>
                 <p class="font-outfit text-3xl font-extrabold text-slate-800 mt-1">2</p>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xl shadow-inner">
-                🕒
+            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shadow-inner">
+                <svg class="w-6 h-6 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
         </div>
 
@@ -47,8 +55,8 @@
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Izin / Sakit</p>
                 <p class="font-outfit text-3xl font-extrabold text-slate-800 mt-1">1</p>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xl shadow-inner">
-                📋
+            <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center shadow-inner">
+                <svg class="w-6 h-6 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
         </div>
 
@@ -58,8 +66,8 @@
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Dinas Luar</p>
                 <p class="font-outfit text-3xl font-extrabold text-slate-800 mt-1">3</p>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xl shadow-inner">
-                📍
+            <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center shadow-inner">
+                <svg class="w-6 h-6 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             </div>
         </div>
     </div>

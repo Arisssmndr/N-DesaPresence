@@ -1,0 +1,279 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Pegawai;
+use App\Models\Kehadiran;
+use App\Models\HariLibur;
+use App\Models\RekapSiltap;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+
+class LaporanController extends Controller
+{
+    // =========================================================
+    //  LAPORAN 1: REKAP PRESENSI HARIAN
+    // =========================================================
+    public function laporanHarian(Request $request)
+    {
+        $tanggal = $request->input('tanggal', date('Y-m-d'));
+        $dt = Carbon::parse($tanggal);
+
+        $pegawais = Pegawai::with(['jabatan', 'kehadirans' => function ($q) use ($tanggal) {
+            $q->where('tanggal', $tanggal);
+        }])->where('status_aktif', true)->orderBy('nama_lengkap')->get();
+
+        $hariLiburs = HariLibur::where('tanggal', $tanggal)->exists();
+        $isWeekend   = $dt->isWeekend();
+
+        $rekap = ['hadir' => 0, 'terlambat' => 0, 'alpa' => 0, 'izin' => 0, 'sakit' => 0, 'dinas' => 0, 'libur' => 0];
+
+        foreach ($pegawais as $p) {
+            $k = $p->kehadirans->first();
+            if ($k) {
+                // Jika ada data kehadiran aktual, catat statusnya
+                match ($k->status) {
+                    'Hadir', 'Tepat Waktu' => $rekap['hadir']++,
+                    'Terlambat'    => $rekap['terlambat']++,
+                    'Izin'         => $rekap['izin']++,
+                    'Sakit'        => $rekap['sakit']++,
+                    'Dinas Luar'   => $rekap['dinas']++,
+                    default        => $rekap['alpa']++,
+                };
+            } elseif ($isWeekend || $hariLiburs) {
+                $rekap['libur']++;
+            } else {
+                $rekap['alpa']++;
+            }
+        }
+
+        $kades  = Pegawai::whereHas('jabatan', fn($q) => $q->where('kode_jabatan', 'KADES'))->first();
+        $sekdes = Pegawai::whereHas('jabatan', fn($q) => $q->where('kode_jabatan', 'SEKDES'))->first();
+        $nomorLaporan = sprintf('001/PRES-HRN/%s/%s', $dt->format('m'), $dt->format('Y'));
+
+        $pdf = Pdf::loadView('reports.laporan-harian-pdf', compact(
+            'tanggal', 'dt', 'pegawais', 'rekap', 'isWeekend', 'hariLiburs',
+            'kades', 'sekdes', 'nomorLaporan'
+        ))->setPaper('a4', 'portrait');
+
+        $filename = "Laporan_Harian_Presensi_{$dt->format('d-m-Y')}.pdf";
+        return $pdf->stream($filename);
+    }
+
+    // =========================================================
+    //  LAPORAN 2: REKAP PRESENSI BULANAN (BATCH LOADED — NO N+1)
+    // =========================================================
+    public function laporanBulanan(Request $request)
+    {
+        $bulan = (int) $request->input('bulan', date('m'));
+        $tahun = (int) $request->input('tahun', date('Y'));
+
+        $carbonBulan  = Carbon::createFromDate($tahun, $bulan, 1);
+        $daysInMonth  = $carbonBulan->daysInMonth;
+        $namaBulan    = $carbonBulan->translatedFormat('F');
+
+        $pegawais   = Pegawai::with('jabatan')->where('status_aktif', true)->orderBy('nama_lengkap')->get();
+        $pegawaiIds = $pegawais->pluck('id')->toArray();
+
+        // 1 Query untuk hari libur bulan ini
+        $hariLiburs = HariLibur::whereYear('tanggal', $tahun)
+            ->whereMonth('tanggal', $bulan)
+            ->pluck('tanggal')
+            ->map(fn($t) => Carbon::parse($t)->format('Y-m-d'))
+            ->flip()
+            ->toArray();
+
+        // 1 Query untuk semua kehadiran semua pegawai bulan ini
+        $semuaKehadiran = Kehadiran::whereIn('pegawai_id', $pegawaiIds)
+            ->whereYear('tanggal', $tahun)
+            ->whereMonth('tanggal', $bulan)
+            ->get()
+            ->groupBy('pegawai_id');
+
+        $matrix  = [];
+        $summary = [];
+
+        foreach ($pegawais as $p) {
+            $kehadiranMap = $semuaKehadiran->get($p->id, collect())->keyBy(fn($k) => Carbon::parse($k->tanggal)->format('Y-m-d'));
+            $pSummary = ['H' => 0, 'T' => 0, 'A' => 0, 'I' => 0, 'D' => 0, 'L' => 0];
+
+            for ($d = 1; $d <= $daysInMonth; $d++) {
+                $dateStr = sprintf("%04d-%02d-%02d", $tahun, $bulan, $d);
+                $dt = Carbon::createFromDate($tahun, $bulan, $d);
+
+                if (isset($kehadiranMap[$dateStr])) {
+                    $code = match ($kehadiranMap[$dateStr]->status) {
+                        'Hadir', 'Tepat Waktu'  => 'H',
+                        'Terlambat'    => 'T',
+                        'Izin', 'Sakit' => 'I',
+                        'Dinas Luar'   => 'D',
+                        default        => 'A',
+                    };
+                } elseif ($dt->isWeekend() || isset($hariLiburs[$dateStr])) {
+                    $code = 'L';
+                } else {
+                    $code = 'A';
+                }
+
+                $matrix[$p->id][$d] = $code;
+                $pSummary[$code]++;
+            }
+
+            $totalHariKerja = $daysInMonth - $pSummary['L'];
+            $totalHadir     = $pSummary['H'] + $pSummary['T'];
+            $pSummary['persen'] = $totalHariKerja > 0
+                ? round(($totalHadir / $totalHariKerja) * 100, 1)
+                : 0;
+            $summary[$p->id] = $pSummary;
+        }
+
+        $kades  = Pegawai::whereHas('jabatan', fn($q) => $q->where('kode_jabatan', 'KADES'))->first();
+        $sekdes = Pegawai::whereHas('jabatan', fn($q) => $q->where('kode_jabatan', 'SEKDES'))->first();
+        $nomorLaporan = sprintf('002/PRES-BLN/%02d/%d', $bulan, $tahun);
+
+        $pdf = Pdf::loadView('reports.laporan-bulanan-pdf', compact(
+            'bulan', 'tahun', 'namaBulan', 'daysInMonth', 'pegawais',
+            'matrix', 'summary', 'kades', 'sekdes', 'nomorLaporan'
+        ))->setPaper('a4', 'landscape');
+
+        $filename = "Laporan_Bulanan_Presensi_{$namaBulan}_{$tahun}.pdf";
+        return $pdf->stream($filename);
+    }
+
+    // =========================================================
+    //  LAPORAN 3: REKAP PRESENSI TAHUNAN (BATCH LOADED — 2 QUERIES TOTAL)
+    // =========================================================
+    public function laporanTahunan(Request $request)
+    {
+        $tahun = (int) $request->input('tahun', date('Y'));
+
+        $pegawais     = Pegawai::with('jabatan')->where('status_aktif', true)->orderBy('nama_lengkap')->get();
+        $pegawaiIds   = $pegawais->pluck('id')->toArray();
+
+        $namaBulanArr = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $namaBulanArr[$m] = Carbon::createFromDate($tahun, $m, 1)->translatedFormat('M');
+        }
+
+        // Query 1: Ambil semua hari libur dalam 1 tahun penuh
+        $hariLiburSet = HariLibur::whereYear('tanggal', $tahun)
+            ->pluck('tanggal')
+            ->map(fn($t) => Carbon::parse($t)->format('Y-m-d'))
+            ->flip()
+            ->toArray();
+
+        // Query 2: Ambil SEMUA data kehadiran tahun ini untuk semua pegawai sekaligus
+        $semuaKehadiran = Kehadiran::whereIn('pegawai_id', $pegawaiIds)
+            ->whereYear('tanggal', $tahun)
+            ->get()
+            ->groupBy(['pegawai_id', function ($item) {
+                return (int) Carbon::parse($item->tanggal)->format('m');
+            }]);
+
+        // Pre-calculate hari kerja per bulan di tahun tersebut
+        $hariKerjaPerBulan = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $carbonBulan = Carbon::createFromDate($tahun, $m, 1);
+            $daysInMonth = $carbonBulan->daysInMonth;
+            $mLibur = 0;
+            for ($d = 1; $d <= $daysInMonth; $d++) {
+                $dateStr = sprintf("%04d-%02d-%02d", $tahun, $m, $d);
+                $dt = Carbon::createFromDate($tahun, $m, $d);
+                if ($dt->isWeekend() || isset($hariLiburSet[$dateStr])) {
+                    $mLibur++;
+                }
+            }
+            $hariKerjaPerBulan[$m] = $daysInMonth - $mLibur;
+        }
+
+        $dataRekap = [];
+        foreach ($pegawais as $p) {
+            $rowData = [];
+            $totalHadir = 0;
+            $totalAlpa  = 0;
+            $totalIzin  = 0;
+            $totalDinas = 0;
+            $totalHariKerja = 0;
+
+            for ($m = 1; $m <= 12; $m++) {
+                $kehadiranBulan = $semuaKehadiran->get($p->id, collect())->get($m, collect());
+
+                $mHadir = $kehadiranBulan->whereIn('status', ['Hadir', 'Tepat Waktu', 'Terlambat'])->count();
+                $mAlpa  = $kehadiranBulan->where('status', 'Alpa')->count();
+                $mIzin  = $kehadiranBulan->whereIn('status', ['Izin', 'Sakit'])->count();
+                $mDinas = $kehadiranBulan->where('status', 'Dinas Luar')->count();
+
+                $mHariKerja = $hariKerjaPerBulan[$m];
+                $rowData[$m] = [
+                    'hadir'       => $mHadir,
+                    'alpa'        => $mAlpa,
+                    'izin'        => $mIzin,
+                    'dinas'       => $mDinas,
+                    'hari_kerja'  => $mHariKerja,
+                    'persen'      => $mHariKerja > 0 ? round(($mHadir / $mHariKerja) * 100, 0) : 0,
+                ];
+
+                $totalHadir     += $mHadir;
+                $totalAlpa      += $mAlpa;
+                $totalIzin      += $mIzin;
+                $totalDinas     += $mDinas;
+                $totalHariKerja += $mHariKerja;
+            }
+
+            $dataRekap[$p->id] = [
+                'per_bulan'      => $rowData,
+                'total_hadir'    => $totalHadir,
+                'total_alpa'     => $totalAlpa,
+                'total_izin'     => $totalIzin,
+                'total_dinas'    => $totalDinas,
+                'total_hk'       => $totalHariKerja,
+                'persen_tahunan' => $totalHariKerja > 0 ? round(($totalHadir / $totalHariKerja) * 100, 1) : 0,
+            ];
+        }
+
+        $kades  = Pegawai::whereHas('jabatan', fn($q) => $q->where('kode_jabatan', 'KADES'))->first();
+        $sekdes = Pegawai::whereHas('jabatan', fn($q) => $q->where('kode_jabatan', 'SEKDES'))->first();
+        $nomorLaporan = sprintf('003/PRES-THN/%d', $tahun);
+
+        $pdf = Pdf::loadView('reports.laporan-tahunan-pdf', compact(
+            'tahun', 'pegawais', 'namaBulanArr', 'dataRekap', 'kades', 'sekdes', 'nomorLaporan'
+        ))->setPaper('a4', 'landscape');
+
+        $filename = "Laporan_Tahunan_Presensi_{$tahun}.pdf";
+        return $pdf->stream($filename);
+    }
+
+    // =========================================================
+    //  LAPORAN 4: DAFTAR PEMBAYARAN SILTAP
+    // =========================================================
+    public function laporanSiltap(Request $request)
+    {
+        $bulan = (int) $request->input('bulan', date('m'));
+        $tahun = (int) $request->input('tahun', date('Y'));
+
+        $carbonBulan = Carbon::createFromDate($tahun, $bulan, 1);
+        $namaBulan   = $carbonBulan->translatedFormat('F');
+
+        $rekaps = RekapSiltap::with(['pegawai.jabatan'])
+            ->where('bulan', $bulan)->where('tahun', $tahun)
+            ->orderBy('created_at')->get();
+
+        $totalBruto     = $rekaps->sum('siltap_bruto');
+        $totalPotongan  = $rekaps->sum(fn($r) => $r->potongan_alpa + $r->potongan_terlambat);
+        $totalNeto      = $rekaps->sum('siltap_neto');
+
+        $kades  = Pegawai::whereHas('jabatan', fn($q) => $q->where('kode_jabatan', 'KADES'))->first();
+        $sekdes = Pegawai::whereHas('jabatan', fn($q) => $q->where('kode_jabatan', 'SEKDES'))->first();
+        $nomorLaporan = sprintf('004/SLTAP/%02d/%d', $bulan, $tahun);
+
+        $pdf = Pdf::loadView('reports.laporan-siltap-pdf', compact(
+            'bulan', 'tahun', 'namaBulan', 'rekaps',
+            'totalBruto', 'totalPotongan', 'totalNeto',
+            'kades', 'sekdes', 'nomorLaporan'
+        ))->setPaper('a4', 'landscape');
+
+        $filename = "Daftar_Siltap_{$namaBulan}_{$tahun}.pdf";
+        return $pdf->stream($filename);
+    }
+}

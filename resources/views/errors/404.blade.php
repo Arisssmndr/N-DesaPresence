@@ -9,8 +9,8 @@
 </head>
 <body class="font-sans bg-[#F5F0E8] min-h-screen flex items-center justify-center p-6 text-slate-800">
     <div class="max-w-md w-full bg-white rounded-3xl p-8 shadow-2xl border border-[#C9A84C]/30 text-center space-y-6">
-        <div class="w-20 h-20 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto text-3xl font-bold border border-amber-200 shadow-inner">
-            🔍
+        <div class="w-20 h-20 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-200 shadow-inner">
+            <svg class="w-10 h-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         </div>
         <div>
             <h1 class="font-outfit text-3xl font-extrabold text-[#064E3B]">404 — Halaman Tidak Ada</h1>

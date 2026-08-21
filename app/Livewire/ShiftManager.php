@@ -75,7 +75,9 @@ class ShiftManager extends Component
                 'modul' => 'Shift Kerja',
             ]);
 
-            session()->flash('success', "Shift kerja {$shift->nama_shift} berhasil diperbarui.");
+            $msg = "Shift kerja {$shift->nama_shift} berhasil diperbarui.";
+            session()->flash('success', $msg);
+            $this->dispatch('notify', message: $msg, type: 'success');
         } else {
             $shift = ShiftKerja::create($data);
 
@@ -87,7 +89,9 @@ class ShiftManager extends Component
                 'modul' => 'Shift Kerja',
             ]);
 
-            session()->flash('success', "Shift kerja baru {$shift->nama_shift} berhasil ditambahkan.");
+            $msg = "Shift kerja baru {$shift->nama_shift} berhasil ditambahkan.";
+            session()->flash('success', $msg);
+            $this->dispatch('notify', message: $msg, type: 'success');
         }
 
         $this->closeModal();

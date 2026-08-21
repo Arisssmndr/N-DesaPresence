@@ -26,7 +26,10 @@
         <!-- Top 5 Paling Disiplin -->
         <div class="sadi-card p-6">
             <h3 class="font-outfit text-base font-bold text-emerald-800 mb-4 flex items-center gap-2">
-                <span>🏆 Top 5 Perangkat Paling Disiplin</span>
+                <svg class="w-5 h-5 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                </svg>
+                <span>Peringkat 5 Perangkat Paling Disiplin</span>
             </h3>
 
             <div class="space-y-3">

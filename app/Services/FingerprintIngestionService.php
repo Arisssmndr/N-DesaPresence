@@ -43,9 +43,13 @@ class FingerprintIngestionService
                 ];
             }
 
-            // 2. Find associated active Pegawai by PIN
+            // 2. Find associated active Pegawai by PIN (supports both '1' and '001')
             $pegawai = Pegawai::with(['jabatan', 'shiftKerja'])
-                ->where('pin_fingerprint', $pin)
+                ->where(function ($q) use ($pin) {
+                    $q->where('pin_fingerprint', $pin)
+                      ->orWhere('pin_fingerprint', str_pad($pin, 3, '0', STR_PAD_LEFT))
+                      ->orWhere('pin_fingerprint', (string)(int)$pin);
+                })
                 ->where('status_aktif', true)
                 ->first();
 
@@ -75,11 +79,13 @@ class FingerprintIngestionService
             $jenisScan = 'masuk';
 
             if (!$kehadiran->wasRecentlyCreated) {
-                // Update jam_pulang if jam_masuk already exists
-                $kehadiran->update([
-                    'jam_pulang' => $jamScan,
-                    'durasi_kerja_menit' => Carbon::parse($kehadiran->jam_masuk)->diffInMinutes($waktu),
-                ]);
+                // Update jam_pulang if jam_masuk already exists and only if jam_pulang is null or current scan is later
+                if (!$kehadiran->jam_pulang || $jamScan > $kehadiran->jam_pulang) {
+                    $kehadiran->update([
+                        'jam_pulang' => $jamScan,
+                        'durasi_kerja_menit' => Carbon::parse($kehadiran->jam_masuk)->diffInMinutes($waktu),
+                    ]);
+                }
                 $jenisScan = 'pulang';
             }
 
@@ -120,8 +126,8 @@ class FingerprintIngestionService
         }
 
         // Format 2 (ZKTeco SSR Tab-delimited): "001\t1\t20260810080523\t1\t0\t0\t0"
-        $parts = preg_split('/\s+/', $rawText);
-        if (count($parts) >= 3 && is_numeric($parts[0])) {
+        $parts = preg_split('/\s+/', $rawText, -1, PREG_SPLIT_NO_EMPTY);
+        if ($parts && count($parts) >= 3 && is_numeric($parts[0])) {
             $pin = $parts[0];
             $timeStr = $parts[2];
 

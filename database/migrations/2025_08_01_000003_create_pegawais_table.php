@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('pegawais', function (Blueprint $table) {
             $table->id();
-            $table->string('pin_fingerprint', 20)->unique();
+            $table->string('pin_fingerprint', 20)->unique()->nullable();
             $table->string('nipd', 30)->unique()->nullable();
             $table->string('nik', 16)->unique();
             $table->string('nama_lengkap', 100);

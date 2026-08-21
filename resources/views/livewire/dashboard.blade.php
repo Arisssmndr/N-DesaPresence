@@ -3,43 +3,27 @@
     <!-- Top Greeting Banner & Live Indicator -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
+            @php
+                $hour = (int) now()->format('H');
+                $greeting = match(true) {
+                    $hour >= 5 && $hour < 11  => 'Selamat Pagi',
+                    $hour >= 11 && $hour < 15 => 'Selamat Siang',
+                    $hour >= 15 && $hour < 18 => 'Selamat Sore',
+                    default                   => 'Selamat Malam',
+                };
+            @endphp
             <h1 class="font-outfit text-3xl font-bold text-[#064E3B] tracking-tight">PRESENCE DESA NANGTANG</h1>
-            <p class="text-sm text-slate-600 mt-1 font-medium">Selamat Pagi, <span class="text-[#064E3B] font-bold">{{ auth()->user()->name }}</span> ({{ ucfirst(auth()->user()->role) }})</p>
+            <p class="text-sm text-slate-600 mt-1 font-medium">{{ $greeting }}, <span class="text-[#064E3B] font-bold">{{ auth()->user()->name }}</span> ({{ ucfirst(auth()->user()->role) }})</p>
         </div>
 
         <div class="flex items-center gap-3">
             <!-- Digital Clock Widget (Alpine.js) -->
-            <div x-data="{ time: '' }" x-init="setInterval(() => time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB', 1000)" class="px-4 py-2 rounded-xl bg-white border border-[#C9A84C]/30 shadow-sm text-xs font-mono font-bold text-[#064E3B] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div x-data="{ time: '' }" x-init="setInterval(() => time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB', 1000)" class="px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-xs text-xs font-mono font-bold text-slate-800 flex items-center gap-2">
+                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span x-text="time">00:00:00 WIB</span>
             </div>
-
-            <!-- Live Status Indicator -->
-            <span class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-ping"></span>
-                <span>LIVE FEED</span>
-            </span>
         </div>
     </div>
-
-    <!-- Pinned Pengumuman Banner (if available) -->
-    @foreach ($pengumumans as $p)
-        <div class="p-4 rounded-2xl bg-gradient-to-r from-[#064E3B] to-[#1B4D3E] text-white shadow-lg border border-[#C9A84C]/30 flex items-start justify-between gap-4">
-            <div class="flex gap-3">
-                <span class="p-2.5 rounded-xl bg-[#C9A84C]/20 text-[#C9A84C] flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
-                </span>
-                <div>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#C9A84C] text-[#064E3B]">
-                        {{ ucfirst($p->kategori) }}
-                    </span>
-                    <h4 class="font-outfit text-sm font-bold text-white mt-1">{{ $p->judul }}</h4>
-                    <p class="text-xs text-emerald-100/90 mt-0.5 leading-relaxed">{{ $p->isi }}</p>
-                </div>
-            </div>
-            <span class="text-[10px] text-emerald-300 font-mono flex-shrink-0">{{ $p->created_at->diffForHumans() }}</span>
-        </div>
-    @endforeach
 
     <!-- Top KPI Stats Cards Grid (Matching reference design 60-30-10) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -101,11 +85,10 @@
         <div class="lg:col-span-8 sadi-card p-6">
             <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
                 <div>
-                    <h3 class="font-outfit text-lg font-bold text-[#064E3B] flex items-center gap-2">
-                        <span>Absensi Hari Ini</span>
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                    <h3 class="font-outfit text-lg font-bold text-[#064E3B]">
+                        Absensi Hari Ini
                     </h3>
-                    <p class="text-xs text-slate-500">Log kehadiran perangkat desa secara real-time (auto update 10 detik)</p>
+                    <p class="text-xs text-slate-500">Log kehadiran perangkat desa hari ini</p>
                 </div>
                 <span class="px-3 py-1 text-[11px] font-bold rounded-full bg-emerald-100 text-emerald-800">
                     {{ count($listAbsenHariIni) }} Scan Terakhir
@@ -144,15 +127,24 @@
                                     {{ $a->jam_pulang ? substr($a->jam_pulang, 0, 5) . ' WIB' : '—' }}
                                 </td>
                                 <td class="py-3 px-3 text-right">
-                                    @match ($a->status)
-                                        'Hadir' => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">Hadir</span>,
-                                        'Tepat Waktu' => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">Hadir</span>,
-                                        'Terlambat' => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">Hadir</span>,
-                                        'Dinas Luar' => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800">Dinas Luar</span>,
-                                        'Izin' => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800">Izin</span>,
-                                        'Sakit' => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800">Sakit</span>,
-                                        default => <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-red-100 text-red-800">Alpa</span>,
-                                    @endmatch
+                                    @switch($a->status)
+                                        @case('Hadir')
+                                        @case('Tepat Waktu')
+                                        @case('Terlambat')
+                                            <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Hadir</span>
+                                            @break
+                                        @case('Dinas Luar')
+                                            <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-300">Dinas Luar</span>
+                                            @break
+                                        @case('Izin')
+                                            <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-300">Izin</span>
+                                            @break
+                                        @case('Sakit')
+                                            <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-300">Sakit</span>
+                                            @break
+                                        @default
+                                            <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-red-100 text-red-800 border border-red-300">Alpa</span>
+                                    @endswitch
                                 </td>
                             </tr>
                         @empty
@@ -170,23 +162,124 @@
         <!-- Matriks Presensi Visual Mini & Audit Logs (4 Cols) -->
         <div class="lg:col-span-4 space-y-6">
 
-            <!-- Matriks Presensi Visual Widget -->
-            <div class="sadi-card p-6">
-                <h3 class="font-outfit text-base font-bold text-[#064E3B] mb-1">Matriks Presensi</h3>
-                <p class="text-xs text-slate-500 mb-4">Rekap harian tanggal 1–{{ count($matrixDays) }} bulan ini</p>
+            <!-- Matriks Presensi & Kalender Visual Widget -->
+            <div x-data="{ selectedDate: null, selectedInfo: null, selectedType: null }" class="sadi-card p-6 border-2 border-[#C9A84C]/20 bg-white">
+                <div class="flex items-center justify-between mb-3 pb-2.5 border-b border-slate-100">
+                    <div>
+                        <h3 class="font-outfit text-base font-bold text-[#064E3B] flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <span>Kalender</span>
+                        </h3>
+                        <p class="text-[11px] text-slate-500 font-medium capitalize">{{ $namaBulanTahun }}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        @if($kalenderBulan !== (int)date('m') || $kalenderTahun !== (int)date('Y'))
+                        <button wire:click="resetToToday" @click="selectedDate = null" title="Kembali ke Hari Ini"
+                            class="px-2.5 py-1 rounded-lg bg-emerald-50 text-[#064E3B] hover:bg-emerald-100 text-[10px] font-bold border border-emerald-200 shadow-2xs transition">
+                            Hari Ini
+                        </button>
+                        @endif
 
-                <!-- Grid Visual 1-31 -->
-                <div class="grid grid-cols-7 gap-1.5 mb-4">
-                    @foreach ($matrixDays as $day)
-                        <div class="h-6 rounded-md text-[10px] font-mono font-bold flex items-center justify-center text-white {{ $day == date('j') ? 'bg-amber-500 ring-2 ring-amber-600' : ($day % 7 == 0 || $day % 7 == 6 ? 'bg-slate-300 text-slate-700' : 'bg-emerald-600') }}">
-                            {{ $day }}
+                        <!-- Arrow Navigation Group (Side-by-Side UX) -->
+                        <div class="inline-flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200/80 shadow-2xs">
+                            <button wire:click="prevMonth" @click="selectedDate = null" title="Bulan Sebelumnya"
+                                class="w-7 h-6 rounded-md hover:bg-white text-slate-600 hover:text-[#064E3B] hover:shadow-xs flex items-center justify-center transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                            </button>
+                            <div class="w-px h-3.5 bg-slate-200 mx-0.5"></div>
+                            <button wire:click="nextMonth" @click="selectedDate = null" title="Bulan Berikutnya"
+                                class="w-7 h-6 rounded-md hover:bg-white text-slate-600 hover:text-[#064E3B] hover:shadow-xs flex items-center justify-center transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                            </button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Header Hari Senin-Minggu -->
+                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 uppercase mb-2">
+                    <span>Sen</span>
+                    <span>Sel</span>
+                    <span>Rab</span>
+                    <span>Kam</span>
+                    <span>Jum</span>
+                    <span class="text-amber-600">Sab</span>
+                    <span class="text-red-500">Min</span>
+                </div>
+
+                <!-- Grid Visual Tanggal -->
+                <div class="grid grid-cols-7 gap-1.5 mb-3">
+                    @foreach ($calendarGrid as $c)
+                        @if ($c === null)
+                            <div class="h-8 rounded-lg bg-transparent"></div>
+                        @else
+                            @php
+                                $cellClass = 'bg-emerald-700 text-white hover:bg-emerald-800';
+                                if ($c['isToday']) {
+                                    $cellClass = 'bg-amber-500 text-white font-black ring-2 ring-amber-600 shadow-md scale-105 z-10';
+                                } elseif ($c['liburInfo']) {
+                                    $cellClass = 'bg-red-50 text-red-600 border border-red-200 font-bold hover:bg-red-100';
+                                } elseif ($c['isWeekend']) {
+                                    $cellClass = 'bg-slate-100 text-slate-400 font-medium hover:bg-slate-200';
+                                } elseif ($c['peringatanInfo']) {
+                                    $cellClass = 'bg-emerald-50 text-[#064E3B] border border-emerald-300 font-bold hover:bg-emerald-100';
+                                }
+
+                                $infoText = $c['keterangan'] ?? ($c['isWeekend'] ? 'Hari Libur Akhir Pekan (Sabtu/Minggu)' : ($c['isToday'] ? 'Hari Ini — Jam Kerja Aktif' : 'Hari Kerja Aktif Kantor Desa'));
+                                $typeKey = $c['liburInfo'] ? 'libur' : ($c['peringatanInfo'] ? 'peringatan' : ($c['isToday'] ? 'today' : ($c['isWeekend'] ? 'weekend' : 'kerja')));
+                            @endphp
+                            <div @click="selectedDate = '{{ $c['day'] }} {{ $namaBulanTahun }}'; selectedInfo = '{{ addslashes($infoText) }}'; selectedType = '{{ $typeKey }}'"
+                                class="h-8 rounded-lg text-xs font-mono font-bold flex flex-col items-center justify-center transition cursor-pointer relative group hover:scale-105 active:scale-95 select-none {{ $cellClass }}"
+                                :class="selectedDate === '{{ $c['day'] }} {{ $namaBulanTahun }}' ? 'ring-2 ring-emerald-900 ring-offset-1 z-20' : ''">
+                                <span>{{ $c['day'] }}</span>
+
+                                {{-- Titik Indikator Khusus --}}
+                                @if ($c['liburInfo'])
+                                    <span class="w-1 h-1 rounded-full bg-red-500 -mt-0.5"></span>
+                                @elseif ($c['peringatanInfo'])
+                                    <span class="w-1 h-1 rounded-full bg-[#C9A84C] -mt-0.5"></span>
+                                @endif
+                            </div>
+                        @endif
                     @endforeach
                 </div>
-                <div class="flex items-center justify-around text-[10px] font-semibold text-slate-600 border-t border-slate-100 pt-3">
-                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Hadir</span>
+
+                <!-- Legenda Status -->
+                <div class="flex items-center justify-between text-[10px] font-semibold text-slate-600 border-t border-slate-100 pt-2.5 pb-1">
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-700"></span> Kerja</span>
                     <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Hari Ini</span>
-                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span> Libur</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-100 border border-red-300"></span> Libur</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-100 border border-emerald-300"></span> Hari Besar</span>
+                </div>
+
+                <!-- Panel Keterangan Interaktif Saat Tanggal Diklik -->
+                <div x-show="selectedDate" x-transition.opacity.duration.200ms x-cloak
+                    class="mt-2.5 p-3 rounded-xl border transition-all text-xs"
+                    :class="{
+                        'bg-red-50 border-red-200 text-red-900': selectedType === 'libur',
+                        'bg-emerald-50 border-emerald-300 text-emerald-950': selectedType === 'peringatan',
+                        'bg-amber-50 border-amber-300 text-amber-950': selectedType === 'today',
+                        'bg-slate-50 border-slate-200 text-slate-800': selectedType === 'weekend',
+                        'bg-emerald-50/40 border-emerald-200 text-emerald-900': selectedType === 'kerja'
+                    }">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-[11px] font-mono px-2 py-0.5 rounded-md bg-white/80 shadow-2xs" x-text="selectedDate"></span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                                :class="{
+                                    'bg-red-200/70 text-red-800': selectedType === 'libur',
+                                    'bg-emerald-200/70 text-emerald-900': selectedType === 'peringatan',
+                                    'bg-amber-200/70 text-amber-900': selectedType === 'today',
+                                    'bg-slate-200 text-slate-700': selectedType === 'weekend',
+                                    'bg-emerald-200/60 text-emerald-800': selectedType === 'kerja'
+                                }"
+                                x-text="selectedType === 'libur' ? 'Libur Resmi' : (selectedType === 'peringatan' ? 'Peringatan Nasional' : (selectedType === 'today' ? 'Hari Ini' : (selectedType === 'weekend' ? 'Akhir Pekan' : 'Hari Kerja')))">
+                            </span>
+                        </div>
+                        <button @click="selectedDate = null" class="text-slate-400 hover:text-slate-700 p-0.5 rounded transition" title="Tutup">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <p class="mt-1.5 text-xs font-semibold leading-snug" x-text="selectedInfo"></p>
                 </div>
             </div>
 

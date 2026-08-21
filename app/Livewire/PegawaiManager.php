@@ -28,6 +28,7 @@ class PegawaiManager extends Component
     public string $nipd = '';
     public string $nik = '';
     public string $nama_lengkap = '';
+    public string $username = '';
     public string $tempat_lahir = '';
     public ?string $tanggal_lahir = null;
     public string $jenis_kelamin = 'L';
@@ -46,7 +47,6 @@ class PegawaiManager extends Component
     protected function rules(): array
     {
         return [
-            'pin_fingerprint' => 'required|string|max:20|unique:pegawais,pin_fingerprint,' . $this->pegawaiId,
             'nik' => 'required|string|size:16|unique:pegawais,nik,' . $this->pegawaiId,
             'nama_lengkap' => 'required|string|max:100',
             'jabatan_id' => 'required|exists:jabatans,id',
@@ -77,11 +77,12 @@ class PegawaiManager extends Component
         $this->isEdit = true;
         $this->pegawaiId = $id;
 
-        $p = Pegawai::findOrFail($id);
+        $p = Pegawai::with('user')->findOrFail($id);
         $this->pin_fingerprint = $p->pin_fingerprint;
         $this->nipd = $p->nipd ?? '';
         $this->nik = $p->nik;
         $this->nama_lengkap = $p->nama_lengkap;
+        $this->username = $p->user?->username ?? '';
         $this->tempat_lahir = $p->tempat_lahir ?? '';
         $this->tanggal_lahir = $p->tanggal_lahir ? $p->tanggal_lahir->format('Y-m-d') : null;
         $this->jenis_kelamin = $p->jenis_kelamin ?? 'L';
@@ -103,57 +104,99 @@ class PegawaiManager extends Component
     {
         $this->validate();
 
-        $fotoPath = $this->existingFoto;
-        if ($this->foto_profil) {
-            $fotoPath = $this->foto_profil->store('pegawai-photos', 'public');
-        }
+        \Illuminate\Support\Facades\DB::transaction(function () {
+            $fotoPath = $this->existingFoto;
+            if ($this->foto_profil) {
+                $fotoPath = $this->foto_profil->store('pegawai-photos', 'public');
+            }
 
-        $data = [
-            'pin_fingerprint' => $this->pin_fingerprint,
-            'nipd' => $this->nipd ?: null,
-            'nik' => $this->nik,
-            'nama_lengkap' => $this->nama_lengkap,
-            'tempat_lahir' => $this->tempat_lahir ?: null,
-            'tanggal_lahir' => $this->tanggal_lahir ?: null,
-            'jenis_kelamin' => $this->jenis_kelamin,
-            'jabatan_id' => $this->jabatan_id,
-            'kategori_pegawai' => $this->kategori_pegawai,
-            'shift_id' => $this->shift_id ?: 1,
-            'no_hp' => $this->no_hp ?: null,
-            'alamat' => $this->alamat ?: null,
-            'foto_profil' => $fotoPath,
-            'periode_mulai' => $this->periode_mulai ?: null,
-            'periode_akhir' => $this->periode_akhir ?: null,
-            'siltap_bruto' => $this->siltap_bruto,
-            'status_aktif' => $this->status_aktif,
-        ];
+            $pin = $this->pin_fingerprint ?: (string) ((Pegawai::lockForUpdate()->max('id') ?? 0) + 1);
 
-        if ($this->isEdit && $this->pegawaiId) {
-            $pegawai = Pegawai::findOrFail($this->pegawaiId);
-            $pegawai->update($data);
+            $data = [
+                'pin_fingerprint' => $pin,
+                'nipd' => $this->nipd ?: null,
+                'nik' => $this->nik,
+                'nama_lengkap' => $this->nama_lengkap,
+                'tempat_lahir' => $this->tempat_lahir ?: null,
+                'tanggal_lahir' => $this->tanggal_lahir ?: null,
+                'jenis_kelamin' => $this->jenis_kelamin,
+                'jabatan_id' => $this->jabatan_id,
+                'kategori_pegawai' => $this->kategori_pegawai,
+                'shift_id' => $this->shift_id ?: 1,
+                'no_hp' => $this->no_hp ?: null,
+                'alamat' => $this->alamat ?: null,
+                'foto_profil' => $fotoPath,
+                'periode_mulai' => $this->periode_mulai ?: null,
+                'periode_akhir' => $this->periode_akhir ?: null,
+                'siltap_bruto' => $this->siltap_bruto,
+                'status_aktif' => $this->status_aktif,
+            ];
 
-            AuditLog::create([
-                'user_id' => auth()->id(),
-                'user_name' => auth()->user()->name ?? 'Admin',
-                'role' => auth()->user()->role ?? 'Admin',
-                'aktivitas' => "Mengubah data pegawai {$pegawai->nama_lengkap} (PIN: {$pegawai->pin_fingerprint})",
-                'modul' => 'Master Pegawai',
-            ]);
+            if ($this->isEdit && $this->pegawaiId) {
+                $pegawai = Pegawai::where('id', $this->pegawaiId)->lockForUpdate()->firstOrFail();
+                $pegawai->update($data);
 
-            session()->flash('success', "Data pegawai {$pegawai->nama_lengkap} berhasil diperbarui.");
-        } else {
-            $pegawai = Pegawai::create($data);
+                // Update / sync akun user staf jika username diisi
+                if ($this->username) {
+                    $cleanUsername = strtolower(trim(str_replace(' ', '', $this->username)));
+                    $user = \App\Models\User::where('pegawai_id', $pegawai->id)->first();
+                    if ($user) {
+                        $user->update([
+                            'username' => $cleanUsername,
+                            'name'     => $this->nama_lengkap,
+                        ]);
+                    } else {
+                        \App\Models\User::create([
+                            'pegawai_id' => $pegawai->id,
+                            'name'       => $this->nama_lengkap,
+                            'username'   => $cleanUsername,
+                            'email'      => $cleanUsername . '@desanangtang.go.id',
+                            'role'       => \App\Enums\UserRole::STAF->value,
+                            'is_active'  => true,
+                        ]);
+                    }
+                }
 
-            AuditLog::create([
-                'user_id' => auth()->id(),
-                'user_name' => auth()->user()->name ?? 'Admin',
-                'role' => auth()->user()->role ?? 'Admin',
-                'aktivitas' => "Menambahkan pegawai baru {$pegawai->nama_lengkap} (PIN: {$pegawai->pin_fingerprint})",
-                'modul' => 'Master Pegawai',
-            ]);
+                AuditLog::create([
+                    'user_id' => auth()->id(),
+                    'user_name' => auth()->user()->name ?? 'Admin',
+                    'role' => auth()->user()->role ?? 'Admin',
+                    'aktivitas' => "Mengubah data pegawai {$pegawai->nama_lengkap}",
+                    'modul' => 'Master Pegawai',
+                ]);
 
-            session()->flash('success', "Pegawai baru {$pegawai->nama_lengkap} berhasil ditambahkan.");
-        }
+                $msg = "Data pegawai {$pegawai->nama_lengkap} berhasil diperbarui.";
+                session()->flash('success', $msg);
+                $this->dispatch('notify', message: $msg, type: 'success');
+                $this->dispatch('refresh-notifications');
+            } else {
+                $pegawai = Pegawai::create($data);
+
+                // Auto-create akun portal staf
+                $username = $this->username ?: strtolower(preg_replace('/[^a-zA-Z0-9]/', '', explode(' ', $this->nama_lengkap)[0] . $pegawai->id));
+                \App\Models\User::create([
+                    'pegawai_id' => $pegawai->id,
+                    'name'       => $this->nama_lengkap,
+                    'username'   => $username,
+                    'email'      => $username . '@desanangtang.go.id',
+                    'role'       => \App\Enums\UserRole::STAF->value,
+                    'is_active'  => true,
+                ]);
+
+                AuditLog::create([
+                    'user_id' => auth()->id(),
+                    'user_name' => auth()->user()->name ?? 'Admin',
+                    'role' => auth()->user()->role ?? 'Admin',
+                    'aktivitas' => "Menambahkan pegawai baru {$pegawai->nama_lengkap}",
+                    'modul' => 'Master Pegawai',
+                ]);
+
+                $msg = "Pegawai baru {$pegawai->nama_lengkap} berhasil ditambahkan dengan akun portal: @{$username}.";
+                session()->flash('success', $msg);
+                $this->dispatch('notify', message: $msg, type: 'success');
+                $this->dispatch('refresh-notifications');
+            }
+        });
 
         $this->closeModal();
     }
@@ -174,7 +217,9 @@ class PegawaiManager extends Component
             'modul' => 'Master Pegawai',
         ]);
 
-        session()->flash('success', "Status pegawai {$pegawai->nama_lengkap} berhasil {$statusText}.");
+        $msg = "Status pegawai {$pegawai->nama_lengkap} berhasil {$statusText}.";
+        session()->flash('success', $msg);
+        $this->dispatch('notify', message: $msg, type: 'info');
     }
 
     public function closeModal()
@@ -190,6 +235,7 @@ class PegawaiManager extends Component
         $this->nipd = '';
         $this->nik = '';
         $this->nama_lengkap = '';
+        $this->username = '';
         $this->tempat_lahir = '';
         $this->tanggal_lahir = null;
         $this->jenis_kelamin = 'L';
@@ -209,13 +255,13 @@ class PegawaiManager extends Component
 
     public function render()
     {
-        $query = Pegawai::with(['jabatan', 'shiftKerja'])
+        $query = Pegawai::with(['jabatan', 'shiftKerja', 'user'])
             ->when($this->search, function ($q) {
                 $q->where(function ($sub) {
                     $sub->where('nama_lengkap', 'like', '%' . $this->search . '%')
                         ->orWhere('nik', 'like', '%' . $this->search . '%')
                         ->orWhere('nipd', 'like', '%' . $this->search . '%')
-                        ->orWhere('pin_fingerprint', 'like', '%' . $this->search . '%');
+                        ->orWhereHas('user', fn($u) => $u->where('username', 'like', '%' . $this->search . '%'));
                 });
             })
             ->when($this->filterJabatan, fn($q) => $q->where('jabatan_id', $this->filterJabatan))

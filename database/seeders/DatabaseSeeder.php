@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             HariLiburSeeder::class,
             DefaultUserSeeder::class,
             KonfigurasiSiltapSeeder::class,
+            KonfigurasiAbsensiSeeder::class,
         ]);
     }
 }

@@ -33,17 +33,10 @@
                 <p class="text-xs text-slate-500 mt-1">Silakan masukkan username dan password akun Anda</p>
             </div>
 
-            @if ($errors->any())
-                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl text-xs text-red-700 font-medium space-y-1">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
-                    @endforeach
-                </div>
-            @endif
-
             @if (session('success'))
-                <div class="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-600 rounded-r-xl text-xs text-emerald-800 font-medium">
-                    {{ session('success') }}
+                <div class="mb-6 p-4 bg-emerald-50 border border-emerald-300 rounded-2xl text-xs text-emerald-900 font-bold flex items-center gap-2">
+                    <svg class="w-4 h-4 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    <span>{{ session('success') }}</span>
                 </div>
             @endif
 
@@ -71,8 +64,13 @@
                     </label>
                 </div>
 
-                <button type="submit" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#064E3B] to-[#1B4D3E] text-white font-bold text-sm tracking-wide shadow-lg shadow-emerald-900/20 hover:from-[#04392B] hover:to-[#064E3B] transition duration-200">
-                    MASUK SADI
+                <button type="submit"
+                    class="w-full py-3.5 px-6 rounded-xl btn-sadi-primary text-white font-extrabold text-sm tracking-wide shadow-lg transition duration-200 cursor-pointer flex items-center justify-center gap-2"
+                    style="background: linear-gradient(135deg, #064E3B 0%, #1B4D3E 100%) !important; color: #FFFFFF !important; border: 1px solid #C9A84C !important;">
+                    <svg class="w-4 h-4 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                    <span>MASUK SADI</span>
                 </button>
             </form>
 
@@ -80,15 +78,15 @@
             <div class="mt-8 pt-6 border-t border-slate-200/70 text-center">
                 <p class="text-[11px] text-slate-500 font-semibold mb-2 uppercase tracking-wider">Kredensial Pengujian (Seeder Defaults)</p>
                 <div class="grid grid-cols-2 gap-2 text-left text-[11px]">
-                    <div class="p-2 bg-white rounded-lg border border-[#C9A84C]/20">
+                    <div class="p-2.5 bg-white rounded-xl border border-[#C9A84C]/30 shadow-sm">
                         <p class="font-bold text-[#064E3B]">Admin / Sekdes:</p>
-                        <p class="text-slate-600">User: <code class="text-amber-800 font-bold">admin</code></p>
-                        <p class="text-slate-600">Pass: <code class="text-amber-800 font-bold">admin123</code></p>
+                        <p class="text-slate-600">User: <code class="text-amber-900 font-bold">admin</code></p>
+                        <p class="text-slate-600">Pass: <code class="text-amber-900 font-bold">admin123</code></p>
                     </div>
-                    <div class="p-2 bg-white rounded-lg border border-[#C9A84C]/20">
+                    <div class="p-2.5 bg-white rounded-xl border border-[#C9A84C]/30 shadow-sm">
                         <p class="font-bold text-[#064E3B]">Kepala Desa:</p>
-                        <p class="text-slate-600">User: <code class="text-amber-800 font-bold">kades</code></p>
-                        <p class="text-slate-600">Pass: <code class="text-amber-800 font-bold">kades123</code></p>
+                        <p class="text-slate-600">User: <code class="text-amber-900 font-bold">kades</code></p>
+                        <p class="text-slate-600">Pass: <code class="text-amber-900 font-bold">kades123</code></p>
                     </div>
                 </div>
             </div>
@@ -96,4 +94,34 @@
         </div>
     </div>
 </div>
+
+@if ($errors->any())
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.Swal) {
+            Swal.fire({
+                title: '<span style="font-family: Outfit, sans-serif; font-weight: 800; color: #064E3B;">Akses Masuk Ditolak</span>',
+                html: `
+                    <div style="text-align: left; font-size: 13px; color: #334155; line-height: 1.6;">
+                        <p style="margin-bottom: 8px; font-weight: 600; color: #991B1B;">Kredensial yang Anda masukkan tidak valid:</p>
+                        <ul style="padding-left: 20px; list-style-type: disc; margin: 0;">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                `,
+                icon: 'error',
+                confirmButtonText: 'Coba Lagi',
+                confirmButtonColor: '#064E3B',
+                background: '#FAF6F0',
+                customClass: {
+                    popup: 'rounded-3xl border border-[#C9A84C]/40 shadow-2xl',
+                    confirmButton: 'rounded-xl px-7 py-3 font-bold text-sm shadow-md'
+                }
+            });
+        }
+    });
+</script>
+@endif
 @endsection

@@ -3,72 +3,73 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\WithFileUploads;
-use App\Services\FingerprintIngestionService;
+use App\Models\Kehadiran;
 use App\Models\AuditLog;
+use Livewire\WithPagination;
+use Carbon\Carbon;
 
+/**
+ * Log Absensi Digital — menampilkan riwayat absensi tanda tangan web.
+ * (Menggantikan AttendanceImporter yang sebelumnya dipakai untuk import log fingerprint USB)
+ */
 class AttendanceImporter extends Component
 {
-    use WithFileUploads;
+    use WithPagination;
 
-    public $logFile;
-    public bool $isProcessing = false;
-    public array $importSummary = [];
+    public string $filterTanggal   = '';
+    public string $filterPegawai   = '';
+    public string $filterSumber    = '';
 
-    public function import(FingerprintIngestionService $ingestionService)
+    protected $queryString = [
+        'filterTanggal' => ['except' => ''],
+        'filterPegawai' => ['except' => ''],
+        'filterSumber'  => ['except' => ''],
+    ];
+
+    public function updatingFilterTanggal(): void { $this->resetPage(); }
+    public function updatingFilterPegawai(): void { $this->resetPage(); }
+    public function updatingFilterSumber(): void  { $this->resetPage(); }
+
+    public function resetFilter(): void
     {
-        $this->validate([
-            'logFile' => 'required|file|max:10240', // 10MB max
-        ]);
-
-        $this->isProcessing = true;
-        $path = $this->logFile->getRealPath();
-        $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-
-        $totalLines = count($lines);
-        $successCount = 0;
-        $duplicateCount = 0;
-        $unknownPinCount = 0;
-        $invalidCount = 0;
-
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
-
-            $result = $ingestionService->ingest($line, 'import_file');
-
-            match ($result['status']) {
-                'created' => $successCount++,
-                'duplicate' => $duplicateCount++,
-                'unknown_pin' => $unknownPinCount++,
-                default => $invalidCount++,
-            };
-        }
-
-        $this->importSummary = [
-            'total' => $totalLines,
-            'success' => $successCount,
-            'duplicate' => $duplicateCount,
-            'unknown_pin' => $unknownPinCount,
-            'invalid' => $invalidCount,
-        ];
-
-        AuditLog::create([
-            'user_id' => auth()->id(),
-            'user_name' => auth()->user()->name ?? 'Admin',
-            'role' => auth()->user()->role ?? 'Admin',
-            'aktivitas' => "Import file log presensi: {$totalLines} baris diproses ({$successCount} berhasil, {$duplicateCount} duplikat)",
-            'modul' => 'Import Absensi',
-        ]);
-
-        session()->flash('success', "Import file log presensi selesai! Total: {$totalLines} baris ({$successCount} berhasil, {$duplicateCount} duplikat).");
-        $this->isProcessing = false;
-        $this->reset('logFile');
+        $this->filterTanggal = '';
+        $this->filterPegawai = '';
+        $this->filterSumber  = '';
+        $this->resetPage();
     }
 
     public function render()
     {
-        return view('livewire.attendance-importer')
-            ->layout('layouts.app', ['title' => 'Import Log Presensi — Presence Desa']);
+        $query = Kehadiran::with(['pegawai.jabatan', 'verifikator'])
+            ->orderByDesc('tanggal')
+            ->orderByDesc('updated_at');
+
+        if ($this->filterTanggal) {
+            $query->where('tanggal', $this->filterTanggal);
+        }
+
+        if ($this->filterPegawai) {
+            $query->whereHas('pegawai', fn($q) =>
+                $q->where('nama_lengkap', 'like', "%{$this->filterPegawai}%")
+            );
+        }
+
+        if ($this->filterSumber) {
+            $query->where('sumber_data', $this->filterSumber);
+        }
+
+        $kehadirans = $query->paginate(15);
+
+        $stats = [
+            'total'          => Kehadiran::count(),
+            'web_signature'  => Kehadiran::where('sumber_data', 'web_signature')->count(),
+            'manual_admin'   => Kehadiran::where('sumber_data', 'manual_admin')->count(),
+            'hari_ini'       => Kehadiran::where('tanggal', Carbon::today()->toDateString())->count(),
+        ];
+
+        return view('livewire.attendance-importer', [
+            'kehadirans' => $kehadirans,
+            'stats'      => $stats,
+        ])->layout('layouts.app', ['title' => 'Log Absensi Digital — Presence Desa']);
     }
 }

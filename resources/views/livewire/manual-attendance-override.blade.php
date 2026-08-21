@@ -56,7 +56,7 @@
             </div>
 
             <div class="md:col-span-2 pt-2 flex justify-end">
-                <button type="submit" class="px-6 py-2.5 rounded-xl bg-[#064E3B] text-white font-bold text-xs hover:bg-[#04392B] shadow-md transition">
+                <button type="submit" class="btn-sadi-primary px-8 py-3 rounded-xl text-white font-bold text-xs shadow-lg transition">
                     SIMPAN OVERRIDE PRESENSI
                 </button>
             </div>

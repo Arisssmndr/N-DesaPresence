@@ -6,7 +6,7 @@
             <h1 class="font-outfit text-2xl font-bold text-[#064E3B] tracking-tight">Manajemen Izin & Sakit Digital</h1>
             <p class="text-xs text-slate-500 mt-1">Pengajuan izin pribadi, kedinasan, sakit, dan cuti perangkat desa</p>
         </div>
-        <button wire:click="openCreateModal" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#064E3B] to-[#1B4D3E] text-white font-bold text-xs tracking-wide shadow-lg hover:shadow-xl transition">
+        <button wire:click="openCreateModal" class="btn-sadi-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-xs tracking-wide shadow-lg transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             <span>Ajukan Izin / Sakit</span>
         </button>
@@ -46,11 +46,16 @@
                                 {{ $i->keterangan }}
                             </td>
                             <td class="py-3 px-4 text-center">
-                                @match ($i->status)
-                                    'disetujui' => <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Disetujui</span>,
-                                    'menunggu' => <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Menunggu</span>,
-                                    default => <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-800">Ditolak</span>,
-                                @endmatch
+                                @switch($i->status)
+                                    @case('disetujui')
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Disetujui</span>
+                                        @break
+                                    @case('menunggu')
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">Menunggu</span>
+                                        @break
+                                    @default
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-300">Ditolak</span>
+                                @endswitch
                             </td>
                             <td class="py-3 px-4 text-right space-x-1">
                                 @if ($i->status === 'menunggu' && auth()->user()->isAdmin())

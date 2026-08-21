@@ -41,11 +41,21 @@ class ManualAttendanceOverride extends Component
 
         $pegawai = Pegawai::findOrFail($this->pegawai_id);
 
+        $durasiMenit = 0;
+        if ($this->jam_masuk && $this->jam_pulang) {
+            $masuk = Carbon::createFromFormat('H:i', $this->jam_masuk);
+            $pulang = Carbon::createFromFormat('H:i', $this->jam_pulang);
+            if ($pulang->greaterThan($masuk)) {
+                $durasiMenit = $masuk->diffInMinutes($pulang);
+            }
+        }
+
         $kehadiran = Kehadiran::updateOrCreate(
             ['pegawai_id' => $this->pegawai_id, 'tanggal' => $this->tanggal],
             [
                 'jam_masuk' => $this->jam_masuk ? $this->jam_masuk . ':00' : null,
                 'jam_pulang' => $this->jam_pulang ? $this->jam_pulang . ':00' : null,
+                'durasi_kerja_menit' => $durasiMenit,
                 'status' => $this->status,
                 'sumber_data' => 'manual_admin',
                 'keterangan' => $this->keterangan,
@@ -61,7 +71,9 @@ class ManualAttendanceOverride extends Component
             'modul' => 'Override Absensi',
         ]);
 
-        session()->flash('success', "Override presensi untuk {$pegawai->nama_lengkap} tanggal {$this->tanggal} berhasil disimpan.");
+        $msg = "Override presensi untuk {$pegawai->nama_lengkap} tanggal {$this->tanggal} berhasil disimpan.";
+        session()->flash('success', $msg);
+        $this->dispatch('notify', message: $msg, type: 'success');
         $this->reset(['pegawai_id', 'keterangan']);
     }
 

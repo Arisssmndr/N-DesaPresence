@@ -20,6 +20,21 @@ class AuditLog extends Model
         'created_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function ($model) {
+            if (empty($model->created_at)) {
+                $model->created_at = now();
+            }
+            if (empty($model->ip_address) && request()) {
+                $model->ip_address = request()->ip();
+            }
+            if (empty($model->user_agent) && request()) {
+                $model->user_agent = request()->userAgent();
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

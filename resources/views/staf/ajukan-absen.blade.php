@@ -314,31 +314,71 @@
         </div>
 
         {{-- 2. Pilih Jenis Pengajuan --}}
-        <div class="sadi-card p-5 bg-white shadow-md space-y-3">
-            <h4 class="font-outfit font-extrabold text-[#064E3B] text-sm">Pilih Jenis Pengajuan <span class="text-red-500">*</span></h4>
-            <div class="grid grid-cols-2 gap-3">
-                {{-- Kegiatan Sosial --}}
-                <label :class="jenisAbsen === 'kegiatan_sosial' ? 'border-[#064E3B] bg-emerald-50 ring-2 ring-[#064E3B]/20' : 'border-slate-200 bg-white'"
-                       class="cursor-pointer rounded-2xl border-2 p-4 flex flex-col items-center gap-2 transition-all">
-                    <input type="radio" name="jenis" value="kegiatan_sosial" x-model="jenisAbsen" class="sr-only">
-                    <div :class="jenisAbsen === 'kegiatan_sosial' ? 'bg-[#064E3B] text-white' : 'bg-slate-100 text-slate-500'"
-                         class="w-10 h-10 rounded-xl flex items-center justify-center transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        <div class="sadi-card p-5 bg-white shadow-md space-y-3.5">
+            <div>
+                <h4 class="font-outfit font-extrabold text-[#064E3B] text-sm">Pilih Kategori Kehadiran Luar <span class="text-red-500">*</span></h4>
+                <p class="text-[11px] text-slate-500 mt-0.5">Pilih salah satu dari 3 kategori Dinas Luar atau Kegiatan Sosial sesuai penugasan Anda:</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {{-- 1. Dinas Luar Undangan --}}
+                <label :class="jenisAbsen === 'dinas_luar_undangan' ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-600/20 shadow-sm' : 'border-slate-200 bg-white hover:border-indigo-300'"
+                       class="cursor-pointer rounded-2xl border-2 p-3.5 flex items-start gap-3 transition-all">
+                    <input type="radio" name="jenis" value="dinas_luar_undangan" x-model="jenisAbsen" class="sr-only">
+                    <div :class="jenisAbsen === 'dinas_luar_undangan' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-indigo-100 text-indigo-700'"
+                         class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all mt-0.5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                     </div>
-                    <span class="text-[11px] font-bold text-center" :class="jenisAbsen === 'kegiatan_sosial' ? 'text-[#064E3B]' : 'text-slate-600'">Kegiatan Sosial</span>
-                    <span class="text-[10px] text-center text-slate-400">Antar warga ke RS, bakti sosial, dll</span>
+                    <div class="space-y-0.5">
+                        <p class="text-xs font-extrabold" :class="jenisAbsen === 'dinas_luar_undangan' ? 'text-indigo-900' : 'text-slate-800'">Dinas Luar (Undangan)</p>
+                        <p class="text-[10.5px] text-slate-500 leading-tight">Menerima undangan resmi dari pihak luar/Kecamatan/Pemkab.</p>
+                        <span class="inline-block text-[9.5px] font-bold text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded-md mt-1">Lampirkan Surat Undangan</span>
+                    </div>
                 </label>
 
-                {{-- Dinas Luar --}}
-                <label :class="jenisAbsen === 'dinas_luar' ? 'border-[#064E3B] bg-emerald-50 ring-2 ring-[#064E3B]/20' : 'border-slate-200 bg-white'"
-                       class="cursor-pointer rounded-2xl border-2 p-4 flex flex-col items-center gap-2 transition-all">
-                    <input type="radio" name="jenis" value="dinas_luar" x-model="jenisAbsen" class="sr-only">
-                    <div :class="jenisAbsen === 'dinas_luar' ? 'bg-[#064E3B] text-white' : 'bg-slate-100 text-slate-500'"
-                         class="w-10 h-10 rounded-xl flex items-center justify-center transition-all">
+                {{-- 2. Dinas Luar Pengajuan (Mandiri / Inisiatif) --}}
+                <label :class="jenisAbsen === 'dinas_luar_pengajuan' ? 'border-teal-600 bg-teal-50/70 ring-2 ring-teal-600/20 shadow-sm' : 'border-slate-200 bg-white hover:border-teal-300'"
+                       class="cursor-pointer rounded-2xl border-2 p-3.5 flex items-start gap-3 transition-all">
+                    <input type="radio" name="jenis" value="dinas_luar_pengajuan" x-model="jenisAbsen" class="sr-only">
+                    <div :class="jenisAbsen === 'dinas_luar_pengajuan' ? 'bg-teal-600 text-white shadow-sm' : 'bg-teal-100 text-teal-700'"
+                         class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all mt-0.5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </div>
+                    <div class="space-y-0.5">
+                        <p class="text-xs font-extrabold" :class="jenisAbsen === 'dinas_luar_pengajuan' ? 'text-teal-900' : 'text-slate-800'">Dinas Luar (Pengajuan Mandiri)</p>
+                        <p class="text-[10.5px] text-slate-500 leading-tight">Inisiatif mandiri perangkat desa untuk urusan lapangan / wilayah.</p>
+                        <span class="inline-block text-[9.5px] font-bold text-teal-700 bg-teal-100/80 px-2 py-0.5 rounded-md mt-1">Lampirkan Foto Lapangan</span>
+                    </div>
+                </label>
+
+                {{-- 3. Dinas Luar Surat Tugas (SPT) --}}
+                <label :class="jenisAbsen === 'dinas_luar_surat_tugas' ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-600/20 shadow-sm' : 'border-slate-200 bg-white hover:border-blue-300'"
+                       class="cursor-pointer rounded-2xl border-2 p-3.5 flex items-start gap-3 transition-all">
+                    <input type="radio" name="jenis" value="dinas_luar_surat_tugas" x-model="jenisAbsen" class="sr-only">
+                    <div :class="jenisAbsen === 'dinas_luar_surat_tugas' ? 'bg-blue-600 text-white shadow-sm' : 'bg-blue-100 text-blue-700'"
+                         class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all mt-0.5">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     </div>
-                    <span class="text-[11px] font-bold text-center" :class="jenisAbsen === 'dinas_luar' ? 'text-[#064E3B]' : 'text-slate-600'">Dinas Luar Resmi</span>
-                    <span class="text-[10px] text-center text-slate-400">Kecamatan, rapat, dinas luar kota, dll</span>
+                    <div class="space-y-0.5">
+                        <p class="text-xs font-extrabold" :class="jenisAbsen === 'dinas_luar_surat_tugas' ? 'text-blue-900' : 'text-slate-800'">Dinas Luar (Surat Tugas / SPT)</p>
+                        <p class="text-[10.5px] text-slate-500 leading-tight">Perintah/penugasan langsung dari Kepala Desa / Pemdes.</p>
+                        <span class="inline-block text-[9.5px] font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-md mt-1">Lampirkan Dokumen SPT</span>
+                    </div>
+                </label>
+
+                {{-- 4. Kegiatan Sosial --}}
+                <label :class="jenisAbsen === 'kegiatan_sosial' ? 'border-pink-600 bg-pink-50/70 ring-2 ring-pink-600/20 shadow-sm' : 'border-slate-200 bg-white hover:border-pink-300'"
+                       class="cursor-pointer rounded-2xl border-2 p-3.5 flex items-start gap-3 transition-all">
+                    <input type="radio" name="jenis" value="kegiatan_sosial" x-model="jenisAbsen" class="sr-only">
+                    <div :class="jenisAbsen === 'kegiatan_sosial' ? 'bg-pink-600 text-white shadow-sm' : 'bg-pink-100 text-pink-700'"
+                         class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all mt-0.5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    </div>
+                    <div class="space-y-0.5">
+                        <p class="text-xs font-extrabold" :class="jenisAbsen === 'kegiatan_sosial' ? 'text-pink-900' : 'text-slate-800'">Kegiatan Sosial</p>
+                        <p class="text-[10.5px] text-slate-500 leading-tight">Bakti sosial kemasyarakatan, gotong royong, pendampingan warga.</p>
+                        <span class="inline-block text-[9.5px] font-bold text-pink-700 bg-pink-100/80 px-2 py-0.5 rounded-md mt-1">Lampirkan Foto Bukti</span>
+                    </div>
                 </label>
             </div>
             @error('jenis')
@@ -349,47 +389,107 @@
         {{-- 3. Detail Kegiatan (muncul setelah pilih jenis) --}}
         <div x-show="jenisAbsen !== ''" x-transition class="space-y-4">
 
-            {{-- Tanggal & Judul --}}
+            {{-- Tanggal & Detail Form --}}
             <div class="sadi-card p-5 bg-white shadow-md space-y-4">
-                <h4 class="font-outfit font-extrabold text-[#064E3B] text-sm border-b border-slate-100 pb-2">Informasi Kegiatan</h4>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                    <h4 class="font-outfit font-extrabold text-[#064E3B] text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span>Informasi Kegiatan & Penugasan</span>
+                    </h4>
+                    <span class="text-[10.5px] font-bold px-2.5 py-1 rounded-full"
+                          :class="{
+                              'bg-indigo-100 text-indigo-800': jenisAbsen === 'dinas_luar_undangan',
+                              'bg-teal-100 text-teal-800': jenisAbsen === 'dinas_luar_pengajuan',
+                              'bg-blue-100 text-blue-800': jenisAbsen === 'dinas_luar_surat_tugas',
+                              'bg-pink-100 text-pink-800': jenisAbsen === 'kegiatan_sosial'
+                          }">
+                        <span x-show="jenisAbsen === 'dinas_luar_undangan'">Undangan Resmi</span>
+                        <span x-show="jenisAbsen === 'dinas_luar_pengajuan'">Inisiatif Mandiri</span>
+                        <span x-show="jenisAbsen === 'dinas_luar_surat_tugas'">Surat Tugas (SPT)</span>
+                        <span x-show="jenisAbsen === 'kegiatan_sosial'">Sosial Kemasyarakatan</span>
+                    </span>
+                </div>
 
+                {{-- Tanggal Absensi --}}
                 <div class="text-xs space-y-1">
                     <label class="block font-bold text-slate-700 uppercase tracking-wider">Tanggal Absensi <span class="text-red-500">*</span></label>
                     <input type="date" name="tanggal" value="{{ old('tanggal', $today) }}" max="{{ $today }}" required
                         class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 focus:border-[#064E3B] focus:ring-2 focus:ring-[#064E3B]/20 outline-none">
-                    <p class="text-[10px] text-slate-400">Maksimal hari ini. Tidak bisa mengajukan untuk tanggal mendatang.</p>
+                    <p class="text-[10px] text-slate-400">Maksimal hari ini. Tidak dapat mengajukan tanggal di masa depan.</p>
                     @error('tanggal') <p class="text-red-600 font-bold">{{ $message }}</p> @enderror
                 </div>
 
+                {{-- Instansi Pengundang (Hanya untuk Dinas Luar Undangan) --}}
+                <div x-show="jenisAbsen === 'dinas_luar_undangan'" x-transition class="text-xs space-y-1">
+                    <label class="block font-bold text-slate-700 uppercase tracking-wider">Instansi / Pihak Pengundang <span class="text-red-500">*</span></label>
+                    <input type="text" name="instansi_pengundang" value="{{ old('instansi_pengundang') }}" placeholder="Contoh: Kantor Kecamatan Cigalontang / DPMD Kab. Tasikmalaya"
+                        class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 focus:border-[#064E3B] focus:ring-2 focus:ring-[#064E3B]/20 outline-none">
+                    <p class="text-[10px] text-slate-400">Sebutkan nama lembaga, instansi, atau kepanitiaan yang mengundang.</p>
+                    @error('instansi_pengundang') <p class="text-red-600 font-bold">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Nomor Surat Tugas / SPT (Hanya untuk Dinas Luar Surat Tugas) --}}
+                <div x-show="jenisAbsen === 'dinas_luar_surat_tugas'" x-transition class="text-xs space-y-1">
+                    <label class="block font-bold text-slate-700 uppercase tracking-wider">Nomor Surat Perintah Tugas (SPT)</label>
+                    <input type="text" name="nomor_surat_tugas" value="{{ old('nomor_surat_tugas') }}" placeholder="Contoh: 090/045/SPT/Pemdes/2026 (Bila ada)"
+                        class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 focus:border-[#064E3B] focus:ring-2 focus:ring-[#064E3B]/20 outline-none">
+                    <p class="text-[10px] text-slate-400">Tuliskan nomor SPT jika sudah diterbitkan oleh Pemerintah Desa.</p>
+                    @error('nomor_surat_tugas') <p class="text-red-600 font-bold">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Judul Kegiatan --}}
                 <div class="text-xs space-y-1">
                     <label class="block font-bold text-slate-700 uppercase tracking-wider">Judul Ringkas Kegiatan <span class="text-red-500">*</span></label>
-                    <input type="text" name="judul" value="{{ old('judul') }}" placeholder="Contoh: Rapat Koordinasi di Kantor Kecamatan Cigalontang" required maxlength="150"
+                    <input type="text" name="judul" value="{{ old('judul') }}" placeholder="Contoh: Rapat Koordinasi Pembinaan Aparatur Desa" required maxlength="150"
                         class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 focus:border-[#064E3B] focus:ring-2 focus:ring-[#064E3B]/20 outline-none">
                     @error('judul') <p class="text-red-600 font-bold">{{ $message }}</p> @enderror
                 </div>
 
+                {{-- Keterangan Lengkap --}}
                 <div class="text-xs space-y-1">
-                    <label class="block font-bold text-slate-700 uppercase tracking-wider">Keterangan Lengkap <span class="text-red-500">*</span></label>
-                    <textarea name="deskripsi" rows="3" required placeholder="Jelaskan secara lengkap kegiatan yang Anda lakukan di luar kantor desa..."
+                    <label class="block font-bold text-slate-700 uppercase tracking-wider">Keterangan / Uraian Kegiatan <span class="text-red-500">*</span></label>
+                    <textarea name="deskripsi" rows="3" required placeholder="Jelaskan uraian kegiatan, agenda, hasil, atau keterangan yang perlu diketahui atasan..."
                         class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 focus:border-[#064E3B] focus:ring-2 focus:ring-[#064E3B]/20 outline-none resize-none">{{ old('deskripsi') }}</textarea>
                     @error('deskripsi') <p class="text-red-600 font-bold">{{ $message }}</p> @enderror
                 </div>
             </div>
 
-            {{-- Bukti: Foto Lokasi (Kegiatan Sosial) --}}
-            <div x-show="jenisAbsen === 'kegiatan_sosial'" x-transition class="sadi-card p-5 bg-white shadow-md space-y-3">
+            {{-- Bukti Dokumen (Untuk Dinas Luar Undangan & Surat Tugas) --}}
+            <div x-show="jenisAbsen === 'dinas_luar_undangan' || jenisAbsen === 'dinas_luar_surat_tugas' || jenisAbsen === 'dinas_luar'" x-transition class="sadi-card p-5 bg-white shadow-md space-y-3">
+                <h4 class="font-outfit font-extrabold text-[#064E3B] text-sm border-b border-slate-100 pb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span x-show="jenisAbsen === 'dinas_luar_undangan'">Dokumen / Surat Undangan Resmi <span class="text-red-500">*</span></span>
+                    <span x-show="jenisAbsen === 'dinas_luar_surat_tugas'">Surat Perintah Tugas (SPT) / Dokumen <span class="text-red-500">*</span></span>
+                    <span x-show="jenisAbsen === 'dinas_luar'">Dokumen Pendukung <span class="text-red-500">*</span></span>
+                </h4>
+                <p class="text-[11px] text-slate-500">Unggah berkas scan surat / foto dokumen resmi. Format: PDF, JPG, PNG, WEBP. Maks 5MB.</p>
+
+                <label class="block cursor-pointer border-2 border-dashed border-slate-300 hover:border-[#064E3B] rounded-xl p-5 text-center transition-all bg-slate-50/50 hover:bg-emerald-50/30">
+                    <input type="file" name="file_dokumen" accept=".pdf,image/*" class="hidden"
+                        @change="namaDokumen = $event.target.files[0] ? $event.target.files[0].name : ''">
+                    <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    <p x-show="!namaDokumen" class="text-xs text-slate-600 font-semibold">Klik untuk pilih berkas dokumen (PDF / Gambar)</p>
+                    <p x-show="namaDokumen" class="text-xs text-[#064E3B] font-extrabold flex items-center justify-center gap-1.5" x-text="namaDokumen"></p>
+                </label>
+                @error('file_dokumen') <p class="text-[11px] text-red-600 font-bold">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Bukti Foto Lokasi (Untuk Pengajuan Mandiri & Kegiatan Sosial) --}}
+            <div x-show="jenisAbsen === 'dinas_luar_pengajuan' || jenisAbsen === 'kegiatan_sosial' || jenisAbsen === 'dinas_luar_undangan' || jenisAbsen === 'dinas_luar_surat_tugas'" x-transition class="sadi-card p-5 bg-white shadow-md space-y-3">
                 <h4 class="font-outfit font-extrabold text-[#064E3B] text-sm border-b border-slate-100 pb-2 flex items-center gap-2">
                     <svg class="w-4 h-4 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    Foto Bukti Lokasi <span class="text-red-500">*</span>
+                    <span>Foto Bukti Keberadaan / Situasi Lapangan</span>
+                    <span x-show="jenisAbsen === 'dinas_luar_pengajuan' || jenisAbsen === 'kegiatan_sosial'" class="text-red-500">*</span>
+                    <span x-show="jenisAbsen === 'dinas_luar_undangan' || jenisAbsen === 'dinas_luar_surat_tugas'" class="text-slate-400 font-normal text-xs">(Opsional)</span>
                 </h4>
-                <p class="text-[11px] text-slate-500">Ambil foto situasi lokasi sebagai bukti keberadaan Anda. Format: JPG, PNG, WEBP. Maks 5MB.</p>
+                <p class="text-[11px] text-slate-500">Ambil foto dokumentasi situasi/kegiatan di lokasi sebagai bukti otentik. Format: JPG, PNG, WEBP. Maks 5MB.</p>
 
-                {{-- Preview --}}
+                {{-- Preview Foto --}}
                 <div x-show="previewFoto" x-transition class="rounded-xl overflow-hidden border-2 border-[#C9A84C]">
                     <img :src="previewFoto" class="w-full max-h-48 object-cover">
                 </div>
 
-                <label class="block cursor-pointer border-2 border-dashed border-slate-300 hover:border-[#064E3B] rounded-xl p-5 text-center transition-all">
+                <label class="block cursor-pointer border-2 border-dashed border-slate-300 hover:border-[#064E3B] rounded-xl p-5 text-center transition-all bg-slate-50/50 hover:bg-emerald-50/30">
                     <input type="file" name="foto_lokasi" accept="image/*" class="hidden"
                         @change="
                             const f = $event.target.files[0];
@@ -401,28 +501,10 @@
                             }
                         ">
                     <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    <p x-show="!namaFoto" class="text-xs text-slate-500 font-semibold">Klik untuk pilih foto atau jepret dari kamera</p>
-                    <p x-show="namaFoto" class="text-xs text-[#064E3B] font-bold" x-text="namaFoto"></p>
+                    <p x-show="!namaFoto" class="text-xs text-slate-600 font-semibold">Klik untuk pilih foto atau jepret langsung dari kamera</p>
+                    <p x-show="namaFoto" class="text-xs text-[#064E3B] font-extrabold" x-text="namaFoto"></p>
                 </label>
                 @error('foto_lokasi') <p class="text-[11px] text-red-600 font-bold">{{ $message }}</p> @enderror
-            </div>
-
-            {{-- Bukti: Dokumen/Surat (Dinas Luar) --}}
-            <div x-show="jenisAbsen === 'dinas_luar'" x-transition class="sadi-card p-5 bg-white shadow-md space-y-3">
-                <h4 class="font-outfit font-extrabold text-[#064E3B] text-sm border-b border-slate-100 pb-2 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    Dokumen Pendukung / Surat Tugas <span class="text-red-500">*</span>
-                </h4>
-                <p class="text-[11px] text-slate-500">Upload surat undangan, surat tugas, atau dokumen resmi lainnya. Format: PDF, JPG, PNG. Maks 5MB.</p>
-
-                <label class="block cursor-pointer border-2 border-dashed border-slate-300 hover:border-[#064E3B] rounded-xl p-5 text-center transition-all">
-                    <input type="file" name="file_dokumen" accept=".pdf,image/*" class="hidden"
-                        @change="namaDokumen = $event.target.files[0] ? $event.target.files[0].name : ''">
-                    <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                    <p x-show="!namaDokumen" class="text-xs text-slate-500 font-semibold">Klik untuk upload dokumen (PDF / Gambar)</p>
-                    <p x-show="namaDokumen" class="text-xs text-[#064E3B] font-bold" x-text="namaDokumen"></p>
-                </label>
-                @error('file_dokumen') <p class="text-[11px] text-red-600 font-bold">{{ $message }}</p> @enderror
             </div>
 
             {{-- Tanda Tangan Digital --}}

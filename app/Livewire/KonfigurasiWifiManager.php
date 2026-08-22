@@ -115,6 +115,37 @@ class KonfigurasiWifiManager extends Component
         $this->dispatch('notify', message: $msg, type: 'info');
     }
 
+    public function gunakanIpLangsung(string $ip): void
+    {
+        $this->editingId = null;
+        $this->form = [
+            'nama_jaringan' => 'WiFi Kantor Desa Nangtang (IP Tunggal)',
+            'ip_address'    => trim($ip),
+            'keterangan'    => 'Didaftarkan otomatis dari IP perangkat saat ini (' . $ip . ')',
+            'is_active'     => true,
+        ];
+        $this->showForm = true;
+    }
+
+    public function gunakanSubnetLangsung(string $ip): void
+    {
+        $this->editingId = null;
+        $parts = explode('.', trim($ip));
+        if (count($parts) === 4) {
+            $subnet = $parts[0] . '.' . $parts[1] . '.' . $parts[2] . '.*';
+        } else {
+            $subnet = trim($ip);
+        }
+
+        $this->form = [
+            'nama_jaringan' => 'Subnet WiFi Kantor Desa Nangtang (' . $subnet . ')',
+            'ip_address'    => $subnet,
+            'keterangan'    => 'Mencakup seluruh HP perangkat desa dalam jaringan ' . $subnet,
+            'is_active'     => true,
+        ];
+        $this->showForm = true;
+    }
+
     private function resetForm(): void
     {
         $this->form = [
@@ -128,9 +159,14 @@ class KonfigurasiWifiManager extends Component
 
     public function render()
     {
+        $clientIp = request()->ip() ?: '127.0.0.1';
+        $parts = explode('.', $clientIp);
+        $subnetSaran = count($parts) === 4 ? $parts[0] . '.' . $parts[1] . '.' . $parts[2] . '.*' : $clientIp;
+
         return view('livewire.konfigurasi-wifi-manager', [
-            'daftarWifi' => KonfigurasiWifi::latest()->get(),
-            'clientIp'   => request()->ip(),
+            'daftarWifi'  => KonfigurasiWifi::latest()->get(),
+            'clientIp'    => $clientIp,
+            'subnetSaran' => $subnetSaran,
         ])->layout('layouts.app', ['title' => 'Konfigurasi WiFi Absensi — Presence Desa']);
     }
 }

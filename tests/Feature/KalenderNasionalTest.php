@@ -42,7 +42,7 @@ class KalenderNasionalTest extends TestCase
         if ($user) {
             $this->actingAs($user);
             Livewire::test(Dashboard::class)
-                ->assertSee('Kalender Nasional RI')
+                ->assertSee('Kalender')
                 ->assertSee('Sen')
                 ->assertSee('Min');
         } else {

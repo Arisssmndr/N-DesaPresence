@@ -94,6 +94,8 @@ class LaporanController extends Controller
         $matrix  = [];
         $summary = [];
 
+        $todayStr = Carbon::today()->toDateString();
+
         foreach ($pegawais as $p) {
             $kehadiranMap = $semuaKehadiran->get($p->id, collect())->keyBy(fn($k) => Carbon::parse($k->tanggal)->format('Y-m-d'));
             $pSummary = ['H' => 0, 'T' => 0, 'A' => 0, 'I' => 0, 'D' => 0, 'L' => 0];
@@ -102,22 +104,31 @@ class LaporanController extends Controller
                 $dateStr = sprintf("%04d-%02d-%02d", $tahun, $bulan, $d);
                 $dt = Carbon::createFromDate($tahun, $bulan, $d);
 
+                $isWeekend = $dt->isWeekend();
+                $isHoliday = isset($hariLiburs[$dateStr]) || $isWeekend;
+                $isFuture = ($dateStr > $todayStr);
+                $isToday = ($dateStr === $todayStr);
+
                 if (isset($kehadiranMap[$dateStr])) {
                     $code = match ($kehadiranMap[$dateStr]->status) {
-                        'Hadir', 'Tepat Waktu'  => 'H',
-                        'Terlambat'    => 'T',
-                        'Izin', 'Sakit' => 'I',
-                        'Dinas Luar'   => 'D',
-                        default        => 'A',
+                        'Hadir', 'Tepat Waktu' => 'H',
+                        'Terlambat'            => 'T',
+                        'Izin', 'Sakit'        => 'I',
+                        'Dinas Luar'           => 'D',
+                        default                => 'A',
                     };
-                } elseif ($dt->isWeekend() || isset($hariLiburs[$dateStr])) {
+                } elseif ($isHoliday) {
                     $code = 'L';
+                } elseif ($isFuture || $isToday) {
+                    $code = '-';
                 } else {
                     $code = 'A';
                 }
 
                 $matrix[$p->id][$d] = $code;
-                $pSummary[$code]++;
+                if (isset($pSummary[$code])) {
+                    $pSummary[$code]++;
+                }
             }
 
             $totalHariKerja = $daysInMonth - $pSummary['L'];

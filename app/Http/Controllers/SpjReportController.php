@@ -6,30 +6,72 @@ use Illuminate\Http\Request;
 use App\Models\Pegawai;
 use App\Models\Kehadiran;
 use App\Models\HariLibur;
+use App\Models\IzinSakit;
+use App\Models\SuratPerintahTugas;
+use App\Services\KalenderNasionalService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
 class SpjReportController extends Controller
 {
-    public function downloadPdf(Request $request)
+    public function downloadPdf(Request $request, KalenderNasionalService $kalenderService)
     {
         $bulan = (int) $request->input('bulan', date('m'));
         $tahun = (int) $request->input('tahun', date('Y'));
 
-        $daysInMonth = Carbon::createFromDate($tahun, $bulan, 1)->daysInMonth;
-        $namaBulan = Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F');
-        $pegawais = Pegawai::with('jabatan')->where('status_aktif', true)->orderBy('nama_lengkap')->get();
-        $hariLiburs = HariLibur::whereYear('tanggal', $tahun)->whereMonth('tanggal', $bulan)->pluck('tanggal')->map(fn($t) => $t->format('Y-m-d'))->toArray();
+        $firstDay = Carbon::createFromDate($tahun, $bulan, 1);
+        $daysInMonth = $firstDay->daysInMonth;
+        $namaBulan = $firstDay->translatedFormat('F');
+        $todayStr = Carbon::today()->toDateString();
+
+        $pegawais = Pegawai::with('jabatan')
+            ->where('status_aktif', true)
+            ->orderBy('nama_lengkap')
+            ->get();
+
+        $startMonth = sprintf('%04d-%02d-01', $tahun, $bulan);
+        $endMonth = sprintf('%04d-%02d-%02d', $tahun, $bulan, $daysInMonth);
+
+        // Ambil hari libur DB & API
+        $hariLibursDb = HariLibur::whereBetween('tanggal', [$startMonth, $endMonth])
+            ->get()
+            ->mapWithKeys(fn($h) => [(is_string($h->tanggal) ? substr($h->tanggal, 0, 10) : $h->tanggal->format('Y-m-d')) => $h->nama_hari_libur])
+            ->toArray();
+
+        $kalenderData = $kalenderService->getKalenderBulan($tahun, $bulan);
+        foreach ($kalenderData['libur'] as $tglStr => $info) {
+            if (!isset($hariLibursDb[$tglStr])) {
+                $hariLibursDb[$tglStr] = $info['nama'];
+            }
+        }
+
+        $semuaKehadiran = Kehadiran::whereBetween('tanggal', [$startMonth, $endMonth])
+            ->get()
+            ->groupBy('pegawai_id');
+
+        $semuaIzin = IzinSakit::where('status', 'disetujui')
+            ->where(function ($q) use ($startMonth, $endMonth) {
+                $q->whereBetween('tanggal_mulai', [$startMonth, $endMonth])
+                  ->orWhereBetween('tanggal_selesai', [$startMonth, $endMonth]);
+            })
+            ->get()
+            ->groupBy('pegawai_id');
+
+        $semuaSpt = SuratPerintahTugas::where('status', 'disetujui')
+            ->where(function ($q) use ($startMonth, $endMonth) {
+                $q->whereBetween('tanggal_mulai', [$startMonth, $endMonth])
+                  ->orWhereBetween('tanggal_selesai', [$startMonth, $endMonth]);
+            })
+            ->get()
+            ->groupBy('pegawai_id');
 
         $matrix = [];
         $summary = [];
 
         foreach ($pegawais as $p) {
-            $kehadirans = Kehadiran::where('pegawai_id', $p->id)
-                ->whereYear('tanggal', $tahun)
-                ->whereMonth('tanggal', $bulan)
-                ->get()
-                ->keyBy(fn($k) => $k->tanggal->format('Y-m-d'));
+            $kehadirans = $semuaKehadiran->get($p->id, collect())->keyBy(fn($k) => (is_string($k->tanggal) ? substr($k->tanggal, 0, 10) : $k->tanggal->format('Y-m-d')));
+            $izinList = $semuaIzin->get($p->id, collect());
+            $sptList = $semuaSpt->get($p->id, collect());
 
             $pSummary = ['H' => 0, 'T' => 0, 'A' => 0, 'I' => 0, 'D' => 0, 'L' => 0];
 
@@ -37,23 +79,36 @@ class SpjReportController extends Controller
                 $dateStr = sprintf("%04d-%02d-%02d", $tahun, $bulan, $d);
                 $dt = Carbon::createFromDate($tahun, $bulan, $d);
 
+                $isWeekend = $dt->isWeekend();
+                $isHoliday = isset($hariLibursDb[$dateStr]) || $isWeekend;
+                $isFuture = ($dateStr > $todayStr);
+                $isToday = ($dateStr === $todayStr);
+
                 if (isset($kehadirans[$dateStr])) {
                     $status = $kehadirans[$dateStr]->status;
                     $code = match ($status) {
-                        'Tepat Waktu' => 'H',
-                        'Terlambat' => 'T',
-                        'Izin', 'Sakit' => 'I',
-                        'Dinas Luar' => 'D',
-                        default => 'A',
+                        'Tepat Waktu', 'Hadir' => 'H',
+                        'Terlambat'           => 'T',
+                        'Izin', 'Sakit'        => 'I',
+                        'Dinas Luar'           => 'D',
+                        default                => 'A',
                     };
-                } elseif ($dt->isWeekend() || in_array($dateStr, $hariLiburs)) {
+                } elseif ($this->checkApprovedIzin($izinList, $dateStr)) {
+                    $code = 'I';
+                } elseif ($this->checkApprovedSpt($sptList, $dateStr)) {
+                    $code = 'D';
+                } elseif ($isHoliday) {
                     $code = 'L';
+                } elseif ($isFuture || $isToday) {
+                    $code = '-';
                 } else {
                     $code = 'A';
                 }
 
                 $matrix[$p->id][$d] = $code;
-                $pSummary[$code] = ($pSummary[$code] ?? 0) + 1;
+                if (isset($pSummary[$code])) {
+                    $pSummary[$code]++;
+                }
             }
 
             $summary[$p->id] = $pSummary;
@@ -75,5 +130,29 @@ class SpjReportController extends Controller
         ])->setPaper('a4', 'landscape');
 
         return $pdf->stream("SPJ_Presensi_Desa_Nangtang_{$namaBulan}_{$tahun}.pdf");
+    }
+
+    private function checkApprovedIzin($izinList, string $dateStr): bool
+    {
+        foreach ($izinList as $izin) {
+            $mulai = is_string($izin->tanggal_mulai) ? substr($izin->tanggal_mulai, 0, 10) : $izin->tanggal_mulai->format('Y-m-d');
+            $selesai = is_string($izin->tanggal_selesai) ? substr($izin->tanggal_selesai, 0, 10) : $izin->tanggal_selesai->format('Y-m-d');
+            if ($dateStr >= $mulai && $dateStr <= $selesai) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function checkApprovedSpt($sptList, string $dateStr): bool
+    {
+        foreach ($sptList as $spt) {
+            $mulai = is_string($spt->tanggal_mulai) ? substr($spt->tanggal_mulai, 0, 10) : $spt->tanggal_mulai->format('Y-m-d');
+            $selesai = is_string($spt->tanggal_selesai) ? substr($spt->tanggal_selesai, 0, 10) : $spt->tanggal_selesai->format('Y-m-d');
+            if ($dateStr >= $mulai && $dateStr <= $selesai) {
+                return true;
+            }
+        }
+        return false;
     }
 }

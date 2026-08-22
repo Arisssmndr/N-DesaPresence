@@ -169,9 +169,16 @@ class PengajuanAbsenManager extends Component
             'tanggal'    => $pengajuan->tanggal->toDateString(),
         ]);
 
-        $kehadiran->status           = $pengajuan->jenis === 'kegiatan_sosial' ? 'Hadir' : 'Dinas Luar';
-        $kehadiran->sumber_data      = 'pengajuan_luar';
-        $kehadiran->keterangan       = "[{$pengajuan->label_jenis}] {$pengajuan->judul}";
+        $labelJenis = $pengajuan->label_jenis;
+        if ($pengajuan->jenis === 'dinas_luar_undangan' && $pengajuan->instansi_pengundang) {
+            $labelJenis .= ': ' . $pengajuan->instansi_pengundang;
+        } elseif ($pengajuan->jenis === 'dinas_luar_surat_tugas' && $pengajuan->nomor_surat_tugas) {
+            $labelJenis .= ' (SPT: ' . $pengajuan->nomor_surat_tugas . ')';
+        }
+
+        $kehadiran->status            = $pengajuan->jenis === 'kegiatan_sosial' ? 'Hadir' : 'Dinas Luar';
+        $kehadiran->sumber_data       = 'pengajuan_luar';
+        $kehadiran->keterangan        = "[{$labelJenis}] {$pengajuan->judul}";
         $kehadiran->diverifikasi_oleh = Auth::id();
 
         // Simpan jam pengajuan aktual (dari created_at pengajuan atau jam sekarang)

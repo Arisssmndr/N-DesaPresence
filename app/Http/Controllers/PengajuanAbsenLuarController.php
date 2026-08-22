@@ -45,22 +45,25 @@ class PengajuanAbsenLuarController extends Controller
         }
 
         $request->validate([
-            'tanggal'       => 'required|date|before_or_equal:today',
-            'jenis'         => 'required|in:kegiatan_sosial,dinas_luar',
-            'judul'         => 'required|string|max:150',
-            'deskripsi'     => 'required|string|max:2000',
-            'foto_lokasi'   => 'required_if:jenis,kegiatan_sosial|nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-            'file_dokumen'  => 'required_if:jenis,dinas_luar|nullable|mimes:pdf,jpeg,png,jpg|max:5120',
-            'latitude'      => 'required|numeric',
-            'longitude'     => 'required|numeric',
-            'alamat_gps'    => 'nullable|string|max:255',
-            'tanda_tangan'  => 'required|string|min:100',
+            'tanggal'              => 'required|date|before_or_equal:today',
+            'jenis'                => 'required|in:dinas_luar_undangan,dinas_luar_pengajuan,dinas_luar_surat_tugas,kegiatan_sosial,dinas_luar',
+            'judul'                => 'required|string|max:150',
+            'instansi_pengundang'  => 'required_if:jenis,dinas_luar_undangan|nullable|string|max:150',
+            'nomor_surat_tugas'    => 'nullable|string|max:100',
+            'deskripsi'            => 'required|string|max:2000',
+            'foto_lokasi'          => 'required_if:jenis,kegiatan_sosial,dinas_luar_pengajuan|nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'file_dokumen'         => 'required_if:jenis,dinas_luar_undangan,dinas_luar_surat_tugas,dinas_luar|nullable|mimes:pdf,jpeg,png,jpg,webp|max:5120',
+            'latitude'             => 'required|numeric',
+            'longitude'            => 'required|numeric',
+            'alamat_gps'           => 'nullable|string|max:255',
+            'tanda_tangan'         => 'required|string|min:100',
         ], [
-            'foto_lokasi.required_if'  => 'Foto lokasi wajib diunggah untuk pengajuan Kegiatan Sosial.',
-            'file_dokumen.required_if' => 'Dokumen/surat wajib diunggah untuk pengajuan Dinas Luar Resmi.',
-            'latitude.required'        => 'Titik lokasi GPS wajib diaktifkan sebelum mengajukan.',
-            'longitude.required'       => 'Titik lokasi GPS wajib diaktifkan sebelum mengajukan.',
-            'tanda_tangan.required'    => 'Tanda tangan digital wajib diisi.',
+            'instansi_pengundang.required_if'  => 'Instansi / Pihak Pengundang wajib diisi untuk Dinas Luar Undangan.',
+            'foto_lokasi.required_if'          => 'Foto bukti situasi / lokasi wajib diunggah.',
+            'file_dokumen.required_if'         => 'Dokumen resmi / surat tugas / undangan wajib diunggah.',
+            'latitude.required'                => 'Titik lokasi GPS wajib diaktifkan sebelum mengajukan.',
+            'longitude.required'               => 'Titik lokasi GPS wajib diaktifkan sebelum mengajukan.',
+            'tanda_tangan.required'            => 'Tanda tangan digital wajib diisi.',
         ]);
 
         // Cek duplikasi pengajuan pada tanggal yang sama
@@ -73,26 +76,28 @@ class PengajuanAbsenLuarController extends Controller
         }
 
         $data = [
-            'pegawai_id'   => $pegawai->id,
-            'user_id'      => $user->id,
-            'tanggal'      => $request->tanggal,
-            'jenis'        => $request->jenis,
-            'judul'        => $request->judul,
-            'deskripsi'    => $request->deskripsi,
-            'latitude'     => $request->latitude,
-            'longitude'    => $request->longitude,
-            'alamat_gps'   => $request->alamat_gps,
-            'tanda_tangan' => $request->tanda_tangan,
-            'status'       => 'menunggu',
+            'pegawai_id'          => $pegawai->id,
+            'user_id'             => $user->id,
+            'tanggal'             => $request->tanggal,
+            'jenis'               => $request->jenis,
+            'judul'               => $request->judul,
+            'instansi_pengundang' => $request->instansi_pengundang ?: null,
+            'nomor_surat_tugas'   => $request->nomor_surat_tugas ?: null,
+            'deskripsi'           => $request->deskripsi,
+            'latitude'            => $request->latitude,
+            'longitude'           => $request->longitude,
+            'alamat_gps'          => $request->alamat_gps,
+            'tanda_tangan'        => $request->tanda_tangan,
+            'status'              => 'menunggu',
         ];
 
-        // Upload foto lokasi (kegiatan_sosial)
+        // Upload foto lokasi (kegiatan_sosial & dinas_luar_pengajuan atau bukti foto lainnya)
         if ($request->hasFile('foto_lokasi')) {
             $data['foto_lokasi'] = $request->file('foto_lokasi')
                 ->store('pengajuan-absen/foto', 'public');
         }
 
-        // Upload file dokumen/surat (dinas_luar)
+        // Upload file dokumen/surat (undangan / SPT / dokumen pendukung)
         if ($request->hasFile('file_dokumen')) {
             $data['file_dokumen'] = $request->file('file_dokumen')
                 ->store('pengajuan-absen/dokumen', 'public');

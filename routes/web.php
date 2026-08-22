@@ -6,7 +6,6 @@ use App\Http\Controllers\StafAuthController;
 use App\Http\Controllers\StafPortalController;
 use App\Http\Controllers\SpjReportController;
 use App\Http\Controllers\LaporanController;
-use App\Http\Controllers\PortalAbsensiController;
 use App\Http\Controllers\PengajuanAbsenLuarController;
 use App\Livewire\Dashboard;
 use App\Livewire\PegawaiManager;

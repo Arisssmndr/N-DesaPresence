@@ -4,46 +4,109 @@
     <meta charset="UTF-8">
     <title>Laporan Presensi Tahunan — {{ $tahun }}</title>
     <style>
-        @page { size: A4 landscape; margin: 8mm 8mm 14mm 10mm; }
+        @page { 
+            size: A4 landscape; 
+            margin: 6mm 8mm 5mm 8mm; 
+        }
         * { box-sizing: border-box; }
-        body { font-family: 'Arial', sans-serif; font-size: 8pt; color: #111; line-height: 1.3; margin: 0; }
+        body { 
+            font-family: 'Arial', Helvetica, sans-serif; 
+            font-size: 7.5pt; 
+            color: #000; 
+            line-height: 1.2; 
+            margin: 0; 
+            padding: 0;
+        }
 
-        /* KOP SURAT */
-        .kop-table { width: 100%; border-bottom: 3px double #000; padding-bottom: 6px; margin-bottom: 8px; }
-        .kop-logo-cell { width: 65px; text-align: center; vertical-align: middle; }
+        /* ══════════ KOP SURAT STANDAR TATA NASKAH DINAS PEMKAB TASIKMALAYA ══════════ */
+        .kop-table { 
+            width: 100%; 
+            border-bottom: 3px double #000; 
+            padding-bottom: 4px; 
+            margin-bottom: 10px; /* Jarak enter standar naskah dinas dari Kop Surat */
+        }
+        .kop-logo-cell { 
+            width: 60px; 
+            text-align: center; 
+            vertical-align: middle; 
+        }
+        .kop-logo-img { 
+            height: 52px; 
+            width: auto; 
+            max-width: 52px; 
+            display: inline-block;
+            vertical-align: middle;
+        }
         .kop-logo-circle {
-            width: 54px; height: 54px;
+            width: 44px; height: 44px;
             border: 2px solid #000; border-radius: 50%;
             text-align: center; vertical-align: middle;
-            font-size: 18pt; font-weight: bold; color: #000;
-            line-height: 54px; display: inline-block;
+            font-size: 15pt; font-weight: bold; color: #000;
+            line-height: 44px; display: inline-block;
         }
-        .kop-text-cell { text-align: center; vertical-align: middle; }
-        .kop-prov  { font-size: 7.5pt; margin: 0; }
-        .kop-desa  { font-size: 12pt; font-weight: bold; text-transform: uppercase; margin: 2px 0; letter-spacing: 0.8px; }
-        .kop-alamat { font-size: 7pt; color: #555; font-style: italic; }
+        .kop-text-cell { 
+            text-align: center; 
+            vertical-align: middle; 
+            padding: 0 6px;
+        }
+        .kop-kab { 
+            font-size: 11.5pt; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            margin: 0; 
+            line-height: 1.2;
+            letter-spacing: 0.5px;
+        }
+        .kop-kec { 
+            font-size: 10.5pt; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            margin: 1px 0; 
+            line-height: 1.2;
+        }
+        .kop-desa { 
+            font-size: 13pt; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            margin: 1px 0; 
+            letter-spacing: 0.8px; 
+            line-height: 1.2;
+        }
+        .kop-alamat { 
+            font-size: 8pt; 
+            color: #111; 
+            font-style: italic; 
+            margin: 2px 0 0; 
+        }
 
-        /* JUDUL */
-        .doc-title { text-align: center; margin: 7px 0 2px; }
-        .doc-title h2 { font-size: 10pt; font-weight: bold; text-transform: uppercase; text-decoration: underline; margin: 0; }
-        .doc-nomor { text-align: center; font-size: 8pt; margin: 0 0 7px; }
+        /* ══════════ JUDUL DOKUMEN & NOMOR ══════════ */
+        .doc-title { text-align: center; margin: 0 0 1px; }
+        .doc-title h2 { 
+            font-size: 11pt; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            text-decoration: underline; 
+            margin: 0; 
+            letter-spacing: 0.5px;
+        }
+        .doc-nomor { text-align: center; font-size: 8.5pt; margin: 2px 0 4px; }
 
-        /* TABEL */
+        /* ══════════ TABEL ══════════ */
         table.data-table { width: 100%; border-collapse: collapse; font-size: 5.8pt; table-layout: fixed; }
         table.data-table th,
         table.data-table td { border: 1px solid #333; padding: 1.5px 1px; text-align: center; vertical-align: middle; }
-        table.data-table th { background-color: #f2f2f2; color: #000; font-weight: bold; }
-        table.data-table th.sub { background-color: #e5e7eb; color: #000; font-size: 5.5pt; }
-        table.data-table th.dark { background-color: #d1d5db; color: #000; }
-        table.data-table td.nama { text-align: left; padding-left: 3px; font-size: 5.8pt; overflow: hidden; }
+        table.data-table th { background-color: #f1f5f9; color: #000; font-weight: bold; }
+        table.data-table th.sub { background-color: #e2e8f0; color: #000; font-size: 5.5pt; }
+        table.data-table th.dark { background-color: #cbd5e1; color: #000; }
+        table.data-table td.nama { text-align: left; padding-left: 3px; font-size: 5.8pt; overflow: hidden; white-space: nowrap; }
         table.data-table tfoot td { background-color: #f5f5f5; font-weight: bold; }
-        table.data-table tr.even td { background-color: #fafafa; }
+        table.data-table tr.even td { background-color: #fafbfc; }
 
         /* WARNA KOLOM */
-        .col-hadir  { background: #bbf7d0; color: #14532d; }
-        .col-alpa   { background: #fecaca; color: #7f1d1d; }
-        .col-persen { background: #f0fdf4; color: #14532d; font-weight: bold; }
-        .col-total-hadir  { background: #d1fae5; color: #065f46; font-weight: bold; }
+        .col-hadir  { background: #dcfce7; color: #166534; }
+        .col-alpa   { background: #fee2e2; color: #991b1b; }
+        .col-persen { background: #f0fdf4; color: #166534; font-weight: bold; }
+        .col-total-hadir  { background: #dcfce7; color: #166534; font-weight: bold; }
         .col-total-alpa   { background: #fee2e2; color: #991b1b; font-weight: bold; }
         .col-total-persen { background: #ecfdf5; color: #064E3B; font-weight: bold; }
 
@@ -53,16 +116,18 @@
         .grade-C { color: #d97706; font-weight: bold; }
         .grade-D { color: #dc2626; font-weight: bold; }
 
-        /* TTD */
-        .ttd-table { width: 100%; margin-top: 14px; }
-        .ttd-cell { width: 50%; text-align: center; font-size: 8.5pt; vertical-align: top; }
-        .ttd-space { height: 48px; }
-        .ttd-name { font-weight: bold; text-decoration: underline; }
+        /* TTD TABLE (4X ENTER LEGA) */
+        .ttd-table { width: 100%; margin-top: 6px; page-break-inside: avoid; }
+        .ttd-cell { width: 50%; text-align: center; font-size: 8.5pt; vertical-align: top; line-height: 1.25; }
+        .ttd-space { height: 48px; /* Ruang 4x Enter lega */ }
+        .ttd-name { font-weight: bold; text-decoration: underline; font-size: 9.5pt; }
+        .ttd-nipd { font-size: 8pt; color: #111; }
 
-        .footer-note { margin-top: 6px; font-size: 7pt; color: #666; font-style: italic; }
-        .legend-table { border-collapse: collapse; margin-top: 7px; font-size: 7pt; }
-        .legend-table td { padding: 2px 8px; border: 1px solid #ddd; }
+        .footer-note { margin-top: 3px; font-size: 6.5pt; color: #555; font-style: italic; }
+        .legend-table { border-collapse: collapse; margin-top: 4px; font-size: 6.8pt; }
+        .legend-table td { padding: 1.5px 6px; border: 1px solid #ddd; }
         .no-break { page-break-inside: avoid; }
+    </style>
 </head>
 <body>
     @php
@@ -73,20 +138,20 @@
     <!-- ══════════ KOP SURAT STANDAR TATA NASKAH DINAS PEMKAB TASIKMALAYA ══════════ -->
     <table class="kop-table" cellspacing="0" cellpadding="0">
         <tr>
-            <td class="kop-logo-cell" style="width: 65px; text-align: center; vertical-align: middle;">
+            <td class="kop-logo-cell">
                 @if($logoBase64)
-                    <img src="data:image/png;base64,{{ $logoBase64 }}" style="height: 60px; width: auto; max-width: 58px;" alt="Logo Kab. Tasikmalaya">
+                    <img src="data:image/png;base64,{{ $logoBase64 }}" class="kop-logo-img" alt="Logo Kab. Tasikmalaya">
                 @else
                     <div class="kop-logo-circle">N</div>
                 @endif
             </td>
-            <td class="kop-text-cell" style="text-align: center; vertical-align: middle; padding: 0 4px;">
-                <p style="font-size: 11pt; font-weight: bold; text-transform: uppercase; margin: 0; line-height: 1.2;">PEMERINTAH KABUPATEN TASIKMALAYA</p>
-                <p style="font-size: 10.5pt; font-weight: bold; text-transform: uppercase; margin: 1px 0; line-height: 1.2;">KECAMATAN CIGALONTANG</p>
-                <p style="font-size: 13.5pt; font-weight: bold; text-transform: uppercase; margin: 2px 0; letter-spacing: 0.5px; line-height: 1.2;">KANTOR KEPALA DESA NANGTANG</p>
-                <p style="font-size: 8pt; color: #111; font-style: italic; margin: 2px 0 0;">Jalan Raya Desa Nangtang, Kode Pos 46463 — Pos-el: pemdes@desanangtang.go.id</p>
+            <td class="kop-text-cell">
+                <div class="kop-kab">PEMERINTAH KABUPATEN TASIKMALAYA</div>
+                <div class="kop-kec">KECAMATAN CIGALONTANG</div>
+                <div class="kop-desa">PEMERINTAH DESA NANGTANG</div>
+                <div class="kop-alamat">Jalan Raya Desa Nangtang, Kode Pos 46463 — Pos-el: pemdes@desanangtang.go.id</div>
             </td>
-            <td class="kop-logo-cell" style="width: 65px;">&nbsp;</td>
+            <td class="kop-logo-cell">&nbsp;</td>
         </tr>
     </table>
 
@@ -131,7 +196,7 @@
                 <tr class="{{ $rowClass }}">
                     <td>{{ $idx + 1 }}</td>
                     <td class="nama"><strong>{{ $p->nama_lengkap }}</strong></td>
-                    <td style="text-align:left; padding-left:2px; font-size:5.5pt;">{{ $p->jabatan->nama_jabatan ?? '-' }}</td>
+                    <td style="text-align:left; padding-left:2px; font-size:5.5pt; white-space:nowrap;">{{ $p->jabatan->nama_jabatan ?? '-' }}</td>
                     @foreach ($namaBulanArr as $m => $nm)
                         @php $mb = $d['per_bulan'][$m] ?? []; @endphp
                         <td class="col-hadir">{{ $mb['hadir'] ?? 0 }}</td>
@@ -149,7 +214,7 @@
             <tr>
                 <td colspan="3" style="text-align:right; font-weight:bold;">TOTAL / RATA-RATA</td>
                 @foreach ($namaBulanArr as $m => $nm)
-                    <td style="background:#d1fae5; color:#14532d; font-weight:bold;">{{ collect($dataRekap)->sum(fn($r) => $r['per_bulan'][$m]['hadir'] ?? 0) }}</td>
+                    <td style="background:#dcfce7; color:#166534; font-weight:bold;">{{ collect($dataRekap)->sum(fn($r) => $r['per_bulan'][$m]['hadir'] ?? 0) }}</td>
                     <td style="background:#fee2e2; color:#991b1b; font-weight:bold;">{{ collect($dataRekap)->sum(fn($r) => $r['per_bulan'][$m]['alpa'] ?? 0) }}</td>
                     <td style="background:#f0fdf4; font-weight:bold;">
                         @php
@@ -158,7 +223,7 @@
                         @endphp
                     </td>
                 @endforeach
-                <td style="background:#d1fae5; color:#14532d; font-weight:bold;">{{ collect($dataRekap)->sum('total_hadir') }}</td>
+                <td style="background:#dcfce7; color:#166534; font-weight:bold;">{{ collect($dataRekap)->sum('total_hadir') }}</td>
                 <td style="background:#fee2e2; color:#991b1b; font-weight:bold;">{{ collect($dataRekap)->sum('total_alpa') }}</td>
                 <td style="background:#ecfdf5; font-weight:bold;">
                     @php
@@ -193,14 +258,14 @@
             <td class="ttd-cell">
                 <p style="margin:0 0 2px;">Mengetahui / Menyetujui,<br><strong>KEPALA DESA NANGTANG</strong></p>
                 <div class="ttd-space"></div>
-                <p class="ttd-name">{{ $kades->nama_lengkap ?? 'H. AHMAD SUPRIYADI, S.IP' }}</p>
-                <p style="font-size:7.5pt;">NIPD: {{ $kades->nipd ?? '-' }}</p>
+                <p class="ttd-name">{{ $kades->nama_lengkap ?? 'DADAY DAHYAT' }}</p>
+                <p class="ttd-nipd">NIPD: {{ $kades->nipd ?? '141.1/Kep.053-Pemdes/2019' }}</p>
             </td>
             <td class="ttd-cell">
                 <p style="margin:0 0 2px;">Nangtang, 31 Desember {{ $tahun }}<br><strong>SEKRETARIS DESA NANGTANG</strong></p>
                 <div class="ttd-space"></div>
-                <p class="ttd-name">{{ $sekdes->nama_lengkap ?? 'HJ. NURLAILA RAHMAWATI, S.AP' }}</p>
-                <p style="font-size:7.5pt;">NIPD: {{ $sekdes->nipd ?? '-' }}</p>
+                <p class="ttd-name">{{ $sekdes->nama_lengkap ?? 'SUSANTI, S.Pd' }}</p>
+                <p class="ttd-nipd">NIPD: {{ $sekdes->nipd ?? '141.1/KEP.01/DES/2020' }}</p>
             </td>
         </tr>
     </table>

@@ -37,12 +37,14 @@
             </select>
         </div>
         <div>
-            <label class="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wider">Jenis</label>
+            <label class="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wider">Kategori / Jenis</label>
             <select wire:model.live="filterJenis"
-                class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 focus:border-[#064E3B] focus:ring-2 focus:ring-[#064E3B]/20 outline-none bg-white">
-                <option value="">Semua Jenis</option>
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 focus:border-[#064E3B] focus:ring-2 focus:ring-[#064E3B]/20 outline-none bg-white font-medium">
+                <option value="">Semua Kategori</option>
+                <option value="dinas_luar_undangan">Dinas Luar (Undangan)</option>
+                <option value="dinas_luar_pengajuan">Dinas Luar (Pengajuan Mandiri)</option>
+                <option value="dinas_luar_surat_tugas">Dinas Luar (Surat Tugas / SPT)</option>
                 <option value="kegiatan_sosial">Kegiatan Sosial</option>
-                <option value="dinas_luar">Dinas Luar Resmi</option>
             </select>
         </div>
         <div>
@@ -65,8 +67,8 @@
                     <tr>
                         <th class="px-4 py-3.5 text-left text-xs font-extrabold uppercase tracking-wider whitespace-nowrap">Pegawai</th>
                         <th class="px-4 py-3.5 text-left text-xs font-extrabold uppercase tracking-wider">Tanggal</th>
-                        <th class="px-4 py-3.5 text-left text-xs font-extrabold uppercase tracking-wider">Jenis</th>
-                        <th class="px-4 py-3.5 text-left text-xs font-extrabold uppercase tracking-wider">Judul</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-extrabold uppercase tracking-wider">Kategori</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-extrabold uppercase tracking-wider">Judul & Detail</th>
                         <th class="px-4 py-3.5 text-left text-xs font-extrabold uppercase tracking-wider">Status</th>
                         <th class="px-4 py-3.5 text-center text-xs font-extrabold uppercase tracking-wider">Aksi</th>
                     </tr>
@@ -93,16 +95,21 @@
                         <td class="px-4 py-3.5 text-xs font-bold text-slate-700 whitespace-nowrap">
                             {{ $p->tanggal->isoFormat('D MMM Y') }}
                         </td>
-                        <td class="px-4 py-3.5">
-                            <span class="text-[10px] font-bold px-2.5 py-1 rounded-full border
-                                {{ $p->jenis === 'dinas_luar' ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-pink-50 text-pink-800 border-pink-200' }}">
+                        <td class="px-4 py-3.5 whitespace-nowrap">
+                            <span class="text-[10px] font-bold px-2.5 py-1 rounded-full border {{ $p->jenis_badge_class }}">
                                 {{ $p->label_jenis }}
                             </span>
                         </td>
                         <td class="px-4 py-3.5 text-xs text-slate-700 max-w-xs">
-                            <p class="font-semibold truncate">{{ $p->judul }}</p>
+                            <p class="font-bold text-slate-800 truncate">{{ $p->judul }}</p>
+                            @if($p->instansi_pengundang)
+                            <p class="text-[10.5px] text-indigo-700 font-semibold truncate">🏛️ {{ $p->instansi_pengundang }}</p>
+                            @endif
+                            @if($p->nomor_surat_tugas)
+                            <p class="text-[10.5px] text-blue-700 font-semibold truncate">📜 SPT: {{ $p->nomor_surat_tugas }}</p>
+                            @endif
                         </td>
-                        <td class="px-4 py-3.5">
+                        <td class="px-4 py-3.5 whitespace-nowrap">
                             <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full border {{ $p->badge_class }}">
                                 @if($p->status === 'menunggu')
                                     <span class="flex items-center gap-1">
@@ -114,7 +121,7 @@
                                 @endif
                             </span>
                         </td>
-                        <td class="px-4 py-3.5">
+                        <td class="px-4 py-3.5 whitespace-nowrap">
                             <div class="flex items-center justify-center gap-2">
                                 <button wire:click="lihatDetail({{ $p->id }})"
                                     class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition" title="Lihat Detail">
@@ -158,7 +165,7 @@
             {{-- Modal Header --}}
             <div class="p-5 border-b border-slate-100 flex items-start justify-between sticky top-0 bg-white rounded-t-3xl z-10">
                 <div>
-                    <h3 class="font-outfit font-extrabold text-[#064E3B] text-base">Detail Pengajuan</h3>
+                    <h3 class="font-outfit font-extrabold text-[#064E3B] text-base">Detail Pengajuan Kehadiran Luar</h3>
                     <p class="text-xs text-slate-500 mt-0.5">{{ $selected->pegawai->nama_lengkap ?? '—' }} · {{ $selected->tanggal->isoFormat('D MMMM Y') }}</p>
                 </div>
                 <button wire:click="tutupModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition">
@@ -167,13 +174,12 @@
             </div>
 
             <div class="p-5 space-y-4 text-xs">
-                {{-- Status Badge --}}
-                <div class="flex items-center gap-2">
+                {{-- Status & Kategori Badge --}}
+                <div class="flex items-center gap-2 flex-wrap">
                     <span class="font-extrabold px-3 py-1.5 rounded-full border {{ $selected->badge_class }} text-[11px]">
                         {{ $selected->label_status }}
                     </span>
-                    <span class="text-[10px] font-bold px-2.5 py-1 rounded-full border
-                        {{ $selected->jenis === 'dinas_luar' ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-pink-50 text-pink-800 border-pink-200' }}">
+                    <span class="text-[11px] font-bold px-3 py-1.5 rounded-full border {{ $selected->jenis_badge_class }}">
                         {{ $selected->label_jenis }}
                     </span>
                 </div>
@@ -189,10 +195,30 @@
                     </div>
                 </div>
 
+                {{-- Detail Tambahan: Instansi Pengundang / Nomor SPT --}}
+                @if($selected->instansi_pengundang)
+                <div class="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-200">
+                    <p class="text-[10px] font-bold text-indigo-900 uppercase tracking-wider">Instansi / Pihak Pengundang</p>
+                    <p class="text-xs font-extrabold text-indigo-950 mt-0.5">{{ $selected->instansi_pengundang }}</p>
+                </div>
+                @endif
+
+                @if($selected->nomor_surat_tugas)
+                <div class="p-3 bg-blue-50/70 rounded-2xl border border-blue-200">
+                    <p class="text-[10px] font-bold text-blue-900 uppercase tracking-wider">Nomor Surat Perintah Tugas (SPT)</p>
+                    <p class="text-xs font-extrabold text-blue-950 font-mono mt-0.5">{{ $selected->nomor_surat_tugas }}</p>
+                </div>
+                @endif
+
                 {{-- Judul & Deskripsi --}}
-                <div>
-                    <p class="font-extrabold text-slate-700 uppercase tracking-wider mb-1">Judul Kegiatan</p>
-                    <p class="font-bold text-slate-800">{{ $selected->judul }}</p>
+                <div class="space-y-1">
+                    <p class="font-extrabold text-slate-700 uppercase tracking-wider">Judul Kegiatan</p>
+                    <p class="font-bold text-slate-800 text-sm">{{ $selected->judul }}</p>
+                </div>
+
+                <div class="space-y-1">
+                    <p class="font-extrabold text-slate-700 uppercase tracking-wider">Uraian / Keterangan</p>
+                    <p class="text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200 leading-relaxed">{{ $selected->deskripsi }}</p>
                 </div>
                 {{-- Koordinat GPS --}}
                 @if($selected->latitude && $selected->longitude)

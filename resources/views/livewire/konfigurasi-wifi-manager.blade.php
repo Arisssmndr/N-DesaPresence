@@ -35,18 +35,53 @@
     </div>
     @endif
 
-    {{-- IP Client Saat Ini --}}
-    <div class="sadi-card p-5">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style="background:linear-gradient(135deg,#064E3B,#04392B)">
-                <svg class="w-6 h-6 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-2"/>
-                </svg>
+    {{-- IP Client Saat Ini & Quick Add --}}
+    <div class="sadi-card p-5 space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style="background:linear-gradient(135deg,#064E3B,#04392B)">
+                    <svg class="w-6 h-6 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-2"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">IP Perangkat / Jaringan Anda Saat Ini</p>
+                        @if(str_starts_with($clientIp, '192.168.') || str_starts_with($clientIp, '10.') || str_starts_with($clientIp, '172.'))
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">IP Lokal (LAN)</span>
+                        @elseif($clientIp === '127.0.0.1' || $clientIp === '::1')
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Localhost Server</span>
+                        @else
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">IP Publik (Online WAN)</span>
+                        @endif
+                    </div>
+                    <p class="text-2xl font-mono font-extrabold text-[#064E3B] mt-0.5">{{ $clientIp }}</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Jika Anda sedang terhubung ke WiFi kantor desa, gunakan tombol di samping untuk mendaftarkannya otomatis.</p>
+                </div>
             </div>
+
+            {{-- Quick Add Buttons --}}
+            <div class="flex flex-wrap items-center gap-2">
+                <button wire:click="gunakanIpLangsung('{{ $clientIp }}')"
+                    class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Gunakan IP Ini ({{ $clientIp }})</span>
+                </button>
+                @if(str_starts_with($clientIp, '192.168.') || str_starts_with($clientIp, '10.') || str_starts_with($clientIp, '172.'))
+                <button wire:click="gunakanSubnetLangsung('{{ $clientIp }}')"
+                    class="px-4 py-2 rounded-xl text-xs font-bold bg-[#064E3B] text-[#C9A84C] hover:bg-[#04392B] transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    <span>Daftarkan Subnet ({{ $subnetSaran }})</span>
+                </button>
+                @endif
+            </div>
+        </div>
+
+        {{-- Petunjuk Singkat --}}
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-600 flex items-start gap-2.5 leading-relaxed">
+            <svg class="w-4 h-4 text-[#064E3B] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <div>
-                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">IP Browser Anda Saat Ini</p>
-                <p class="text-xl font-mono font-bold text-[#064E3B]">{{ $clientIp }}</p>
-                <p class="text-xs text-slate-400 mt-0.5">Gunakan IP ini jika ingin mendaftarkan komputer/jaringan Anda</p>
+                <strong>Cara Kerja Otomatis:</strong> Staf yang terhubung ke WiFi kantor desa akan otomatis diizinkan absen. Staf yang menggunakan paket data seluler sendiri atau WiFi dari luar kantor desa akan otomatis <strong>ditolak / diblokir</strong> oleh sistem.
             </div>
         </div>
     </div>

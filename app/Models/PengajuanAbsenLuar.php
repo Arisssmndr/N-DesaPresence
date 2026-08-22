@@ -15,6 +15,8 @@ class PengajuanAbsenLuar extends Model
         'tanggal',
         'jenis',
         'judul',
+        'instansi_pengundang',
+        'nomor_surat_tugas',
         'deskripsi',
         'foto_lokasi',
         'file_dokumen',
@@ -72,9 +74,24 @@ class PengajuanAbsenLuar extends Model
     public function getLabelJenisAttribute(): string
     {
         return match ($this->jenis) {
-            'kegiatan_sosial' => 'Kegiatan Sosial',
-            'dinas_luar'      => 'Dinas Luar Resmi',
-            default           => $this->jenis,
+            'dinas_luar_undangan'    => 'Dinas Luar (Undangan)',
+            'dinas_luar_pengajuan'   => 'Dinas Luar (Pengajuan Mandiri)',
+            'dinas_luar_surat_tugas' => 'Dinas Luar (Surat Tugas)',
+            'kegiatan_sosial'        => 'Kegiatan Sosial',
+            'dinas_luar'             => 'Dinas Luar Resmi',
+            default                  => ucwords(str_replace('_', ' ', $this->jenis)),
+        };
+    }
+
+    public function getJenisBadgeClassAttribute(): string
+    {
+        return match ($this->jenis) {
+            'dinas_luar_undangan'    => 'bg-indigo-50 text-indigo-800 border-indigo-200',
+            'dinas_luar_pengajuan'   => 'bg-teal-50 text-teal-800 border-teal-200',
+            'dinas_luar_surat_tugas' => 'bg-blue-50 text-blue-800 border-blue-200',
+            'kegiatan_sosial'        => 'bg-pink-50 text-pink-800 border-pink-200',
+            'dinas_luar'             => 'bg-blue-50 text-blue-800 border-blue-200',
+            default                  => 'bg-slate-100 text-slate-800 border-slate-200',
         };
     }
 

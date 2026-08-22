@@ -67,8 +67,7 @@
             <div class="flex items-start justify-between gap-2">
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 flex-wrap mb-1">
-                        <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border
-                            {{ $p->jenis === 'dinas_luar' ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-pink-50 text-pink-800 border-pink-200' }}">
+                        <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border {{ $p->jenis_badge_class }}">
                             {{ $p->label_jenis }}
                         </span>
                         <span class="text-[10px] font-bold text-slate-400">{{ $p->tanggal->isoFormat('D MMMM Y') }}</span>
@@ -79,6 +78,12 @@
                         @endif
                     </div>
                     <p class="font-bold text-slate-800 text-sm truncate">{{ $p->judul }}</p>
+                    @if($p->instansi_pengundang)
+                    <p class="text-[11px] text-indigo-800 font-semibold mt-0.5">🏛️ Pengundang: {{ $p->instansi_pengundang }}</p>
+                    @endif
+                    @if($p->nomor_surat_tugas)
+                    <p class="text-[11px] text-blue-800 font-semibold mt-0.5">📜 SPT: {{ $p->nomor_surat_tugas }}</p>
+                    @endif
                     <p class="text-xs text-slate-500 mt-0.5 line-clamp-2">{{ $p->deskripsi }}</p>
                 </div>
                 <span class="shrink-0 text-[10px] font-extrabold px-2.5 py-1 rounded-full border {{ $p->badge_class }}">

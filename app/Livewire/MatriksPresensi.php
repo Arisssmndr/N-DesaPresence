@@ -6,6 +6,9 @@ use Livewire\Component;
 use App\Models\Pegawai;
 use App\Models\Kehadiran;
 use App\Models\HariLibur;
+use App\Models\IzinSakit;
+use App\Models\SuratPerintahTugas;
+use App\Services\KalenderNasionalService;
 use Carbon\Carbon;
 
 class MatriksPresensi extends Component
@@ -19,21 +22,70 @@ class MatriksPresensi extends Component
         $this->tahun = (int) date('Y');
     }
 
-    public function render()
+    public function render(KalenderNasionalService $kalenderService)
     {
-        $daysInMonth = Carbon::createFromDate($this->tahun, $this->bulan, 1)->daysInMonth;
-        $pegawais = Pegawai::with('jabatan')->where('status_aktif', true)->orderBy('nama_lengkap')->get();
-        $hariLiburs = HariLibur::whereYear('tanggal', $this->tahun)->whereMonth('tanggal', $this->bulan)->pluck('tanggal')->map(fn($t) => $t->format('Y-m-d'))->toArray();
+        $firstDay = Carbon::createFromDate($this->tahun, $this->bulan, 1);
+        $daysInMonth = $firstDay->daysInMonth;
+        $todayStr = Carbon::today()->toDateString();
+
+        $pegawais = Pegawai::with('jabatan')
+            ->where('status_aktif', true)
+            ->orderBy('nama_lengkap')
+            ->get();
+
+        $startMonth = sprintf('%04d-%02d-01', $this->tahun, $this->bulan);
+        $endMonth = sprintf('%04d-%02d-%02d', $this->tahun, $this->bulan, $daysInMonth);
+
+        // 1. Ambil Hari Libur dari Database
+        $hariLibursDb = HariLibur::whereBetween('tanggal', [$startMonth, $endMonth])
+            ->get()
+            ->mapWithKeys(function ($h) {
+                $tglStr = is_string($h->tanggal) ? substr($h->tanggal, 0, 10) : $h->tanggal->format('Y-m-d');
+                return [$tglStr => $h->nama_hari_libur];
+            })
+            ->toArray();
+
+        // 2. Gabungkan dengan Hari Libur Resmi dari Kalender Nasional Service (API Caching)
+        $kalenderData = $kalenderService->getKalenderBulan($this->tahun, $this->bulan);
+        foreach ($kalenderData['libur'] as $tglStr => $info) {
+            if (!isset($hariLibursDb[$tglStr])) {
+                $hariLibursDb[$tglStr] = $info['nama'];
+            }
+        }
+
+        // 3. Ambil semua Data Kehadiran pegawai bulan ini dari Database
+        $semuaKehadiran = Kehadiran::whereBetween('tanggal', [$startMonth, $endMonth])
+            ->get()
+            ->groupBy('pegawai_id');
+
+        // 4. Ambil data Izin/Sakit yang disetujui
+        $semuaIzin = IzinSakit::where('status', 'disetujui')
+            ->where(function ($q) use ($startMonth, $endMonth) {
+                $q->whereBetween('tanggal_mulai', [$startMonth, $endMonth])
+                  ->orWhereBetween('tanggal_selesai', [$startMonth, $endMonth]);
+            })
+            ->get()
+            ->groupBy('pegawai_id');
+
+        // 5. Ambil data SPT (Dinas Luar) yang disetujui
+        $semuaSpt = SuratPerintahTugas::where('status', 'disetujui')
+            ->where(function ($q) use ($startMonth, $endMonth) {
+                $q->whereBetween('tanggal_mulai', [$startMonth, $endMonth])
+                  ->orWhereBetween('tanggal_selesai', [$startMonth, $endMonth]);
+            })
+            ->get()
+            ->groupBy('pegawai_id');
 
         $attendanceMatrix = [];
         $summary = [];
 
         foreach ($pegawais as $p) {
-            $kehadirans = Kehadiran::where('pegawai_id', $p->id)
-                ->whereYear('tanggal', $this->tahun)
-                ->whereMonth('tanggal', $this->bulan)
-                ->get()
-                ->keyBy(fn($k) => $k->tanggal->format('Y-m-d'));
+            $kehadirans = $semuaKehadiran->get($p->id, collect())->keyBy(function ($k) {
+                return is_string($k->tanggal) ? substr($k->tanggal, 0, 10) : $k->tanggal->format('Y-m-d');
+            });
+
+            $izinList = $semuaIzin->get($p->id, collect());
+            $sptList = $semuaSpt->get($p->id, collect());
 
             $pSummary = ['H' => 0, 'A' => 0, 'I' => 0, 'D' => 0, 'L' => 0];
 
@@ -41,22 +93,43 @@ class MatriksPresensi extends Component
                 $dateStr = sprintf("%04d-%02d-%02d", $this->tahun, $this->bulan, $d);
                 $dt = Carbon::createFromDate($this->tahun, $this->bulan, $d);
 
+                $isWeekend = $dt->isWeekend();
+                $isHoliday = isset($hariLibursDb[$dateStr]) || $isWeekend;
+                $isFuture = ($dateStr > $todayStr);
+                $isToday = ($dateStr === $todayStr);
+
+                // Cek data kehadiran database terlebih dahulu
                 if (isset($kehadirans[$dateStr])) {
                     $status = $kehadirans[$dateStr]->status;
                     $code = match ($status) {
                         'Hadir', 'Tepat Waktu', 'Terlambat' => 'H',
-                        'Izin', 'Sakit' => 'I',
-                        'Dinas Luar' => 'D',
-                        default => 'A',
+                        'Izin', 'Sakit'                     => 'I',
+                        'Dinas Luar'                        => 'D',
+                        default                             => 'A',
                     };
-                } elseif ($dt->isWeekend() || in_array($dateStr, $hariLiburs)) {
+                } elseif ($this->checkApprovedIzin($izinList, $dateStr)) {
+                    $code = 'I';
+                } elseif ($this->checkApprovedSpt($sptList, $dateStr)) {
+                    $code = 'D';
+                } elseif ($isHoliday) {
                     $code = 'L';
+                } elseif ($isFuture) {
+                    // Tanggal belum terjadi (masa depan, misal tgl 23-31): JANGAN ALPA!
+                    $code = '-';
+                } elseif ($isToday) {
+                    // Hari ini jika belum scan presensi, belum dianggap Alpa definitif
+                    $code = '-';
                 } else {
+                    // Hari kerja lampau yang tidak memiliki scan presensi
                     $code = 'A';
                 }
 
                 $attendanceMatrix[$p->id][$d] = $code;
-                $pSummary[$code] = ($pSummary[$code] ?? 0) + 1;
+
+                // Hanya hitung ke summary jika bukan hari belum berjalan (-)
+                if (isset($pSummary[$code])) {
+                    $pSummary[$code]++;
+                }
             }
 
             $summary[$p->id] = $pSummary;
@@ -64,9 +137,34 @@ class MatriksPresensi extends Component
 
         return view('livewire.matriks-presensi', [
             'daysInMonth' => $daysInMonth,
-            'pegawais' => $pegawais,
-            'matrix' => $attendanceMatrix,
-            'summary' => $summary,
+            'pegawais'    => $pegawais,
+            'matrix'      => $attendanceMatrix,
+            'summary'     => $summary,
+            'todayStr'    => $todayStr,
         ])->layout('layouts.app', ['title' => 'Buku Matriks Presensi — Presence Desa']);
+    }
+
+    private function checkApprovedIzin($izinList, string $dateStr): bool
+    {
+        foreach ($izinList as $izin) {
+            $mulai = is_string($izin->tanggal_mulai) ? substr($izin->tanggal_mulai, 0, 10) : $izin->tanggal_mulai->format('Y-m-d');
+            $selesai = is_string($izin->tanggal_selesai) ? substr($izin->tanggal_selesai, 0, 10) : $izin->tanggal_selesai->format('Y-m-d');
+            if ($dateStr >= $mulai && $dateStr <= $selesai) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function checkApprovedSpt($sptList, string $dateStr): bool
+    {
+        foreach ($sptList as $spt) {
+            $mulai = is_string($spt->tanggal_mulai) ? substr($spt->tanggal_mulai, 0, 10) : $spt->tanggal_mulai->format('Y-m-d');
+            $selesai = is_string($spt->tanggal_selesai) ? substr($spt->tanggal_selesai, 0, 10) : $spt->tanggal_selesai->format('Y-m-d');
+            if ($dateStr >= $mulai && $dateStr <= $selesai) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -14,18 +14,21 @@ class PortalAbsensiController extends Controller
 
     /**
      * Tampilkan halaman portal absensi mobile.
+     * Catatan: Portal ini hanya bisa diakses dari jaringan WiFi Desa (sama seperti portal staf).
      */
     public function index(Request $request)
     {
+        $clientIp    = $this->absensiService->resolveClientIp($request);
+        $isWifiValid = $this->absensiService->validasiIpWifi($clientIp);
+
         $pegawais = Pegawai::with('jabatan')
             ->where('status_aktif', true)
             ->orderBy('nama_lengkap')
             ->get();
 
-        $clientIp = $this->getClientIp($request);
         $today = Carbon::today()->toDateString();
 
-        return view('portal.absensi', compact('pegawais', 'clientIp', 'today'));
+        return view('portal.absensi', compact('pegawais', 'clientIp', 'today', 'isWifiValid'));
     }
 
     /**
@@ -35,7 +38,7 @@ class PortalAbsensiController extends Controller
     {
         $request->validate(['pegawai_id' => 'required|exists:pegawais,id']);
 
-        $today = Carbon::today()->toDateString();
+        $today    = Carbon::today()->toDateString();
         $kehadiran = Kehadiran::where('pegawai_id', $request->pegawai_id)
             ->where('tanggal', $today)
             ->with('pegawai.jabatan')
@@ -52,17 +55,31 @@ class PortalAbsensiController extends Controller
 
     /**
      * Proses absen masuk dengan tanda tangan.
+     * WAJIB terhubung ke WiFi Desa — divalidasi ketat di sisi backend.
      */
     public function absenMasuk(Request $request)
     {
         $request->validate([
-            'pegawai_id'    => 'required|exists:pegawais,id',
-            'tanda_tangan'  => 'required|string|min:100', // base64 SVG/PNG minimal
+            'pegawai_id'   => 'required|exists:pegawais,id',
+            'tanda_tangan' => 'required|string|min:100',
         ]);
 
-        $pegawai   = Pegawai::with('jabatan')->findOrFail($request->pegawai_id);
-        $clientIp  = $this->getClientIp($request);
-        $hasil     = $this->absensiService->prosesAbsenMasuk($pegawai, $request->tanda_tangan, $clientIp);
+        // ─── Validasi Jaringan WiFi Desa (anti-spoofing) ──────────────────────
+        // Menggunakan resolveClientIp() dari service — aman, tidak bisa dipalsukan
+        // via header X-Forwarded-For oleh klien jahat.
+        $clientIp = $this->absensiService->resolveClientIp($request);
+
+        if (!$this->absensiService->validasiIpWifi($clientIp)) {
+            $msg = 'Akses ditolak. Absensi tanda tangan hanya dapat dilakukan dari jaringan WiFi Desa Nangtang.';
+            if ($request->expectsJson()) {
+                return response()->json(['status' => 'error', 'message' => $msg, 'ip' => $clientIp], 403);
+            }
+            return back()->with('error', $msg);
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
+        $pegawai = Pegawai::with('jabatan')->findOrFail($request->pegawai_id);
+        $hasil   = $this->absensiService->prosesAbsenMasuk($pegawai, $request->tanda_tangan, $clientIp);
 
         if ($request->expectsJson()) {
             return response()->json($hasil, $hasil['status'] === 'berhasil' ? 200 : 422);
@@ -73,17 +90,29 @@ class PortalAbsensiController extends Controller
 
     /**
      * Proses absen pulang dengan tanda tangan.
+     * WAJIB terhubung ke WiFi Desa — divalidasi ketat di sisi backend.
      */
     public function absenPulang(Request $request)
     {
         $request->validate([
-            'pegawai_id'    => 'required|exists:pegawais,id',
-            'tanda_tangan'  => 'required|string|min:100',
+            'pegawai_id'   => 'required|exists:pegawais,id',
+            'tanda_tangan' => 'required|string|min:100',
         ]);
 
-        $pegawai   = Pegawai::with('jabatan')->findOrFail($request->pegawai_id);
-        $clientIp  = $this->getClientIp($request);
-        $hasil     = $this->absensiService->prosesAbsenPulang($pegawai, $request->tanda_tangan, $clientIp);
+        // ─── Validasi Jaringan WiFi Desa (anti-spoofing) ──────────────────────
+        $clientIp = $this->absensiService->resolveClientIp($request);
+
+        if (!$this->absensiService->validasiIpWifi($clientIp)) {
+            $msg = 'Akses ditolak. Absensi tanda tangan hanya dapat dilakukan dari jaringan WiFi Desa Nangtang.';
+            if ($request->expectsJson()) {
+                return response()->json(['status' => 'error', 'message' => $msg, 'ip' => $clientIp], 403);
+            }
+            return back()->with('error', $msg);
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
+        $pegawai = Pegawai::with('jabatan')->findOrFail($request->pegawai_id);
+        $hasil   = $this->absensiService->prosesAbsenPulang($pegawai, $request->tanda_tangan, $clientIp);
 
         if ($request->expectsJson()) {
             return response()->json($hasil, $hasil['status'] === 'berhasil' ? 200 : 422);
@@ -91,17 +120,5 @@ class PortalAbsensiController extends Controller
 
         return back()->with($hasil['status'] === 'berhasil' ? 'success' : 'error', $hasil['message']);
     }
-
-    /**
-     * Ambil IP client yang sesungguhnya (mendukung proxy/hosting).
-     */
-    private function getClientIp(Request $request): string
-    {
-        if ($request->hasHeader('X-Forwarded-For')) {
-            $ips = explode(',', $request->header('X-Forwarded-For'));
-            return trim($ips[0]);
-        }
-
-        return $request->ip();
-    }
 }
+

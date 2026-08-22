@@ -89,7 +89,7 @@
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between gap-1 mb-0.5">
                             <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
-                                Pengajuan Absen Luar
+                                {{ $p->label_jenis }}
                             </span>
                             <span class="text-[10px] text-slate-400 font-semibold">{{ $p->created_at->diffForHumans() }}</span>
                         </div>

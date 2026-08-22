@@ -6,48 +6,48 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 8mm 12mm 8mm 15mm;
+            margin: 4mm 10mm 4mm 10mm;
         }
         * { box-sizing: border-box; }
         body {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 8.5pt;
+            font-family: 'Arial', Helvetica, sans-serif;
+            font-size: 7.5pt;
             color: #000;
-            line-height: 1.2;
+            line-height: 1.15;
             margin: 0;
             padding: 0;
         }
 
-        /* ══════════ KOP SURAT STANDAR TATA NASKAH DINAS RI ══════════ */
+        /* ══════════ KOP SURAT STANDAR TATA NASKAH DINAS PEMKAB TASIKMALAYA ══════════ */
         .kop-table {
             width: 100%;
             border-bottom: 3px double #000;
-            padding-bottom: 5px;
-            margin-bottom: 6px;
+            padding-bottom: 3px;
+            margin-bottom: 7px; /* Jarak enter standar naskah dinas dari Kop Surat */
         }
         .kop-logo-cell {
-            width: 70px;
+            width: 58px;
             text-align: center;
             vertical-align: middle;
         }
         .kop-logo-img {
-            height: 68px;
+            height: 48px;
             width: auto;
-            max-width: 65px;
+            max-width: 48px;
             display: inline-block;
             vertical-align: middle;
         }
         .kop-logo-circle {
-            width: 54px;
-            height: 54px;
+            width: 38px;
+            height: 38px;
             border: 2px solid #000;
             border-radius: 50%;
             text-align: center;
             vertical-align: middle;
-            font-size: 20pt;
+            font-size: 14pt;
             font-weight: bold;
             color: #000;
-            line-height: 54px;
+            line-height: 38px;
             display: inline-block;
         }
         .kop-text-cell {
@@ -60,73 +60,71 @@
             font-weight: bold;
             text-transform: uppercase;
             margin: 0;
-            line-height: 1.2;
-            letter-spacing: 0.3px;
+            line-height: 1.15;
+            letter-spacing: 0.5px;
         }
         .kop-kec {
-            font-size: 10.5pt;
+            font-size: 10pt;
             font-weight: bold;
             text-transform: uppercase;
             margin: 1px 0;
-            line-height: 1.2;
-            letter-spacing: 0.3px;
+            line-height: 1.15;
         }
         .kop-desa {
-            font-size: 14pt;
+            font-size: 12.5pt;
             font-weight: bold;
             text-transform: uppercase;
-            margin: 2px 0;
+            margin: 1px 0;
             letter-spacing: 0.8px;
-            line-height: 1.2;
+            line-height: 1.15;
         }
         .kop-alamat {
-            font-size: 8pt;
+            font-size: 7.5pt;
             color: #111;
             font-style: italic;
-            margin: 2px 0 0;
-            line-height: 1.2;
+            margin: 1px 0 0;
+            line-height: 1.15;
         }
 
-        /* JUDUL LAPORAN */
-        .doc-title { text-align: center; margin: 4px 0 1px; }
+        /* ══════════ JUDUL DOKUMEN (TANPA NOMOR SURAT) ══════════ */
+        .doc-title { 
+            text-align: center; 
+            margin: 0 0 6px 0; 
+        }
         .doc-title h2 {
-            font-size: 11.5pt;
+            font-size: 10.5pt;
             font-weight: bold;
             text-transform: uppercase;
             text-decoration: underline;
             margin: 0;
-            letter-spacing: 0.3px;
-        }
-        .doc-nomor {
-            text-align: center;
-            font-size: 8.5pt;
-            margin: 1px 0 4px;
+            letter-spacing: 0.5px;
+            line-height: 1.15;
         }
 
-        /* INFO TABLE */
+        /* ══════════ INFO TABLE ══════════ */
         .info-table {
             width: 100%;
             margin-bottom: 4px;
-            font-size: 8pt;
+            font-size: 7.5pt;
         }
         .info-table td {
             padding: 0.5px 0;
             vertical-align: top;
         }
-        .info-table td.label { width: 110px; }
-        .info-table td.sep   { width: 10px; }
+        .info-table td.label { width: 90px; }
+        .info-table td.sep   { width: 8px; }
 
-        /* TABEL PRESENSI HARIAN */
+        /* ══════════ TABEL PRESENSI HARIAN ══════════ */
         table.data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 2px;
-            font-size: 8pt;
+            margin-top: 1px;
+            font-size: 7.2pt;
         }
         table.data-table th,
         table.data-table td {
             border: 1px solid #000;
-            padding: 2px 3px;
+            padding: 1.5px 2.5px;
             vertical-align: middle;
             text-align: center;
             color: #000;
@@ -135,133 +133,112 @@
             background-color: #f2f2f2;
             color: #000;
             font-weight: bold;
-            font-size: 8pt;
+            font-size: 7.2pt;
             text-transform: uppercase;
-            padding: 3.5px 2px;
+            padding: 2px 2px;
         }
         table.data-table td.left { text-align: left; }
-        table.data-table tr.even td { background-color: #fafafa; }
+        table.data-table tr.even td { background-color: #fafbfc; }
         table.data-table tfoot td {
             font-weight: bold;
-            background-color: #f5f5f5;
-            padding: 3px 4px;
+            background-color: #f2f2f2;
+            padding: 1.5px 3px;
+            color: #000;
+            font-size: 7.2pt;
         }
 
-        /* STATUS STYLING */
-        .status-badge {
+        /* STATUS STYLING (FORMAL BLACK) */
+        .status-text {
+            color: #000;
+            font-size: 7.2pt;
+        }
+        .status-bold {
+            color: #000;
+            font-size: 7.2pt;
             font-weight: bold;
-            font-size: 7.5pt;
-            padding: 1px 2px;
-            display: inline-block;
         }
-        .s-hadir     { color: #000; }
-        .s-terlambat { color: #000; }
-        .s-alpa      { color: #000; font-weight: bold; }
-        .s-izin      { color: #000; }
-        .s-sakit     { color: #000; }
-        .s-dinas     { color: #000; }
-        .s-libur     { color: #555; }
 
-        /* TTD CELL IN TABLE (LARGE & CLEAR) */
+        /* TTD CELL IN TABLE (BESAR, JELAS, PROFESIONAL & ALAMI SEPERTI ASLI) */
         .ttd-col {
             height: 38px;
             min-height: 38px;
             vertical-align: middle !important;
-            padding: 2px 4px !important;
+            padding: 0 4px !important;
         }
         .ttd-box-left {
             text-align: left;
             width: 100%;
-            line-height: 34px;
+            display: block;
+            white-space: nowrap;
         }
         .ttd-box-right {
             text-align: left;
             width: 100%;
-            padding-left: 28px;
-            line-height: 34px;
+            padding-left: 16px;
+            display: block;
+            white-space: nowrap;
         }
         .ttd-num {
             font-size: 8pt;
             font-weight: bold;
-            margin-right: 3px;
+            margin-right: 4px;
             display: inline-block;
             vertical-align: middle;
         }
         .ttd-dots {
-            font-size: 8pt;
-            color: #888;
+            font-size: 7.8pt;
+            color: #555;
             letter-spacing: 1px;
             display: inline-block;
             vertical-align: middle;
         }
         .ttd-img {
-            max-height: 34px;
-            max-width: 90px;
+            height: 48px;
+            max-height: 50px;
+            width: auto;
+            max-width: 125px;
             vertical-align: middle;
             display: inline-block;
+            margin: -6px 0 -6px 2px;
         }
 
-        /* RINGKASAN REKAP */
-        .rekap-container {
-            margin-top: 4px;
-            font-size: 7.5pt;
-        }
-        .rekap-table {
-            border-collapse: collapse;
-            margin-top: 1px;
-            font-size: 7.5pt;
-            width: 100%;
-        }
-        .rekap-table td {
-            border: 1px solid #333;
-            padding: 2.5px 4px;
-            text-align: center;
-            background-color: #fcfcfc;
-        }
-        .rekap-val {
-            font-size: 8.5pt;
-            font-weight: bold;
-            display: block;
-        }
-        .rekap-label {
-            font-size: 6.5pt;
-            color: #333;
-            display: block;
-            margin-top: 1px;
-        }
-
-        /* TANDA TANGAN PEJABAT PENGESAH */
+        /* TANDA TANGAN PEJABAT PENGESAH (ENTER 4X LEBIH LEGA) */
         .ttd-table {
             width: 100%;
-            margin-top: 8px;
+            margin-top: 6px;
+            page-break-inside: avoid;
         }
         .ttd-cell {
             width: 50%;
             text-align: center;
             font-size: 8pt;
             vertical-align: top;
-            line-height: 1.2;
+            line-height: 1.15;
+            color: #000;
         }
-        .ttd-space { height: 32px; }
+        .ttd-space { 
+            height: 44px; /* Ruang 4x Enter yang sangat lega untuk tanda tangan basah & stempel resmi */
+        }
         .ttd-name {
             font-weight: bold;
             text-decoration: underline;
             margin: 0;
-            font-size: 8.5pt;
+            font-size: 9pt;
+            color: #000;
         }
         .ttd-nipd {
             font-size: 7.5pt;
             margin: 1px 0 0;
+            color: #000;
         }
 
         .footer-note {
             margin-top: 3px;
-            font-size: 6.5pt;
-            color: #555;
+            font-size: 6pt;
+            color: #444;
             font-style: italic;
         }
 
-        /* PAGE BREAK UTILITY */
         .no-break { page-break-inside: avoid; }
     </style>
 </head>
@@ -283,21 +260,18 @@
                 @endif
             </td>
             <td class="kop-text-cell">
-                <p class="kop-kab">PEMERINTAH KABUPATEN TASIKMALAYA</p>
-                <p class="kop-kec">KECAMATAN CIGALONTANG</p>
-                <p class="kop-desa">KANTOR KEPALA DESA NANGTANG</p>
-                <p class="kop-alamat">Jalan Raya Desa Nangtang, Kode Pos 46463 — Pos-el: pemdes@desanangtang.go.id</p>
+                <div class="kop-kab">PEMERINTAH KABUPATEN TASIKMALAYA</div>
+                <div class="kop-kec">KECAMATAN CIGALONTANG</div>
+                <div class="kop-desa">PEMERINTAH DESA NANGTANG</div>
+                <div class="kop-alamat">Jalan Raya Desa Nangtang, Kode Pos 46463 — Pos-el: pemdes@desanangtang.go.id</div>
             </td>
             <td class="kop-logo-cell">&nbsp;</td>
         </tr>
     </table>
 
-    <!-- ══════════ JUDUL ══════════ -->
+    <!-- ══════════ JUDUL DOKUMEN (TANPA NOMOR SURAT) ══════════ -->
     <div class="doc-title">
         <h2>DAFTAR HADIR & REKAPITULASI PRESENSI HARIAN</h2>
-    </div>
-    <div class="doc-nomor">
-        Nomor: {{ $nomorLaporan }}
     </div>
 
     <!-- ══════════ INFORMASI ══════════ -->
@@ -314,14 +288,14 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width:22px;">No</th>
+                <th style="width:20px;">No</th>
                 <th style="width:125px;">Nama Perangkat Desa / NIPD</th>
                 <th style="width:95px;">Jabatan</th>
-                <th style="width:42px;">Masuk</th>
-                <th style="width:42px;">Pulang</th>
-                <th style="width:40px;">Durasi</th>
+                <th style="width:38px;">Masuk</th>
+                <th style="width:38px;">Pulang</th>
+                <th style="width:36px;">Durasi</th>
                 <th style="width:50px;">Status</th>
-                <th style="width:125px;">Tanda Tangan / Bukti</th>
+                <th style="width:145px;">Tanda Tangan / Bukti</th>
             </tr>
         </thead>
         <tbody>
@@ -331,22 +305,22 @@
                     $k = $p->kehadirans->first();
                     if ($isWeekend || $hariLiburs) {
                         $statusLabel = 'Libur';
-                        $statusClass = 's-libur';
+                        $statusClass = 'status-text';
                     } elseif (!$k) {
                         $statusLabel = 'Alpa';
-                        $statusClass = 's-alpa';
+                        $statusClass = 'status-bold';
                     } else {
                         $statusLabel = match($k->status) {
                             'Tepat Waktu' => 'Hadir',
                             default       => $k->status,
                         };
                         $statusClass = match($k->status) {
-                            'Tepat Waktu', 'Hadir' => 's-hadir',
-                            'Terlambat'            => 's-terlambat',
-                            'Izin'                 => 's-izin',
-                            'Sakit'                => 's-sakit',
-                            'Dinas Luar'           => 's-dinas',
-                            default                => 's-alpa',
+                            'Tepat Waktu', 'Hadir' => 'status-bold',
+                            'Terlambat'            => 'status-text',
+                            'Izin'                 => 'status-text',
+                            'Sakit'                => 'status-text',
+                            'Dinas Luar'           => 'status-bold',
+                            default                => 'status-bold',
                         };
                     }
                     $durasi = ($k && $k->durasi_kerja_menit)
@@ -360,14 +334,14 @@
                     <td class="left">
                         <strong>{{ $p->nama_lengkap }}</strong>
                         @if($p->nipd)
-                            <br><span style="font-size:6.8pt; color:#333;">NIPD. {{ $p->nipd }}</span>
+                            <br><span style="font-size:7pt; color:#333;">NIPD. {{ $p->nipd }}</span>
                         @endif
                     </td>
                     <td class="left">{{ $p->jabatan->nama_jabatan ?? '-' }}</td>
                     <td>{{ $k?->jam_masuk ? substr($k->jam_masuk, 0, 5) : '-' }}</td>
                     <td>{{ $k?->jam_pulang ? substr($k->jam_pulang, 0, 5) : '-' }}</td>
                     <td>{{ $durasi }}</td>
-                    <td><span class="status-badge {{ $statusClass }}">{{ $statusLabel }}</span></td>
+                    <td><span class="{{ $statusClass }}">{{ $statusLabel }}</span></td>
                     <td class="ttd-col">
                         @if($currentNo % 2 === 1)
                             {{-- Format Ganjil (Kiri) --}}
@@ -401,72 +375,34 @@
         <tfoot>
             <tr>
                 <td colspan="6" style="text-align:right; font-weight:bold;">TOTAL KEHADIRAN HARI INI :</td>
-                <td colspan="2" style="font-weight:bold; text-align:center;">
+                <td colspan="2" style="font-weight:bold; text-align:center; color:#000;">
                     {{ $rekap['hadir'] + $rekap['terlambat'] + $rekap['dinas'] }} / {{ $pegawais->count() }} Pegawai
                 </td>
             </tr>
         </tfoot>
     </table>
 
-    <!-- ══════════ RINGKASAN REKAPITULASI ══════════ -->
-    <div class="no-break rekap-container">
-        <table class="rekap-table" cellspacing="0" cellpadding="0">
-            <tr>
-                <td style="font-weight:bold; width:14%;">
-                    <span class="rekap-val">{{ $rekap['hadir'] }}</span>
-                    <span class="rekap-label">Hadir Tepat</span>
-                </td>
-                <td style="width:14%;">
-                    <span class="rekap-val">{{ $rekap['terlambat'] }}</span>
-                    <span class="rekap-label">Terlambat</span>
-                </td>
-                <td style="width:14%;">
-                    <span class="rekap-val">{{ $rekap['dinas'] }}</span>
-                    <span class="rekap-label">Dinas Luar</span>
-                </td>
-                <td style="width:14%;">
-                    <span class="rekap-val">{{ $rekap['izin'] }}</span>
-                    <span class="rekap-label">Izin</span>
-                </td>
-                <td style="width:14%;">
-                    <span class="rekap-val">{{ $rekap['sakit'] }}</span>
-                    <span class="rekap-label">Sakit</span>
-                </td>
-                <td style="width:14%;">
-                    <span class="rekap-val">{{ $rekap['alpa'] }}</span>
-                    <span class="rekap-label">Tanpa Ket. (Alpa)</span>
-                </td>
-                @if($rekap['libur'] > 0)
-                <td style="width:16%;">
-                    <span class="rekap-val">{{ $rekap['libur'] }}</span>
-                    <span class="rekap-label">Libur</span>
-                </td>
-                @endif
-            </tr>
-        </table>
-    </div>
-
-    <!-- ══════════ TANDA TANGAN PEJABAT PENGESAH ══════════ -->
+    <!-- ══════════ TANDA TANGAN PEJABAT PENGESAH (ENTER 4X LEBIH LEGA) ══════════ -->
     <div class="no-break">
         <table class="ttd-table" cellspacing="0" cellpadding="0">
             <tr>
                 <td class="ttd-cell">
-                    <p style="margin:0 0 2px;">Mengetahui / Mengesahkan,<br><strong>KEPALA DESA NANGTANG</strong></p>
+                    <p style="margin:0 0 2px;">Mengetahui / Menyetujui,<br><strong>KEPALA DESA NANGTANG</strong></p>
                     <div class="ttd-space"></div>
-                    <p class="ttd-name">{{ $kades->nama_lengkap ?? 'H. AHMAD SUPRIYADI, S.IP' }}</p>
-                    <p class="ttd-nipd">NIPD. {{ $kades->nipd ?? '-' }}</p>
+                    <p class="ttd-name">{{ $kades->nama_lengkap ?? 'DADAY DAHYAT' }}</p>
+                    <p class="ttd-nipd">NIPD: {{ $kades->nipd ?? '141.1/Kep.053-Pemdes/2019' }}</p>
                 </td>
                 <td class="ttd-cell">
-                    <p style="margin:0 0 2px;">Nangtang, {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}<br><strong>SEKRETARIS DESA / OPERATOR</strong></p>
+                    <p style="margin:0 0 2px;">Nangtang, {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}<br><strong>SEKRETARIS DESA NANGTANG</strong></p>
                     <div class="ttd-space"></div>
-                    <p class="ttd-name">{{ $sekdes->nama_lengkap ?? 'HJ. NURLAILA RAHMAWATI, S.AP' }}</p>
-                    <p class="ttd-nipd">NIPD. {{ $sekdes->nipd ?? '-' }}</p>
+                    <p class="ttd-name">{{ $sekdes->nama_lengkap ?? 'SUSANTI, S.Pd' }}</p>
+                    <p class="ttd-nipd">NIPD: {{ $sekdes->nipd ?? '141.1/KEP.01/DES/2020' }}</p>
                 </td>
             </tr>
         </table>
 
         <p class="footer-note">
-            * Dokumen ini sah dan dicetak secara otomatis melalui Sistem Informasi Presensi Digital Desa Nangtang (SADI v2.0) pada {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }} WIB.
+            * Dokumen ini sah dan dicetak secara otomatis melalui Sistem Informasi Presensi Digital Desa Nangtang pada {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }} WIB.
         </p>
     </div>
 

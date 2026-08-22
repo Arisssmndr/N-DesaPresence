@@ -80,15 +80,13 @@ class SptManager extends Component
                 'keperluan' => $this->keperluan,
                 'file_undangan' => $undanganPath,
                 'anggaran' => $this->anggaran ?? 0,
-                'status' => $isKades ? 'disetujui' : 'diajukan',
-                'disetujui_oleh' => $isKades ? auth()->id() : null,
-                'tanggal_persetujuan' => $isKades ? now() : null,
+                'status' => 'disetujui',
+                'disetujui_oleh' => auth()->id(),
+                'tanggal_persetujuan' => now(),
                 'created_by' => auth()->id(),
             ]);
 
-            if ($spt->status === 'disetujui') {
-                $this->applySptAttendance($spt);
-            }
+            $this->applySptAttendance($spt);
 
             $pegawai = Pegawai::find($this->pegawai_id);
 

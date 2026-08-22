@@ -17,10 +17,6 @@ class PusatLaporan extends Component
     // Tahunan
     public int $tahunTahunan;
 
-    // Siltap
-    public int $bulanSiltap;
-    public int $tahunSiltap;
-
     public array $listBulan = [
         1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
         5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
@@ -33,8 +29,6 @@ class PusatLaporan extends Component
         $this->bulanBulanan  = (int) date('m');
         $this->tahunBulanan  = (int) date('Y');
         $this->tahunTahunan  = (int) date('Y');
-        $this->bulanSiltap   = (int) date('m');
-        $this->tahunSiltap   = (int) date('Y');
     }
 
     public function getUrlHarian(): string
@@ -52,21 +46,15 @@ class PusatLaporan extends Component
         return route('laporan.tahunan', ['tahun' => $this->tahunTahunan]);
     }
 
-    public function getUrlSiltap(): string
-    {
-        return route('laporan.siltap', ['bulan' => $this->bulanSiltap, 'tahun' => $this->tahunSiltap]);
-    }
-
     public function render()
     {
         $tahunOptions = range(date('Y') - 3, date('Y') + 1);
         $urlHarian  = $this->getUrlHarian();
         $urlBulanan = $this->getUrlBulanan();
         $urlTahunan = $this->getUrlTahunan();
-        $urlSiltap  = $this->getUrlSiltap();
 
         return view('livewire.pusat-laporan', compact(
-            'tahunOptions', 'urlHarian', 'urlBulanan', 'urlTahunan', 'urlSiltap'
+            'tahunOptions', 'urlHarian', 'urlBulanan', 'urlTahunan'
         ))->layout('layouts.app', ['title' => 'Pusat Laporan — Presence Desa']);
     }
 }

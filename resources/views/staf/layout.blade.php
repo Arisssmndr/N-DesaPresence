@@ -11,9 +11,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS & Alpine.js & SweetAlert2 -->
+    <!-- Tailwind CSS & Alpine.js & SignaturePad & SweetAlert2 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         tailwind.config = {
@@ -110,6 +111,16 @@
                     </svg>
                 </div>
                 <span class="text-[11px]">Absen Luar</span>
+            </a>
+
+            {{-- Tab Izin & Sakit --}}
+            <a href="{{ route('staf.izin') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('staf.izin*') ? 'text-[#064E3B] font-extrabold' : 'text-slate-500 hover:text-slate-800 font-semibold' }}">
+                <div class="{{ request()->routeIs('staf.izin*') ? 'p-1.5 rounded-xl bg-emerald-100/80 text-[#064E3B]' : 'p-1.5 text-slate-500' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <span class="text-[11px]">Izin / Sakit</span>
             </a>
 
             <a href="{{ route('staf.riwayat') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('staf.riwayat') ? 'text-[#064E3B] font-extrabold' : 'text-slate-500 hover:text-slate-800 font-semibold' }}">

@@ -140,17 +140,6 @@ class PengajuanAbsenLuarController extends Controller
      */
     public function riwayat()
     {
-        $user    = Auth::user();
-        $pegawai = $user->pegawai;
-
-        if (!$pegawai) {
-            return redirect()->route('staf.beranda');
-        }
-
-        $pengajuans = PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
-            ->orderByDesc('tanggal')
-            ->paginate(10);
-
-        return view('staf.riwayat-pengajuan', compact('user', 'pegawai', 'pengajuans'));
+        return redirect()->route('staf.riwayat', ['tab' => 'absen_luar']);
     }
 }

@@ -12,8 +12,8 @@
         </button>
     </div>
 
-    <!-- Data Table -->
-    <div class="sadi-card overflow-hidden">
+    <!-- Data Table & Softfile Viewer -->
+    <div class="sadi-card overflow-hidden" x-data="{ viewModal: false, activeFile: '', activeExt: '', activeTitle: '', activeNomor: '' }">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
                 <thead>
@@ -58,7 +58,7 @@
                                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600 border border-slate-300">Draft</span>
                                 @endswitch
                             </td>
-                            <td class="py-3 px-4 text-right space-x-1">
+                            <td class="py-3 px-4 text-right space-x-1 whitespace-nowrap">
                                 @if ($s->status === 'diajukan' && (auth()->user()->isKades() || auth()->user()->isAdmin()))
                                     <button wire:click="approve({{ $s->id }})" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[11px] hover:bg-emerald-700 transition">
                                         Setujui
@@ -68,9 +68,16 @@
                                     </button>
                                 @endif
                                 @if ($s->file_undangan)
-                                    <a href="{{ Storage::url($s->file_undangan) }}" target="_blank" class="p-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition inline-block" title="Lihat Lampiran">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                    </a>
+                                    @php
+                                        $fileUrl = asset('storage/' . $s->file_undangan);
+                                        $ext = strtolower(pathinfo($s->file_undangan, PATHINFO_EXTENSION));
+                                    @endphp
+                                    <button type="button"
+                                            @click="activeFile = '{{ $fileUrl }}'; activeExt = '{{ $ext }}'; activeTitle = '{{ addslashes($s->tujuan) }}'; activeNomor = '{{ $s->nomor_spt }}'; viewModal = true;"
+                                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-[11px] border border-blue-200 transition cursor-pointer" title="Lihat Softfile">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                        <span>Softfile</span>
+                                    </button>
                                 @endif
                             </td>
                         </tr>
@@ -86,6 +93,63 @@
         </div>
         <div class="px-4 py-3 border-t border-slate-100">
             {{ $spts->links() }}
+        </div>
+
+        <!-- MODAL VIEWER SOFTFILE (ADMIN) -->
+        <div x-show="viewModal"
+             x-transition.opacity
+             class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4"
+             style="display: none;"
+             @keydown.escape.window="viewModal = false">
+            <div @click.away="viewModal = false"
+                 class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden border border-[#C9A84C]/40 my-6 flex flex-col max-h-[90vh]">
+                
+                <!-- Header Modal -->
+                <div class="px-6 py-4 bg-[#064E3B] text-white flex items-center justify-between border-b border-[#C9A84C]/40 shrink-0">
+                    <div>
+                        <h3 class="font-outfit text-sm font-bold text-white flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#E2C268]"></span>
+                            <span>Softfile Surat Perintah Tugas</span>
+                        </h3>
+                        <p class="text-[11px] text-emerald-200 font-mono mt-0.5" x-text="activeNomor + ' — ' + activeTitle"></p>
+                    </div>
+                    <button type="button" @click="viewModal = false" class="p-1 rounded-lg hover:bg-emerald-800 text-emerald-200 hover:text-white transition cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <!-- Body Modal (Preview Image / PDF) -->
+                <div class="p-4 overflow-y-auto max-h-[65vh] bg-slate-50 flex items-center justify-center">
+                    <template x-if="['jpg', 'jpeg', 'png', 'webp'].includes(activeExt)">
+                        <div class="text-center p-2">
+                            <img :src="activeFile" :alt="activeNomor" class="max-h-[58vh] w-auto mx-auto rounded-xl border border-slate-200 shadow-md object-contain">
+                        </div>
+                    </template>
+                    <template x-if="activeExt === 'pdf'">
+                        <iframe :src="activeFile" class="w-full h-[58vh] border-0 rounded-xl shadow-inner bg-white"></iframe>
+                    </template>
+                </div>
+
+                <!-- Footer Modal -->
+                <div class="px-6 py-3.5 bg-white border-t border-slate-200 flex items-center justify-between shrink-0">
+                    <span class="text-xs text-slate-500 font-medium font-mono" x-text="'Format: ' + activeExt.toUpperCase()"></span>
+                    <div class="flex items-center gap-2">
+                        <a :href="activeFile" target="_blank"
+                           class="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow hover:bg-blue-700 transition inline-flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            <span>Buka Layar Penuh</span>
+                        </a>
+                        <a :href="activeFile" download
+                           class="px-4 py-2 rounded-xl bg-[#064E3B] text-white text-xs font-bold shadow hover:bg-[#04392B] transition inline-flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            <span>Unduh File</span>
+                        </a>
+                        <button type="button" @click="viewModal = false" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 transition cursor-pointer">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

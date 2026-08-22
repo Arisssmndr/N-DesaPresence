@@ -80,6 +80,49 @@ class StafPortalController extends Controller
             ->latest('diproses_pada')
             ->first();
 
+        // Ambil Surat Perintah Tugas (SPT) resmi untuk pegawai yang bersangkutan
+        $notifSpts = \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)
+            ->where(function ($query) {
+                $query->whereDate('tanggal_selesai', '>=', Carbon::today()->subDays(14))
+                      ->orWhereDate('created_at', '>=', Carbon::today()->subDays(14));
+            })
+            ->latest()
+            ->get();
+
+        // ─── JADWAL PIKET DESA (H-1, Hari Ini, & Lepas Piket) ─────────────────
+        $notifPikets = \App\Models\JadwalPiket::where('pegawai_id', $pegawai->id)
+            ->whereDate('tanggal_piket', '>=', Carbon::yesterday())
+            ->whereDate('tanggal_piket', '<=', Carbon::today()->addDays(7))
+            ->orderBy('tanggal_piket')
+            ->get();
+
+        // Cek jika kemarin piket dan hadir -> hari ini Lepas Piket
+        $piketKemarin = \App\Models\JadwalPiket::where('pegawai_id', $pegawai->id)
+            ->whereDate('tanggal_piket', Carbon::yesterday())
+            ->where('status', 'hadir')
+            ->first();
+
+        $isLepasPiketHariIni = false;
+        if ($piketKemarin) {
+            $isLepasPiketHariIni = true;
+            // Otomatis pastikan kehadiran hari ini berstatus Lepas Piket
+            if (!$kehadiranHariIni) {
+                $kehadiranHariIni = Kehadiran::create([
+                    'pegawai_id'        => $pegawai->id,
+                    'tanggal'           => $today,
+                    'status'            => 'Hadir',
+                    'sumber_data'       => 'manual_admin',
+                    'diverifikasi_oleh' => $piketKemarin->created_by ?? 1,
+                    'keterangan'        => 'Lepas Piket (Tugas Piket Malam tgl ' . $piketKemarin->tanggal_piket->format('d/m/Y') . ')'
+                ]);
+            } elseif (!str_contains($kehadiranHariIni->keterangan ?? '', 'Lepas Piket')) {
+                $kehadiranHariIni->update([
+                    'status'     => 'Hadir',
+                    'keterangan' => 'Lepas Piket (Tugas Piket Malam tgl ' . $piketKemarin->tanggal_piket->format('d/m/Y') . ')'
+                ]);
+            }
+        }
+
         return view('staf.beranda', compact(
             'user',
             'pegawai',
@@ -97,8 +140,63 @@ class StafPortalController extends Controller
             'jamPulangSelesai',
             'riwayatTerakhir',
             'pengumumans',
-            'notifPengajuan'
+            'notifPengajuan',
+            'notifSpts',
+            'notifPikets',
+            'isLepasPiketHariIni',
+            'piketKemarin'
         ));
+    }
+
+    public function absenPiket(Request $request)
+    {
+        $user = Auth::user();
+        $pegawai = $user->pegawai;
+
+        if (!$pegawai) {
+            return redirect()->route('staf.beranda')->with('error', 'Akun tidak terhubung dengan pegawai.');
+        }
+
+        $validated = $request->validate([
+            'piket_id'        => 'required|exists:jadwal_pikets,id',
+            'tanda_tangan'    => 'required|string',
+        ], [
+            'tanda_tangan.required' => 'Goreskan tanda tangan digital untuk konfirmasi kehadiran piket.',
+        ]);
+
+        $piket = \App\Models\JadwalPiket::where('id', $validated['piket_id'])
+            ->where('pegawai_id', $pegawai->id)
+            ->firstOrFail();
+
+        $clientIp = $this->signatureService->resolveClientIp($request);
+
+        $piket->update([
+            'status'       => 'hadir',
+            'tanda_tangan' => $validated['tanda_tangan'],
+            'waktu_absen'  => now(),
+            'ip_absen'     => $clientIp,
+        ]);
+
+        // Otomatis tandai presensi hari berikutnya sebagai "Lepas Piket"
+        $besokStr = Carbon::parse($piket->tanggal_piket)->addDay()->toDateString();
+        $kehadiranBesok = Kehadiran::firstOrNew([
+            'pegawai_id' => $pegawai->id,
+            'tanggal'    => $besokStr,
+        ]);
+        $kehadiranBesok->status = 'Hadir';
+        $kehadiranBesok->sumber_data = 'manual_admin';
+        $kehadiranBesok->keterangan = "Lepas Piket (Tugas Piket Malam tgl " . $piket->tanggal_piket->format('d/m/Y') . ")";
+        $kehadiranBesok->save();
+
+        \App\Models\AuditLog::create([
+            'user_id'   => $user->id,
+            'user_name' => $user->name,
+            'role'      => $user->role ?? 'perangkat',
+            'aktivitas' => "Mengisi absensi & tanda tangan piket tanggal " . $piket->tanggal_piket->format('d/m/Y'),
+            'modul'     => 'Jadwal Piket',
+        ]);
+
+        return redirect()->route('staf.beranda')->with('success', 'Absensi tugas piket berhasil tercatat! Status presensi hari berikutnya otomatis berstatus Lepas Piket.');
     }
 
     public function halamanAbsen(Request $request, string $jenis)
@@ -165,7 +263,7 @@ class StafPortalController extends Controller
         return response()->json($hasil, $hasil['status'] === 'berhasil' ? 200 : 422);
     }
 
-    public function riwayat()
+    public function riwayat(Request $request)
     {
         $user = Auth::user();
         $pegawai = $user->pegawai;
@@ -174,11 +272,21 @@ class StafPortalController extends Controller
             return redirect()->route('staf.beranda');
         }
 
+        $tab = $request->query('tab', 'presensi'); // presensi | izin | absen_luar
+
         $riwayats = Kehadiran::where('pegawai_id', $pegawai->id)
             ->orderByDesc('tanggal')
-            ->paginate(15);
+            ->paginate(15, ['*'], 'presensi_page');
 
-        return view('staf.riwayat', compact('user', 'pegawai', 'riwayats'));
+        $riwayatIzin = \App\Models\IzinSakit::where('pegawai_id', $pegawai->id)
+            ->latest()
+            ->paginate(15, ['*'], 'izin_page');
+
+        $riwayatAbsenLuar = \App\Models\PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
+            ->orderByDesc('tanggal')
+            ->paginate(15, ['*'], 'absen_luar_page');
+
+        return view('staf.riwayat', compact('user', 'pegawai', 'riwayats', 'riwayatIzin', 'riwayatAbsenLuar', 'tab'));
     }
 
     public function profil()

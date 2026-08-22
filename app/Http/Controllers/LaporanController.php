@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\Pegawai;
 use App\Models\Kehadiran;
 use App\Models\HariLibur;
-use App\Models\RekapSiltap;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
@@ -252,39 +251,6 @@ class LaporanController extends Controller
         ))->setPaper('a4', 'landscape');
 
         $filename = "Laporan_Tahunan_Presensi_{$tahun}.pdf";
-        return $pdf->stream($filename);
-    }
-
-    // =========================================================
-    //  LAPORAN 4: DAFTAR PEMBAYARAN SILTAP
-    // =========================================================
-    public function laporanSiltap(Request $request)
-    {
-        $bulan = (int) $request->input('bulan', date('m'));
-        $tahun = (int) $request->input('tahun', date('Y'));
-
-        $carbonBulan = Carbon::createFromDate($tahun, $bulan, 1);
-        $namaBulan   = $carbonBulan->translatedFormat('F');
-
-        $rekaps = RekapSiltap::with(['pegawai.jabatan'])
-            ->where('bulan', $bulan)->where('tahun', $tahun)
-            ->orderBy('created_at')->get();
-
-        $totalBruto     = $rekaps->sum('siltap_bruto');
-        $totalPotongan  = $rekaps->sum(fn($r) => $r->potongan_alpa + $r->potongan_terlambat);
-        $totalNeto      = $rekaps->sum('siltap_neto');
-
-        $kades  = Pegawai::whereHas('jabatan', fn($q) => $q->where('kode_jabatan', 'KADES'))->first();
-        $sekdes = Pegawai::whereHas('jabatan', fn($q) => $q->where('kode_jabatan', 'SEKDES'))->first();
-        $nomorLaporan = sprintf('004/SLTAP/%02d/%d', $bulan, $tahun);
-
-        $pdf = Pdf::loadView('reports.laporan-siltap-pdf', compact(
-            'bulan', 'tahun', 'namaBulan', 'rekaps',
-            'totalBruto', 'totalPotongan', 'totalNeto',
-            'kades', 'sekdes', 'nomorLaporan'
-        ))->setPaper('a4', 'landscape');
-
-        $filename = "Daftar_Siltap_{$namaBulan}_{$tahun}.pdf";
         return $pdf->stream($filename);
     }
 }

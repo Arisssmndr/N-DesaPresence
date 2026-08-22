@@ -180,17 +180,21 @@
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
                         <span>Buku Matriks Presensi</span>
                     </a>
-                    <a href="{{ route('siltap.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('siltap.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span>Kalkulasi Siltap</span>
-                    </a>
                     <a href="{{ route('spt.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('spt.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         <span>SPT Kedinasan</span>
                     </a>
+                    @php $jmlIzinMenunggu = \App\Models\IzinSakit::where('status','menunggu')->count(); @endphp
                     <a href="{{ route('izin.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('izin.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                        <span>Izin & Sakit</span>
+                        <span class="flex-1">Izin & Sakit</span>
+                        @if($jmlIzinMenunggu > 0)
+                        <span class="text-[10px] font-extrabold bg-amber-500 text-white px-1.5 py-0.5 rounded-full leading-none animate-pulse">{{ $jmlIzinMenunggu }}</span>
+                        @endif
+                    </a>
+                    <a href="{{ route('jadwal-piket.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('jadwal-piket.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Jadwal Piket</span>
                     </a>
                     {{-- ═══ PENGAJUAN ABSEN LUAR (dengan badge notifikasi) ═══ --}}
                     @php $jmlPengajuanMenunggu = \App\Models\PengajuanAbsenLuar::where('status','menunggu')->count(); @endphp

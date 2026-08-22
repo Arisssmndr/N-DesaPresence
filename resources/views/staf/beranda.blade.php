@@ -159,6 +159,320 @@
     </div>
     @endif
 
+    <!-- ═══ BANNER STATUS HARI INI: LEPAS PIKET ═══ -->
+    @if(isset($isLepasPiketHariIni) && $isLepasPiketHariIni)
+    <div class="sadi-card p-4 bg-linear-to-r from-emerald-900 via-[#064E3B] to-emerald-800 text-white border-2 border-[#E2C268] shadow-lg rounded-2xl flex items-start gap-3.5 relative overflow-hidden">
+        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-[#E2C268]/15 rounded-full blur-lg pointer-events-none"></div>
+        <div class="w-11 h-11 rounded-2xl bg-[#E2C268] text-[#064E3B] flex items-center justify-center font-bold text-xl shadow-md shrink-0">
+            🌙
+        </div>
+        <div class="flex-1 min-w-0">
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#E2C268] text-[#064E3B] uppercase tracking-wider">
+                STATUS HARI INI: LEPAS PIKET
+            </span>
+            <h4 class="font-outfit font-extrabold text-sm text-white mt-1">
+                Istirahat Lepas Tugas Piket Malam
+            </h4>
+            <p class="text-[11px] text-emerald-200 mt-0.5 leading-relaxed">
+                Presensi kehadiran Anda hari ini telah <strong>otomatis dicatat sebagai Hadir / Lepas Piket</strong> setelah melaksanakan tugas piket.
+            </p>
+        </div>
+    </div>
+    @endif
+
+    <!-- ═══ NOTIFIKASI JADWAL PIKET DESA (H-1 & HARI INI) ═══ -->
+    @if(isset($notifPikets) && $notifPikets->count() > 0)
+    <div class="space-y-3" x-data="{ activePiketModal: null }">
+        @foreach($notifPikets as $piket)
+            @php
+                $isToday = $piket->tanggal_piket->isToday();
+                $isTomorrow = $piket->tanggal_piket->isTomorrow();
+                $isSudahAbsen = ($piket->status === 'hadir' || $piket->status === 'lepas_piket');
+            @endphp
+            <div class="sadi-card p-4 {{ $isToday ? 'bg-linear-to-br from-[#064E3B] to-[#04392B] text-white border-2 border-[#C9A84C]' : 'bg-slate-900 text-white border border-slate-700' }} shadow-lg relative overflow-hidden rounded-2xl">
+                <div class="absolute -right-8 -bottom-8 w-28 h-28 bg-[#C9A84C]/15 rounded-full blur-lg pointer-events-none"></div>
+
+                <div class="flex items-start gap-3.5 relative z-10">
+                    <div class="w-10 h-10 rounded-2xl {{ $isToday ? 'bg-[#C9A84C] text-[#064E3B]' : 'bg-slate-800 text-amber-400' }} flex items-center justify-center shrink-0 shadow-md font-bold text-lg">
+                        🛡️
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider {{ $isToday ? 'bg-[#E2C268] text-[#064E3B]' : 'bg-blue-900 text-blue-200 border border-blue-700' }}">
+                                {{ $isToday ? 'JADWAL PIKET HARI INI' : ($isTomorrow ? 'JADWAL PIKET BESOK (H-1)' : 'JADWAL PIKET DESA') }}
+                            </span>
+                            @if($isSudahAbsen)
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500 text-white shadow-xs">✓ Hadir</span>
+                            @else
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-400 text-slate-900 animate-pulse">Wajib Hadir</span>
+                            @endif
+                        </div>
+
+                        <h4 class="font-outfit font-extrabold text-sm text-white mt-1 leading-snug">
+                            {{ $piket->keterangan }}
+                        </h4>
+                        
+                        <p class="text-xs text-emerald-100 font-semibold mt-0.5">
+                            Waktu: <span class="text-[#E2C268] font-mono font-bold">{{ \Carbon\Carbon::parse($piket->tanggal_piket)->isoFormat('dddd, D MMMM Y') }} ({{ substr($piket->jam_mulai, 0, 5) }} - {{ substr($piket->jam_selesai, 0, 5) }} WIB)</span>
+                        </p>
+
+                        <div class="mt-3 pt-2.5 border-t border-emerald-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div class="text-[10px] text-emerald-300">
+                                <span>Kompensasi:</span>
+                                <strong class="text-white block font-sans">Otomatis Lepas Piket hari berikutnya</strong>
+                            </div>
+
+                            @if(!$isSudahAbsen)
+                            <button type="button" @click="activePiketModal = {{ $piket->id }}; setTimeout(() => { initPiketPad({{ $piket->id }}) }, 100);"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#C9A84C] text-[#064E3B] font-outfit text-[11px] font-extrabold shadow hover:bg-[#E2C268] transition cursor-pointer active:scale-95">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                <span>Tanda Tangan Absen Piket</span>
+                            </button>
+                            @else
+                            <span class="text-[11px] text-emerald-300 font-semibold flex items-center gap-1">
+                                <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                Telah Absen Piket ({{ $piket->waktu_absen?->format('H:i') }} WIB)
+                            </span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL TANDA TANGAN DIGITAL ABSEN PIKET -->
+                <div x-show="activePiketModal === {{ $piket->id }}"
+                     x-transition.opacity
+                     class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+                     style="display: none;"
+                     @keydown.escape.window="activePiketModal = null">
+                    <div @click.away="activePiketModal = null"
+                         class="bg-white text-slate-800 rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-[#C9A84C]/40 my-6 flex flex-col max-h-[92vh]">
+                        
+                        <div class="px-5 py-3.5 bg-[#064E3B] text-white flex items-center justify-between border-b border-[#C9A84C]/40 shrink-0">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-[#E2C268] animate-pulse"></span>
+                                <h3 class="font-outfit text-sm font-bold text-white">Tanda Tangan Presensi Piket</h3>
+                            </div>
+                            <button type="button" @click="activePiketModal = null" class="p-1 rounded-lg hover:bg-emerald-800 text-emerald-200 hover:text-white transition cursor-pointer">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+
+                        <form id="form-piket-{{ $piket->id }}" action="{{ route('staf.piket.absen') }}" method="POST" onsubmit="return submitPiketForm(event, {{ $piket->id }})" class="p-4 space-y-3 text-xs">
+                            @csrf
+                            <input type="hidden" name="piket_id" value="{{ $piket->id }}">
+                            <input type="hidden" name="tanda_tangan" id="input-ttd-{{ $piket->id }}">
+
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                                <p class="font-bold text-slate-800">{{ $piket->keterangan }}</p>
+                                <p class="text-[11px] text-slate-600">Pelaksanaan: {{ \Carbon\Carbon::parse($piket->tanggal_piket)->isoFormat('dddd, D MMMM Y') }} ({{ substr($piket->jam_mulai, 0, 5) }} - {{ substr($piket->jam_selesai, 0, 5) }} WIB)</p>
+                                <p class="text-[10px] text-emerald-700 font-semibold leading-relaxed">
+                                    * Tanda tangan digital ini mengonfirmasi kehadiran Anda pada tugas piket malam dan secara otomatis mencatatkan kehadiran Anda sebagai <strong>Lepas Piket</strong> di hari berikutnya.
+                                </p>
+                            </div>
+
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Bubuhkan Tanda Tangan Anda</label>
+                                    <button type="button" onclick="clearPiketPad({{ $piket->id }})" class="text-[11px] font-bold text-red-600 hover:underline cursor-pointer">Hapus / Ulangi</button>
+                                </div>
+                                <div id="wrapper-piket-{{ $piket->id }}" class="border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 overflow-hidden relative">
+                                    <canvas id="canvas-piket-{{ $piket->id }}" class="w-full h-40 cursor-crosshair touch-none"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="pt-2 flex justify-end gap-2">
+                                <button type="button" @click="activePiketModal = null" class="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-bold hover:bg-slate-300 transition cursor-pointer">
+                                    Batal
+                                </button>
+                                <button type="submit" class="px-4 py-2 rounded-xl bg-[#064E3B] text-white font-bold hover:bg-[#04392B] transition cursor-pointer flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    <span>Simpan Presensi Piket</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    </div>
+    @endif
+
+    <!-- Notifikasi Surat Perintah Tugas (SPT) Resmi dari Kepala Desa / Pemerintah Desa -->
+    @if(isset($notifSpts) && $notifSpts->count() > 0)
+    <div class="space-y-3" x-data="{ activeSptModal: null }">
+        @foreach($notifSpts as $spt)
+        <div class="sadi-card p-4 bg-gradient-to-br from-[#064E3B] to-[#04392B] text-white border-2 border-[#C9A84C] shadow-lg relative overflow-hidden rounded-2xl">
+            <!-- Background accent -->
+            <div class="absolute -right-8 -bottom-8 w-28 h-28 bg-[#C9A84C]/15 rounded-full blur-lg pointer-events-none"></div>
+
+            <div class="flex items-start gap-3.5 relative z-10">
+                <div class="w-10 h-10 rounded-2xl bg-[#C9A84C] text-[#064E3B] flex items-center justify-center shrink-0 shadow-md font-bold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[#E2C268] text-[#064E3B] uppercase tracking-wider">
+                            Surat Perintah Tugas (SPT)
+                        </span>
+                        <span class="text-[10px] text-emerald-200/80 font-mono font-semibold">
+                            {{ $spt->created_at ? $spt->created_at->diffForHumans() : '' }}
+                        </span>
+                    </div>
+
+                    <h4 class="font-outfit font-extrabold text-sm text-white mt-1 leading-snug">
+                        {{ $spt->nomor_spt }}
+                    </h4>
+                    
+                    <p class="text-xs text-emerald-100 font-semibold mt-0.5">
+                        Tujuan: <span class="text-[#E2C268] font-bold">{{ $spt->tujuan }}</span>
+                    </p>
+                    
+                    <p class="text-[11px] text-emerald-200/90 mt-1 leading-relaxed">
+                        Keperluan: {{ $spt->keperluan }}
+                    </p>
+
+                    <div class="mt-3 pt-2.5 border-t border-emerald-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div class="text-[10px] text-emerald-300">
+                            <span>Pelaksanaan:</span>
+                            <strong class="text-white block font-sans">
+                                {{ \Carbon\Carbon::parse($spt->tanggal_mulai)->isoFormat('D MMM Y') }}
+                                @if($spt->tanggal_mulai != $spt->tanggal_selesai)
+                                    s/d {{ \Carbon\Carbon::parse($spt->tanggal_selesai)->isoFormat('D MMM Y') }}
+                                @endif
+                            </strong>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button type="button" @click="activeSptModal = {{ $spt->id }}"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#C9A84C] text-[#064E3B] font-outfit text-[11px] font-extrabold shadow hover:bg-[#E2C268] transition cursor-pointer active:scale-95">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                <span>Lihat Berkas / Softfile</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL VIEWER SOFTFILE SURAT PERINTAH TUGAS (SPT) -->
+            <div x-show="activeSptModal === {{ $spt->id }}"
+                 x-transition.opacity
+                 class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+                 style="display: none;"
+                 @keydown.escape.window="activeSptModal = null">
+                <div @click.away="activeSptModal = null"
+                     class="bg-white text-slate-800 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-[#C9A84C]/40 my-6 flex flex-col max-h-[92vh]">
+                    
+                    <!-- Header Modal -->
+                    <div class="px-5 py-3.5 bg-[#064E3B] text-white flex items-center justify-between border-b border-[#C9A84C]/40 shrink-0">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#E2C268] animate-pulse"></span>
+                            <div>
+                                <h3 class="font-outfit text-sm font-bold text-white">Softfile Surat Perintah Tugas</h3>
+                                <p class="text-[10px] text-emerald-200 font-mono">{{ $spt->nomor_spt }}</p>
+                            </div>
+                        </div>
+                        <button type="button" @click="activeSptModal = null" class="p-1 rounded-lg hover:bg-emerald-800 text-emerald-200 hover:text-white transition cursor-pointer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Body Modal (Softfile Display) -->
+                    <div class="p-4 overflow-y-auto space-y-3.5 text-xs">
+                        
+                        <!-- Ringkasan Info Penugasan -->
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-2 gap-2 text-[11px]">
+                            <div>
+                                <span class="text-slate-400 font-bold uppercase text-[9px]">Tujuan Kedinasan</span>
+                                <p class="font-bold text-[#064E3B] mt-0.5">{{ $spt->tujuan }}</p>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 font-bold uppercase text-[9px]">Waktu Pelaksanaan</span>
+                                <p class="font-bold text-slate-800 mt-0.5">
+                                    {{ \Carbon\Carbon::parse($spt->tanggal_mulai)->isoFormat('D MMM Y') }}
+                                    @if($spt->tanggal_mulai != $spt->tanggal_selesai)
+                                        s/d {{ \Carbon\Carbon::parse($spt->tanggal_selesai)->isoFormat('D MMM Y') }}
+                                    @endif
+                                </p>
+                            </div>
+                            <div class="col-span-2 pt-1 border-t border-slate-200/60">
+                                <span class="text-slate-400 font-bold uppercase text-[9px]">Agenda / Keperluan</span>
+                                <p class="text-slate-700 mt-0.5">{{ $spt->keperluan }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Soft Copy File Preview -->
+                        @if($spt->file_undangan)
+                            @php
+                                $ext = strtolower(pathinfo($spt->file_undangan, PATHINFO_EXTENSION));
+                                $fileUrl = asset('storage/' . $spt->file_undangan);
+                                $isImg = in_array($ext, ['jpg', 'jpeg', 'png', 'webp']);
+                            @endphp
+
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-bold text-xs text-slate-700 flex items-center gap-1.5">
+                                        <svg class="w-4 h-4 text-[#064E3B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        <span>Softfile Surat ({{ strtoupper($ext) }})</span>
+                                    </span>
+                                    <a href="{{ $fileUrl }}" target="_blank" download class="text-[11px] font-extrabold text-[#064E3B] underline hover:text-emerald-900">
+                                        Unduh File Asli
+                                    </a>
+                                </div>
+
+                                @if($isImg)
+                                    <div class="rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 p-1 text-center shadow-inner">
+                                        <img src="{{ $fileUrl }}" alt="Softfile SPT {{ $spt->nomor_spt }}" class="max-h-96 w-auto mx-auto rounded-lg object-contain">
+                                    </div>
+                                @else
+                                    <div class="rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 shadow-inner">
+                                        <iframe src="{{ $fileUrl }}" class="w-full h-80 border-0 rounded-lg"></iframe>
+                                    </div>
+                                @endif
+                            </div>
+                        @else
+                            <div class="p-6 bg-amber-50 rounded-xl border border-amber-200 text-center space-y-2">
+                                <svg class="w-8 h-8 text-amber-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                                <p class="font-bold text-amber-900 text-xs">Softfile berkas belum diunggah oleh admin</p>
+                                <p class="text-[11px] text-amber-800">Dokumen fisik asli SPT tersimpan dan dapat diambil di Kantor Desa Nangtang.</p>
+                            </div>
+                        @endif
+
+                    </div>
+
+                    <!-- Footer Modal -->
+                    <div class="px-5 py-3 bg-slate-100 border-t border-slate-200 flex items-center justify-between shrink-0">
+                        <span class="text-[10px] text-slate-500 font-medium">Status: <strong class="text-emerald-700 font-bold">Sah & Tercatat di Presensi</strong></span>
+                        <div class="flex items-center gap-2">
+                            @if($spt->file_undangan)
+                            <a href="{{ asset('storage/' . $spt->file_undangan) }}" target="_blank"
+                               class="px-3.5 py-1.5 rounded-xl bg-[#064E3B] text-white text-xs font-bold shadow hover:bg-[#04392B] transition inline-flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                </svg>
+                                <span>Buka Layar Penuh</span>
+                            </a>
+                            @endif
+                            <button type="button" @click="activeSptModal = null" class="px-3.5 py-1.5 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-300 transition cursor-pointer">
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+    @endif
+
     <!-- Notifikasi Approval Pengajuan Absen Luar -->
     @if(isset($notifPengajuan) && $notifPengajuan)
     <div class="sadi-card p-4 border-2 shadow-md flex items-start gap-3.5
@@ -428,6 +742,70 @@
         @endif
     </div>
 
+    <!-- Tombol Pengajuan Izin / Sakit Quick Card -->
+    <div class="sadi-card p-5 bg-white space-y-3 border border-slate-200 shadow-md">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-emerald-100 border-2 border-emerald-300 flex items-center justify-center shrink-0 text-[#064E3B]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="font-outfit font-bold text-slate-800 text-sm">Berhalangan Hadir / Sakit?</p>
+                <p class="text-[11px] text-slate-500">Ajukan permohonan Izin atau Sakit secara digital ke Kepala Desa</p>
+            </div>
+        </div>
+
+        <a href="{{ route('staf.izin') }}"
+           class="w-full py-3.5 rounded-xl border-2 border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-[#064E3B] font-extrabold text-sm flex items-center justify-center gap-2.5 transition cursor-pointer shadow-sm">
+            <svg class="w-5 h-5 text-[#064E3B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            <span>Ajukan Izin / Sakit Sekarang</span>
+        </a>
+    </div>
+
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    const piketPads = {};
+
+    function initPiketPad(piketId) {
+        const canvas = document.getElementById('canvas-piket-' + piketId);
+        const wrapper = document.getElementById('wrapper-piket-' + piketId);
+        if (!canvas || !wrapper) return;
+
+        canvas.width = wrapper.offsetWidth || 350;
+        canvas.height = 160;
+
+        if (!piketPads[piketId]) {
+            piketPads[piketId] = new SignaturePad(canvas, {
+                minWidth: 1.5,
+                maxWidth: 3.5,
+                penColor: '#064E3B',
+                backgroundColor: 'rgba(0,0,0,0)'
+            });
+        }
+    }
+
+    function clearPiketPad(piketId) {
+        if (piketPads[piketId]) {
+            piketPads[piketId].clear();
+        }
+    }
+
+    function submitPiketForm(e, piketId) {
+        const pad = piketPads[piketId];
+        if (!pad || pad.isEmpty()) {
+            e.preventDefault();
+            alert('⚠️ Harap bubuhkan tanda tangan digital Anda terlebih dahulu sebelum menyimpan absensi piket.');
+            return false;
+        }
+
+        const inputTtd = document.getElementById('input-ttd-' + piketId);
+        if (inputTtd) {
+            inputTtd.value = pad.toDataURL('image/png');
+        }
+        return true;
+    }
+</script>
 @endsection
 

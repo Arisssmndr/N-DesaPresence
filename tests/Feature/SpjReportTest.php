@@ -75,10 +75,5 @@ class SpjReportTest extends TestCase
         $resTahunan = $this->get('/laporan/tahunan-pdf?tahun=2026');
         $resTahunan->assertStatus(200);
         $resTahunan->assertHeader('content-type', 'application/pdf');
-
-        // 4. Laporan Siltap
-        $resSiltap = $this->get('/laporan/siltap-pdf?bulan=8&tahun=2026');
-        $resSiltap->assertStatus(200);
-        $resSiltap->assertHeader('content-type', 'application/pdf');
     }
 }

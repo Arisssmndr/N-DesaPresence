@@ -9,11 +9,9 @@ use App\Models\Jabatan;
 use App\Models\Kehadiran;
 use App\Models\SuratPerintahTugas;
 use App\Models\IzinSakit;
-use App\Models\RekapSiltap;
 use App\Livewire\SptManager;
 use App\Livewire\IzinManager;
 use App\Livewire\UserStafManager;
-use App\Livewire\SiltapKalkulator;
 use Livewire\Livewire;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -143,38 +141,5 @@ class BusinessProcessAuditFixesTest extends TestCase
             ->set('form.password', '') // Password kosong
             ->call('simpan')
             ->assertHasErrors(['form.password']);
-    }
-
-    public function test_siltap_counts_terlambat_statistics()
-    {
-        $this->actingAs($this->adminUser);
-
-        $bulan = (int) date('m');
-        $tahun = (int) date('Y');
-        $testDate = Carbon::createFromDate($tahun, $bulan, 1)->toDateString();
-
-        Kehadiran::where('pegawai_id', $this->pegawai->id)->where('tanggal', $testDate)->delete();
-        Kehadiran::create([
-            'pegawai_id' => $this->pegawai->id,
-            'tanggal' => $testDate,
-            'jam_masuk' => '08:15:00',
-            'terlambat_menit' => 15,
-            'status' => 'Terlambat',
-            'sumber_data' => 'web_signature',
-        ]);
-
-        Livewire::test(SiltapKalkulator::class)
-            ->set('bulan', $bulan)
-            ->set('tahun', $tahun)
-            ->call('generateRekap');
-
-        $rekap = RekapSiltap::where('pegawai_id', $this->pegawai->id)
-            ->where('bulan', $bulan)
-            ->where('tahun', $tahun)
-            ->first();
-
-        $this->assertNotNull($rekap);
-        $this->assertGreaterThanOrEqual(1, $rekap->total_terlambat);
-        $this->assertGreaterThanOrEqual(15, $rekap->total_menit_terlambat);
     }
 }

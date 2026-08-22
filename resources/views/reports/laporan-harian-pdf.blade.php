@@ -158,12 +158,14 @@
             font-weight: bold;
         }
 
-        /* TTD CELL IN TABLE (BESAR, JELAS, PROFESIONAL & ALAMI SEPERTI ASLI) */
+        /* TTD CELL IN TABLE (PROPORSIONAL, RAPI & PAS MENYESUAIKAN KOLOM) */
         .ttd-col {
-            height: 38px;
-            min-height: 38px;
+            height: 24px;
+            min-height: 24px;
+            max-height: 28px;
             vertical-align: middle !important;
-            padding: 0 4px !important;
+            padding: 1px 3px !important;
+            overflow: hidden;
         }
         .ttd-box-left {
             text-align: left;
@@ -174,32 +176,32 @@
         .ttd-box-right {
             text-align: left;
             width: 100%;
-            padding-left: 16px;
+            padding-left: 10px;
             display: block;
             white-space: nowrap;
         }
         .ttd-num {
-            font-size: 8pt;
+            font-size: 7pt;
             font-weight: bold;
-            margin-right: 4px;
+            margin-right: 3px;
             display: inline-block;
             vertical-align: middle;
         }
         .ttd-dots {
-            font-size: 7.8pt;
+            font-size: 7pt;
             color: #555;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             display: inline-block;
             vertical-align: middle;
         }
         .ttd-img {
-            height: 48px;
-            max-height: 50px;
+            height: 22px;
+            max-height: 22px;
             width: auto;
-            max-width: 125px;
+            max-width: 65px;
             vertical-align: middle;
             display: inline-block;
-            margin: -6px 0 -6px 2px;
+            margin: 0 0 0 2px;
         }
 
         /* TANDA TANGAN PEJABAT PENGESAH (ENTER 4X LEBIH LEGA) */

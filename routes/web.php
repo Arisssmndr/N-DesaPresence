@@ -7,6 +7,7 @@ use App\Http\Controllers\StafPortalController;
 use App\Http\Controllers\SpjReportController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PengajuanAbsenLuarController;
+use App\Http\Controllers\StafIzinController;
 use App\Livewire\Dashboard;
 use App\Livewire\PegawaiManager;
 use App\Livewire\ShiftManager;
@@ -15,9 +16,9 @@ use App\Livewire\AttendanceImporter;
 use App\Livewire\ManualAttendanceOverride;
 use App\Livewire\SptManager;
 use App\Livewire\IzinManager;
+use App\Livewire\JadwalPiketManager;
 use App\Livewire\PengumumanManager;
 use App\Livewire\MatriksPresensi;
-use App\Livewire\SiltapKalkulator;
 use App\Livewire\AnalitikDashboard;
 use App\Livewire\PusatLaporan;
 use App\Livewire\KonfigurasiWifiManager;
@@ -54,6 +55,13 @@ Route::prefix('staf')->group(function () {
         Route::get('/profil/edit', [\App\Http\Controllers\StafEditProfilController::class, 'edit'])->name('staf.profil.edit');
         Route::put('/profil', [\App\Http\Controllers\StafEditProfilController::class, 'update'])->name('staf.profil.update');
 
+        // ─── Pengajuan Izin & Sakit ───────────────────────────────────────────
+        Route::get('/izin', [StafIzinController::class, 'index'])->name('staf.izin');
+        Route::post('/izin', [StafIzinController::class, 'store'])->middleware('throttle:15,1')->name('staf.izin.store');
+
+        // ─── Absensi Piket Desa ───────────────────────────────────────────────
+        Route::post('/piket/absen', [StafPortalController::class, 'absenPiket'])->name('staf.piket.absen');
+
         // ─── Pengajuan Absen Luar ─────────────────────────────────────────────
         Route::get('/ajukan-absen', [PengajuanAbsenLuarController::class, 'form'])->name('staf.ajukan.form');
         Route::post('/ajukan-absen', [PengajuanAbsenLuarController::class, 'store'])->middleware('throttle:15,1')->name('staf.ajukan.store');
@@ -83,6 +91,7 @@ Route::middleware(['auth', 'role:admin,kepala_desa'])->group(function () {
     Route::get('/override-absensi', ManualAttendanceOverride::class)->name('attendance.override');
     Route::get('/spt', SptManager::class)->name('spt.index');
     Route::get('/izin', IzinManager::class)->name('izin.index');
+    Route::get('/jadwal-piket', JadwalPiketManager::class)->name('jadwal-piket.index');
     Route::get('/pengumuman', PengumumanManager::class)->name('pengumuman.index');
     
     // Pengajuan Absen Luar — Admin Approval
@@ -94,9 +103,8 @@ Route::middleware(['auth', 'role:admin,kepala_desa'])->group(function () {
     Route::get('/konfigurasi-absensi', KonfigurasiAbsensiManager::class)->name('konfigurasi-absensi.index');
     Route::get('/konfigurasi-wifi', KonfigurasiWifiManager::class)->name('konfigurasi-wifi.index');
 
-    // Phase 4 Routes (Matriks, Siltap, PDF SPJ, Analitik)
+    // Phase 4 Routes (Matriks, PDF SPJ, Analitik)
     Route::get('/matriks', MatriksPresensi::class)->name('matriks.index');
-    Route::get('/siltap', SiltapKalkulator::class)->name('siltap.index');
     Route::get('/analitik', AnalitikDashboard::class)->name('analitik.index');
     Route::get('/spj-pdf', [SpjReportController::class, 'downloadPdf'])->name('spj.pdf');
 
@@ -105,5 +113,4 @@ Route::middleware(['auth', 'role:admin,kepala_desa'])->group(function () {
     Route::get('/laporan/harian-pdf', [LaporanController::class, 'laporanHarian'])->name('laporan.harian');
     Route::get('/laporan/bulanan-pdf', [LaporanController::class, 'laporanBulanan'])->name('laporan.bulanan');
     Route::get('/laporan/tahunan-pdf', [LaporanController::class, 'laporanTahunan'])->name('laporan.tahunan');
-    Route::get('/laporan/siltap-pdf', [LaporanController::class, 'laporanSiltap'])->name('laporan.siltap');
 });

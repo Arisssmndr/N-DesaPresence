@@ -13,7 +13,6 @@ class DatabaseSeeder extends Seeder
             ShiftKerjaSeeder::class,
             HariLiburSeeder::class,
             DefaultUserSeeder::class,
-            KonfigurasiSiltapSeeder::class,
             KonfigurasiAbsensiSeeder::class,
         ]);
     }

@@ -66,6 +66,10 @@ class IzinDanPiketTest extends TestCase
 
     public function test_admin_can_approve_izin_and_updates_kehadiran_status()
     {
+        Kehadiran::where('pegawai_id', $this->pegawai->id)
+            ->where('tanggal', Carbon::today()->toDateString())
+            ->delete();
+
         $izin = IzinSakit::create([
             'pegawai_id'      => $this->pegawai->id,
             'jenis'           => 'izin_pribadi',
@@ -84,11 +88,12 @@ class IzinDanPiketTest extends TestCase
         $izin->refresh();
         $this->assertEquals('disetujui', $izin->status);
 
-        $this->assertDatabaseHas('kehadirans', [
-            'pegawai_id' => $this->pegawai->id,
-            'tanggal'    => Carbon::today()->toDateString(),
-            'status'     => 'Izin',
-        ]);
+        // Verifikasi kehadiran dengan query model (cross-database compat: SQLite vs MySQL)
+        $kehadiran = Kehadiran::where('pegawai_id', $this->pegawai->id)
+            ->whereDate('tanggal', Carbon::today()->toDateString())
+            ->where('status', 'Izin')
+            ->first();
+        $this->assertNotNull($kehadiran, 'Kehadiran berstatus Izin tidak ditemukan untuk hari ini');
     }
 
     public function test_admin_can_create_jadwal_piket_and_staff_can_sign()
@@ -103,15 +108,12 @@ class IzinDanPiketTest extends TestCase
             ->set('keterangan', 'Piket Jaga Malam Balai Desa')
             ->call('save');
 
-        $this->assertDatabaseHas('jadwal_pikets', [
-            'pegawai_id'    => $this->pegawai->id,
-            'tanggal_piket' => Carbon::today()->toDateString(),
-            'status'        => 'terjadwal',
-        ]);
-
+        // Verifikasi jadwal piket dengan query model (cross-database compat)
         $piket = JadwalPiket::where('pegawai_id', $this->pegawai->id)
-            ->whereDate('tanggal_piket', Carbon::today())
+            ->whereDate('tanggal_piket', Carbon::today()->toDateString())
+            ->where('status', 'terjadwal')
             ->first();
+        $this->assertNotNull($piket, 'Jadwal piket berstatus terjadwal tidak ditemukan');
 
         // Staf signs attendance
         $this->actingAs($this->stafUser);
@@ -127,15 +129,14 @@ class IzinDanPiketTest extends TestCase
         $this->assertEquals('hadir', $piket->status);
         $this->assertNotNull($piket->waktu_absen);
 
-        // Next day attendance automatically becomes Lepas Piket
+        // Verifikasi kehadiran besok dengan whereDate (cross-database compat)
         $besok = Carbon::today()->addDay()->toDateString();
-        $this->assertDatabaseHas('kehadirans', [
-            'pegawai_id' => $this->pegawai->id,
-            'tanggal'    => $besok,
-            'status'     => 'Hadir',
-        ]);
-
-        $kehadiranBesok = Kehadiran::where('pegawai_id', $this->pegawai->id)->where('tanggal', $besok)->first();
+        $kehadiranBesok = Kehadiran::where('pegawai_id', $this->pegawai->id)
+            ->whereDate('tanggal', $besok)
+            ->where('status', 'Hadir')
+            ->first();
+        $this->assertNotNull($kehadiranBesok, 'Kehadiran Hadir untuk esok hari tidak ditemukan');
         $this->assertStringContainsString('Lepas Piket', $kehadiranBesok->keterangan);
+
     }
 }

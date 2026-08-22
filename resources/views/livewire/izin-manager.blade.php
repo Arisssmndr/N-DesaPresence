@@ -34,13 +34,19 @@
                                 <p class="text-[10px] text-slate-400 font-normal">{{ $i->pegawai->jabatan->nama_jabatan ?? '' }}</p>
                             </td>
                             <td class="py-3 px-4">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">
-                                    {{ ucfirst(str_replace('_', ' ', $i->jenis)) }}
-                                </span>
+                                @if(str_contains($i->jenis, 'sakit'))
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                                        {{ ucfirst(str_replace('_', ' ', $i->jenis)) }}
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 border border-teal-200">
+                                        {{ ucfirst(str_replace('_', ' ', $i->jenis)) }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="py-3 px-4 text-slate-700 font-mono text-[11px]">
                                 {{ $i->tanggal_mulai->format('d/m/Y') }} — {{ $i->tanggal_selesai->format('d/m/Y') }}
-                                <p class="text-[10px] text-purple-700 font-bold font-sans">({{ $i->jumlah_hari }} Hari)</p>
+                                <p class="text-[10px] text-teal-700 font-bold font-sans">({{ $i->jumlah_hari }} Hari)</p>
                             </td>
                             <td class="py-3 px-4 max-w-xs text-slate-600">
                                 {{ $i->keterangan }}

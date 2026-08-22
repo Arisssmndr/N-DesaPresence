@@ -56,11 +56,11 @@
         <div class="sadi-card p-6 flex items-center justify-between relative overflow-hidden">
             <div class="relative z-10">
                 <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Izin / Sakit</p>
-                <p class="font-outfit text-3xl font-extrabold text-purple-700 mt-1">{{ $statistik['izinSakit'] }}</p>
-                <p class="text-[10px] text-purple-600 font-medium mt-1">Pengajuan disetujui</p>
+                <p class="font-outfit text-3xl font-extrabold text-teal-700 mt-1">{{ $statistik['izinSakit'] }}</p>
+                <p class="text-[10px] text-teal-600 font-medium mt-1">Pengajuan disetujui</p>
             </div>
-            <div class="w-14 h-14 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center shadow-inner border border-purple-200 shrink-0">
-                <svg class="w-7 h-7 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <div class="w-14 h-14 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center shadow-inner border border-teal-200 shrink-0">
+                <svg class="w-7 h-7 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
         </div>
 
@@ -137,10 +137,10 @@
                                             <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-300">Dinas Luar</span>
                                             @break
                                         @case('Izin')
-                                            <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-300">Izin</span>
+                                            <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-teal-100 text-teal-800 border border-teal-300">Izin</span>
                                             @break
                                         @case('Sakit')
-                                            <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-300">Sakit</span>
+                                            <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300">Sakit</span>
                                             @break
                                         @default
                                             <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-red-100 text-red-800 border border-red-300">Alpa</span>

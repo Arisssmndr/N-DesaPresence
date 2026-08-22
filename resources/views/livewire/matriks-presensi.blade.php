@@ -35,7 +35,7 @@
         <div class="flex flex-wrap items-center gap-3 text-[11px] font-bold text-slate-700">
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-600"></span> H: Hadir</span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-600"></span> A: Alpa</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-purple-600"></span> I: Izin/Sakit</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-teal-600"></span> I: Izin/Sakit</span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-600"></span> D: Dinas Luar</span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-200 border border-slate-300"></span> L: Libur</span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-50 border border-slate-300"></span> - : Belum Berjalan</span>
@@ -59,7 +59,7 @@
                             </th>
                         @endfor
                         <th class="py-2 px-1.5 bg-emerald-900 border-r border-emerald-800 text-emerald-200 font-bold" title="Total Hadir">H</th>
-                        <th class="py-2 px-1.5 bg-emerald-900 border-r border-emerald-800 text-purple-300 font-bold" title="Total Izin/Sakit">I</th>
+                        <th class="py-2 px-1.5 bg-emerald-900 border-r border-emerald-800 text-teal-300 font-bold" title="Total Izin/Sakit">I</th>
                         <th class="py-2 px-1.5 bg-emerald-900 border-r border-emerald-800 text-blue-300 font-bold" title="Total Dinas Luar">D</th>
                         <th class="py-2 px-1.5 bg-emerald-900 border-r border-emerald-800 text-red-300 font-bold" title="Total Alpa">A</th>
                     </tr>
@@ -81,7 +81,7 @@
                                     @elseif ($code === 'T')
                                         <span class="w-6 h-6 rounded flex items-center justify-center text-white bg-amber-500 font-bold mx-auto shadow-2xs">T</span>
                                     @elseif ($code === 'I')
-                                        <span class="w-6 h-6 rounded flex items-center justify-center text-white bg-purple-600 font-bold mx-auto shadow-2xs">I</span>
+                                        <span class="w-6 h-6 rounded flex items-center justify-center text-white bg-teal-600 font-bold mx-auto shadow-2xs">I</span>
                                     @elseif ($code === 'D')
                                         <span class="w-6 h-6 rounded flex items-center justify-center text-white bg-blue-600 font-bold mx-auto shadow-2xs">D</span>
                                     @elseif ($code === 'L')
@@ -94,7 +94,7 @@
                                 </td>
                             @endfor
                             <td class="py-2 px-1 bg-emerald-50/70 text-emerald-800 border-r border-slate-200 font-extrabold">{{ $summary[$p->id]['H'] ?? 0 }}</td>
-                            <td class="py-2 px-1 bg-purple-50/70 text-purple-800 border-r border-slate-200 font-extrabold">{{ $summary[$p->id]['I'] ?? 0 }}</td>
+                            <td class="py-2 px-1 bg-teal-50/70 text-teal-800 border-r border-slate-200 font-extrabold">{{ $summary[$p->id]['I'] ?? 0 }}</td>
                             <td class="py-2 px-1 bg-blue-50/70 text-blue-800 border-r border-slate-200 font-extrabold">{{ $summary[$p->id]['D'] ?? 0 }}</td>
                             <td class="py-2 px-1 bg-red-50/70 text-red-800 border-r border-slate-200 font-extrabold">{{ $summary[$p->id]['A'] ?? 0 }}</td>
                         </tr>

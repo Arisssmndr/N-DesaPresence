@@ -118,10 +118,10 @@ class DinasLuarKategoriTest extends TestCase
 
         $testDate = Carbon::today()->subDays(2)->toDateString();
         PengajuanAbsenLuar::where('pegawai_id', $this->pegawai->id)
-            ->where('tanggal', $testDate)
+            ->whereDate('tanggal', $testDate)
             ->delete();
         Kehadiran::where('pegawai_id', $this->pegawai->id)
-            ->where('tanggal', $testDate)
+            ->whereDate('tanggal', $testDate)
             ->delete();
 
         $pengajuan = PengajuanAbsenLuar::create([
@@ -145,14 +145,13 @@ class DinasLuarKategoriTest extends TestCase
         $pengajuan->refresh();
         $this->assertEquals('disetujui', $pengajuan->status);
 
-        $this->assertDatabaseHas('kehadirans', [
-            'pegawai_id'  => $this->pegawai->id,
-            'tanggal'     => $testDate,
-            'status'      => 'Dinas Luar',
-            'sumber_data' => 'pengajuan_luar',
-        ]);
-
-        $kehadiran = Kehadiran::where('pegawai_id', $this->pegawai->id)->where('tanggal', $testDate)->first();
+        // Verifikasi dengan whereDate untuk kompatibilitas SQLite/MySQL
+        $kehadiran = Kehadiran::where('pegawai_id', $this->pegawai->id)
+            ->whereDate('tanggal', $testDate)
+            ->where('status', 'Dinas Luar')
+            ->where('sumber_data', 'pengajuan_luar')
+            ->first();
+        $this->assertNotNull($kehadiran, 'Kehadiran Dinas Luar tidak ditemukan setelah approval');
         $this->assertStringContainsString('Dinas Luar (Undangan)', $kehadiran->keterangan);
         $this->assertStringContainsString('DPMD Kabupaten Tasikmalaya', $kehadiran->keterangan);
     }

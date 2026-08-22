@@ -35,21 +35,40 @@ class StafIzinController extends Controller
             return redirect()->route('staf.beranda')->with('error', 'Akun belum terhubung dengan data pegawai.');
         }
 
+        $minDate = Carbon::today()->subDays(60)->toDateString();
+
         $validated = $request->validate([
             'kategori' => 'required|in:izin,sakit',
             'jenis_detail' => 'nullable|string|max:50',
-            'tanggal_mulai' => 'required|date',
+            'tanggal_mulai' => 'required|date|after_or_equal:' . $minDate,
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'keterangan' => 'required|string|max:500',
             'file_lampiran' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120', // Opsional, maks 5MB
         ], [
             'kategori.required' => 'Pilih kategori pengajuan (Izin atau Sakit).',
             'tanggal_mulai.required' => 'Tanggal mulai harus diisi.',
+            'tanggal_mulai.after_or_equal' => 'Tanggal mulai maksimal 60 hari ke belakang.',
             'tanggal_selesai.required' => 'Tanggal selesai harus diisi.',
             'tanggal_selesai.after_or_equal' => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
             'keterangan.required' => 'Berikan alasan / keterangan pengajuan.',
             'file_lampiran.max' => 'Ukuran berkas maksimal 5 MB.',
         ]);
+
+        // Cek tumpang tindih pengajuan izin yang masih aktif
+        $adaIzinBentrok = IzinSakit::where('pegawai_id', $pegawai->id)
+            ->where('status', '!=', 'ditolak')
+            ->where(function ($q) use ($validated) {
+                $q->whereBetween('tanggal_mulai', [$validated['tanggal_mulai'], $validated['tanggal_selesai']])
+                  ->orWhereBetween('tanggal_selesai', [$validated['tanggal_mulai'], $validated['tanggal_selesai']])
+                  ->orWhere(function ($sub) use ($validated) {
+                      $sub->where('tanggal_mulai', '<=', $validated['tanggal_mulai'])
+                          ->where('tanggal_selesai', '>=', $validated['tanggal_selesai']);
+                  });
+            })->exists();
+
+        if ($adaIzinBentrok) {
+            return back()->withInput()->with('error', 'Anda sudah memiliki pengajuan izin/sakit yang aktif pada rentang tanggal tersebut.');
+        }
 
         $lampiranPath = null;
         if ($request->hasFile('file_lampiran')) {

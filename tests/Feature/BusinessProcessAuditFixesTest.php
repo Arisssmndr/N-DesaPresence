@@ -56,7 +56,7 @@ class BusinessProcessAuditFixesTest extends TestCase
         $testDate = Carbon::today()->subDays(3)->toDateString();
 
         // Buat kehadiran langsung (sudah absen di kantor)
-        Kehadiran::where('pegawai_id', $this->pegawai->id)->where('tanggal', $testDate)->delete();
+        Kehadiran::where('pegawai_id', $this->pegawai->id)->whereDate('tanggal', $testDate)->delete();
         $kehadiran = Kehadiran::create([
             'pegawai_id' => $this->pegawai->id,
             'tanggal' => $testDate,
@@ -99,7 +99,7 @@ class BusinessProcessAuditFixesTest extends TestCase
 
         $testDate = Carbon::today()->subDays(4)->toDateString();
 
-        Kehadiran::where('pegawai_id', $this->pegawai->id)->where('tanggal', $testDate)->delete();
+        Kehadiran::where('pegawai_id', $this->pegawai->id)->whereDate('tanggal', $testDate)->delete();
         $kehadiran = Kehadiran::create([
             'pegawai_id' => $this->pegawai->id,
             'tanggal' => $testDate,

@@ -25,7 +25,7 @@ class StafPortalController extends Controller
 
         $today = Carbon::today()->toDateString();
         $kehadiranHariIni = Kehadiran::where('pegawai_id', $pegawai->id)
-            ->where('tanggal', $today)
+            ->whereDate('tanggal', $today)
             ->first();
 
         // Cek WiFi Desa
@@ -45,7 +45,7 @@ class StafPortalController extends Controller
 
         // Cek pengajuan absen luar hari ini
         $pengajuanHariIni = \App\Models\PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
-            ->where('tanggal', $today)
+            ->whereDate('tanggal', $today)
             ->first();
 
         // Jika pengajuan dinas luar hari ini sudah disetujui atau status kehadiran sudah Dinas Luar / Izin / Sakit
@@ -105,7 +105,7 @@ class StafPortalController extends Controller
         $isLepasPiketHariIni = false;
         if ($piketKemarin) {
             $isLepasPiketHariIni = true;
-            // Otomatis pastikan kehadiran hari ini berstatus Lepas Piket
+            // Otomatis pastikan kehadiran hari ini berstatus Lepas Piket HANYA jika belum ada absen fisik
             if (!$kehadiranHariIni) {
                 $kehadiranHariIni = Kehadiran::create([
                     'pegawai_id'        => $pegawai->id,
@@ -115,7 +115,7 @@ class StafPortalController extends Controller
                     'diverifikasi_oleh' => $piketKemarin->created_by ?? 1,
                     'keterangan'        => 'Lepas Piket (Tugas Piket Malam tgl ' . $piketKemarin->tanggal_piket->format('d/m/Y') . ')'
                 ]);
-            } elseif (!str_contains($kehadiranHariIni->keterangan ?? '', 'Lepas Piket')) {
+            } elseif (!$kehadiranHariIni->jam_masuk && !str_contains($kehadiranHariIni->keterangan ?? '', 'Lepas Piket') && $kehadiranHariIni->sumber_data === 'manual_admin') {
                 $kehadiranHariIni->update([
                     'status'     => 'Hadir',
                     'keterangan' => 'Lepas Piket (Tugas Piket Malam tgl ' . $piketKemarin->tanggal_piket->format('d/m/Y') . ')'

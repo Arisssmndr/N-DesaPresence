@@ -91,7 +91,7 @@ class AbsensiSignatureService
         return DB::transaction(function () use ($pegawai, $signatureBase64, $ipAddress, $tanggal, $jamMasuk) {
             // Lock record hari ini jika ada untuk mencegah double tap / race condition
             $existing = Kehadiran::where('pegawai_id', $pegawai->id)
-                ->where('tanggal', $tanggal)
+                ->whereDate('tanggal', $tanggal)
                 ->lockForUpdate()
                 ->first();
 
@@ -113,13 +113,33 @@ class AbsensiSignatureService
                 ->whereDate('tanggal_selesai', '>=', $tanggal)
                 ->exists();
 
-            $statusKehadiran = $adaSPT ? 'Dinas Luar' : 'Hadir';
+            $statusKehadiran = 'Hadir';
+            $terlambatMenit = 0;
+
+            if ($adaSPT) {
+                $statusKehadiran = 'Dinas Luar';
+            } else {
+                $shift = $pegawai->shift ?? \App\Models\ShiftKerja::where('is_active', true)->first();
+                if ($shift && $shift->jam_masuk) {
+                    $jadwalMasuk = Carbon::createFromTimeString($shift->jam_masuk);
+                    $toleransi = (int) ($shift->toleransi_menit ?? 0);
+                    $batasTepatWaktu = $jadwalMasuk->copy()->addMinutes($toleransi);
+                    $waktuMasuk = Carbon::createFromTimeString($jamMasuk);
+
+                    if ($waktuMasuk->gt($batasTepatWaktu)) {
+                        $statusKehadiran = 'Terlambat';
+                        $terlambatMenit = (int) $jadwalMasuk->diffInMinutes($waktuMasuk);
+                    } else {
+                        $statusKehadiran = 'Tepat Waktu';
+                    }
+                }
+            }
 
             $kehadiran = Kehadiran::updateOrCreate(
                 ['pegawai_id' => $pegawai->id, 'tanggal' => $tanggal],
                 [
                     'jam_masuk'           => $jamMasuk,
-                    'terlambat_menit'     => 0,
+                    'terlambat_menit'     => $terlambatMenit,
                     'status'              => $statusKehadiran,
                     'sumber_data'         => 'web_signature',
                     'tanda_tangan_masuk'  => $signaturePath,
@@ -127,10 +147,12 @@ class AbsensiSignatureService
                 ]
             );
 
+            $ketTerlambat = $terlambatMenit > 0 ? " (Terlambat {$terlambatMenit} menit)" : "";
+
             AuditLog::create([
                 'user_name' => $pegawai->nama_lengkap,
                 'role'      => $pegawai->jabatan->nama_jabatan ?? 'Perangkat Desa',
-                'aktivitas' => "Absen masuk via tanda tangan web ({$statusKehadiran}) pukul {$jamMasuk} dari IP {$ipAddress}",
+                'aktivitas' => "Absen masuk via tanda tangan web ({$statusKehadiran}{$ketTerlambat}) pukul {$jamMasuk} dari IP {$ipAddress}",
                 'modul'     => 'Absensi Tanda Tangan',
                 'ip_address'=> $ipAddress,
             ]);
@@ -154,7 +176,7 @@ class AbsensiSignatureService
 
         return DB::transaction(function () use ($pegawai, $signatureBase64, $ipAddress, $tanggal, $jamPulang) {
             $kehadiran = Kehadiran::where('pegawai_id', $pegawai->id)
-                ->where('tanggal', $tanggal)
+                ->whereDate('tanggal', $tanggal)
                 ->lockForUpdate()
                 ->first();
 

@@ -45,7 +45,9 @@ class Dashboard extends Component
     {
         $today = Carbon::today()->toDateString();
         $totalPegawai = Pegawai::where('status_aktif', true)->count();
-        $kehadiranHariIni = Kehadiran::where('tanggal', $today)->get();
+        $kehadiranHariIni = Kehadiran::with('pegawai.jabatan')
+            ->whereDate('tanggal', $today)
+            ->get();
 
         $hadirCount = $kehadiranHariIni->whereIn('status', ['Hadir', 'Tepat Waktu', 'Terlambat'])->count();
         $izinSakitCount = $kehadiranHariIni->whereIn('status', ['Izin', 'Sakit'])->count();
@@ -127,11 +129,7 @@ class Dashboard extends Component
                 'belumMasuk'   => $belumMasukCount,
                 'persenHadir'  => $persenHadir,
             ],
-            'listAbsenHariIni' => Kehadiran::with('pegawai.jabatan')
-                ->where('tanggal', $today)
-                ->latest('updated_at')
-                ->take(15)
-                ->get(),
+            'listAbsenHariIni' => $kehadiranHariIni->sortByDesc('updated_at')->take(15),
             'auditLogs'        => AuditLog::latest()->take(5)->get(),
             'calendarGrid'     => $calendarGrid,
             'namaBulanTahun'   => $firstDayOfMonth->translatedFormat('F Y'),

@@ -6,15 +6,15 @@
 <div class="space-y-4">
 
     <!-- Header Banner -->
-    <div class="sadi-card p-5 bg-linear-to-br from-[#064E3B] to-[#04392B] text-white rounded-2xl shadow-lg border border-[#C9A84C]/40 relative overflow-hidden">
+    <div class="sadi-card p-5 text-white rounded-2xl shadow-lg border border-[#C9A84C]/40 relative overflow-hidden" style="background: linear-gradient(135deg, #064E3B 0%, #04392B 100%) !important;">
         <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-[#C9A84C]/15 rounded-full blur-xl pointer-events-none"></div>
         <div class="relative z-10 flex items-center justify-between">
             <div>
-                <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[#E2C268] text-[#064E3B] uppercase tracking-wider">
+                <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[#E2C268] text-[#064E3B] uppercase tracking-wider shadow-xs">
                     Layanan Mandiri Perangkat
                 </span>
-                <h1 class="font-outfit text-lg font-bold text-white mt-1">Pengajuan Izin & Sakit</h1>
-                <p class="text-xs text-emerald-200 mt-0.5"></p>
+                <h1 class="font-outfit text-lg font-bold text-white mt-1.5">Pengajuan Izin & Sakit</h1>
+                <p class="text-xs text-emerald-200 mt-0.5">Formulir permohonan izin tidak masuk kerja & surat sakit</p>
             </div>
             <div class="w-12 h-12 rounded-2xl bg-[#C9A84C] text-[#064E3B] flex items-center justify-center font-bold text-xl shadow shrink-0">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

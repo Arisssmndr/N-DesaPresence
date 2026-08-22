@@ -52,6 +52,23 @@ class IzinManager extends Component
     {
         $this->validate();
 
+        // Cek tumpang tindih izin aktif
+        $adaIzinBentrok = IzinSakit::where('pegawai_id', $this->pegawai_id)
+            ->where('status', '!=', 'ditolak')
+            ->where(function ($q) {
+                $q->whereBetween('tanggal_mulai', [$this->tanggal_mulai, $this->tanggal_selesai])
+                  ->orWhereBetween('tanggal_selesai', [$this->tanggal_mulai, $this->tanggal_selesai])
+                  ->orWhere(function ($sub) {
+                      $sub->where('tanggal_mulai', '<=', $this->tanggal_mulai)
+                          ->where('tanggal_selesai', '>=', $this->tanggal_selesai);
+                  });
+            })->exists();
+
+        if ($adaIzinBentrok) {
+            $this->addError('tanggal_mulai', 'Pegawai sudah memiliki pengajuan izin/sakit yang aktif pada rentang tanggal tersebut.');
+            return;
+        }
+
         \Illuminate\Support\Facades\DB::transaction(function () {
             $lampiranPath = null;
             if ($this->file_lampiran) {
@@ -157,7 +174,7 @@ class IzinManager extends Component
         while ($start->lte($end)) {
             $dateStr = $start->toDateString();
             $existing = Kehadiran::where('pegawai_id', $izin->pegawai_id)
-                ->where('tanggal', $dateStr)
+                ->whereDate('tanggal', $dateStr)
                 ->first();
 
             if (!$existing) {

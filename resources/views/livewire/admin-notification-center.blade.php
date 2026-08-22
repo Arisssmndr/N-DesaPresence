@@ -53,7 +53,7 @@
                 <p class="text-[10px] font-bold text-slate-500 group-hover:text-[#064E3B]">Absen Luar</p>
             </a>
             <a href="{{ route('izin.index') }}" wire:navigate class="p-2 rounded-xl transition group bg-white border border-slate-200/80 hover:border-[#064E3B] shadow-sm">
-                <p class="font-outfit font-extrabold text-sm {{ $totalIzinSakit > 0 ? 'text-purple-800' : 'text-slate-700' }}">{{ $totalIzinSakit }}</p>
+                <p class="font-outfit font-extrabold text-sm {{ $totalIzinSakit > 0 ? 'text-teal-800' : 'text-slate-700' }}">{{ $totalIzinSakit }}</p>
                 <p class="text-[10px] font-bold text-slate-500 group-hover:text-[#064E3B]">Izin / Sakit</p>
             </a>
             <a href="{{ route('spt.index') }}" wire:navigate class="p-2 rounded-xl transition group bg-white border border-slate-200/80 hover:border-[#064E3B] shadow-sm">
@@ -111,15 +111,18 @@
 
             {{-- 2. Pengajuan Izin & Sakit Items --}}
             @foreach($izinSakits as $i)
+                @php
+                    $isSakit = str_contains($i->jenis, 'sakit');
+                @endphp
                 <a href="{{ route('izin.index') }}" wire:navigate
-                   class="p-3.5 hover:bg-purple-50/80 transition flex items-start gap-3 block group border-l-4 border-purple-600 bg-white">
-                    <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-800 border border-purple-300 flex items-center justify-center shrink-0 mt-0.5">
+                   class="p-3.5 {{ $isSakit ? 'hover:bg-rose-50/80 border-rose-500' : 'hover:bg-teal-50/80 border-teal-600' }} transition flex items-start gap-3 block group border-l-4 bg-white">
+                    <div class="w-9 h-9 rounded-xl {{ $isSakit ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-teal-100 text-teal-800 border-teal-300' }} border flex items-center justify-center shrink-0 mt-0.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between gap-1 mb-0.5">
-                            <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-purple-100 text-purple-900 border border-purple-300">
-                                Permohonan {{ ucfirst($i->jenis) }}
+                            <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded {{ $isSakit ? 'bg-rose-100 text-rose-900 border-rose-300' : 'bg-teal-100 text-teal-900 border-teal-300' }} border">
+                                Permohonan {{ ucfirst(str_replace('_', ' ', $i->jenis)) }}
                             </span>
                             <span class="text-[10px] text-slate-400 font-semibold">{{ $i->created_at->diffForHumans() }}</span>
                         </div>
@@ -129,7 +132,7 @@
                         <p class="text-[11px] text-slate-600 line-clamp-1 mt-0.5">
                             {{ $i->keterangan }}
                         </p>
-                        <div class="mt-1 text-[10px] text-purple-800 font-bold">
+                        <div class="mt-1 text-[10px] {{ $isSakit ? 'text-rose-800' : 'text-teal-800' }} font-bold">
                             📅 {{ $i->tanggal_mulai->format('d/m/Y') }} — {{ $i->tanggal_selesai->format('d/m/Y') }} ({{ $i->jumlah_hari }} Hari)
                         </div>
                     </div>

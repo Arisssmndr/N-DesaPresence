@@ -28,12 +28,12 @@ class PengajuanAbsenLuarController extends Controller
 
         // Cek apakah sudah ada catatan kehadiran langsung di kantor hari ini
         $kehadiranHariIni = Kehadiran::where('pegawai_id', $pegawai->id)
-            ->where('tanggal', $today)
+            ->whereDate('tanggal', $today)
             ->first();
 
         // Cek apakah sudah ada pengajuan absen luar hari ini
         $pengajuanHariIni = PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
-            ->where('tanggal', $today)
+            ->whereDate('tanggal', $today)
             ->first();
 
         return view('staf.ajukan-absen', compact('user', 'pegawai', 'kehadiranHariIni', 'pengajuanHariIni', 'today'));
@@ -51,8 +51,10 @@ class PengajuanAbsenLuarController extends Controller
             return back()->with('error', 'Data kepegawaian Anda tidak ditemukan.');
         }
 
+        $minDate = Carbon::today()->subDays(30)->toDateString();
+
         $request->validate([
-            'tanggal'              => 'required|date|before_or_equal:today',
+            'tanggal'              => 'required|date|before_or_equal:today|after_or_equal:' . $minDate,
             'jenis'                => 'required|in:dinas_luar_undangan,dinas_luar_pengajuan,dinas_luar_surat_tugas,kegiatan_sosial,dinas_luar',
             'judul'                => 'required|string|max:150',
             'instansi_pengundang'  => 'required_if:jenis,dinas_luar_undangan|nullable|string|max:150',
@@ -66,6 +68,7 @@ class PengajuanAbsenLuarController extends Controller
             'alamat_gps'           => 'nullable|string|max:255',
             'tanda_tangan'         => 'required|string|min:100',
         ], [
+            'tanggal.after_or_equal'           => 'Pengajuan absen luar maksimal untuk 30 hari ke belakang.',
             'instansi_pengundang.required_if'  => 'Instansi / Pihak Pengundang wajib diisi untuk Dinas Luar Undangan.',
             'foto_lokasi.required_if'          => 'Foto bukti situasi / lokasi wajib diunggah.',
             'file_dokumen.required_if'         => 'Dokumen resmi / surat tugas / undangan wajib diunggah.',
@@ -78,10 +81,10 @@ class PengajuanAbsenLuarController extends Controller
 
         // 1. Cek apakah sudah ada catatan kehadiran langsung di kantor pada tanggal yang diajukan
         $kehadiran = Kehadiran::where('pegawai_id', $pegawai->id)
-            ->where('tanggal', $request->tanggal)
+            ->whereDate('tanggal', $request->tanggal)
             ->first();
 
-        if ($kehadiran && ($kehadiran->jam_masuk || in_array(strtolower($kehadiran->status), ['hadir', 'terlambat', 'dinas luar']))) {
+        if ($kehadiran && ($kehadiran->jam_masuk || in_array(strtolower($kehadiran->status), ['hadir', 'tepat waktu', 'terlambat', 'dinas luar']))) {
             $info = $kehadiran->jam_masuk 
                 ? 'Absen Masuk pukul ' . substr($kehadiran->jam_masuk, 0, 5) . ' WIB' 
                 : 'Status: ' . $kehadiran->status;
@@ -90,7 +93,7 @@ class PengajuanAbsenLuarController extends Controller
 
         // 2. Cek duplikasi pengajuan pada tanggal yang sama
         $existing = PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
-            ->where('tanggal', $request->tanggal)
+            ->whereDate('tanggal', $request->tanggal)
             ->first();
 
         if ($existing) {

@@ -61,7 +61,7 @@
 }
 
 .sadi-card {
-  background: #FFFFFF;
+  background-color: #FFFFFF;
   border-radius: 16px;
   box-shadow: 0px 4px 20px rgba(27, 77, 62, 0.05);
   border: 1px solid rgba(201, 168, 76, 0.18);
@@ -110,7 +110,7 @@
   color: #1E40AF;
 }
 
-.sadi-badge-purple {
-  background-color: #F3E8FF;
-  color: #6B21A8;
+.sadi-badge-teal {
+  background-color: #CCFBF1;
+  color: #115E59;
 }

@@ -57,6 +57,23 @@ class SptManager extends Component
     {
         $this->validate();
 
+        // Cek tumpang tindih SPT aktif
+        $adaSptBentrok = SuratPerintahTugas::where('pegawai_id', $this->pegawai_id)
+            ->where('status', '!=', 'ditolak')
+            ->where(function ($q) {
+                $q->whereBetween('tanggal_mulai', [$this->tanggal_mulai, $this->tanggal_selesai])
+                  ->orWhereBetween('tanggal_selesai', [$this->tanggal_mulai, $this->tanggal_selesai])
+                  ->orWhere(function ($sub) {
+                      $sub->where('tanggal_mulai', '<=', $this->tanggal_mulai)
+                          ->where('tanggal_selesai', '>=', $this->tanggal_selesai);
+                  });
+            })->exists();
+
+        if ($adaSptBentrok) {
+            $this->addError('tanggal_mulai', 'Pegawai sudah memiliki SPT aktif pada rentang tanggal tersebut.');
+            return;
+        }
+
         \Illuminate\Support\Facades\DB::transaction(function () {
             $undanganPath = null;
             if ($this->file_undangan) {
@@ -66,10 +83,12 @@ class SptManager extends Component
             // Auto-generate nomor SPT: SPT/BULAN/TAHUN/URUTAN
             $month = Carbon::parse($this->tanggal_mulai)->format('m');
             $year = Carbon::parse($this->tanggal_mulai)->format('Y');
-            $countThisMonth = SuratPerintahTugas::whereYear('created_at', $year)->whereMonth('created_at', $month)->lockForUpdate()->count() + 1;
+            $countThisMonth = SuratPerintahTugas::whereYear('created_at', $year)->whereMonth('created_at', $month)->count() + 1;
             $nomorSpt = sprintf("SPT/%s/%s/%03d", $month, $year, $countThisMonth);
 
             $isKades = auth()->user()->isKades();
+            $isAdmin = auth()->user()->isAdmin();
+            $status = ($isKades || $isAdmin) ? 'disetujui' : 'diajukan';
 
             $spt = SuratPerintahTugas::create([
                 'nomor_spt' => $nomorSpt,
@@ -80,13 +99,15 @@ class SptManager extends Component
                 'keperluan' => $this->keperluan,
                 'file_undangan' => $undanganPath,
                 'anggaran' => $this->anggaran ?? 0,
-                'status' => 'disetujui',
-                'disetujui_oleh' => auth()->id(),
-                'tanggal_persetujuan' => now(),
+                'status' => $status,
+                'disetujui_oleh' => $status === 'disetujui' ? auth()->id() : null,
+                'tanggal_persetujuan' => $status === 'disetujui' ? now() : null,
                 'created_by' => auth()->id(),
             ]);
 
-            $this->applySptAttendance($spt);
+            if ($spt->status === 'disetujui') {
+                $this->applySptAttendance($spt);
+            }
 
             $pegawai = Pegawai::find($this->pegawai_id);
 
@@ -165,7 +186,7 @@ class SptManager extends Component
         while ($start->lte($end)) {
             $dateStr = $start->toDateString();
             $existing = Kehadiran::where('pegawai_id', $spt->pegawai_id)
-                ->where('tanggal', $dateStr)
+                ->whereDate('tanggal', $dateStr)
                 ->first();
 
             if (!$existing) {

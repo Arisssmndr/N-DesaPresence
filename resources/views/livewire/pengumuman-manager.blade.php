@@ -19,7 +19,7 @@
                 $kategoriStyle = match($p->kategori) {
                     'penting' => 'bg-red-50 text-red-700 border-red-200',
                     'rapat' => 'bg-blue-50 text-blue-700 border-blue-200',
-                    'kegiatan' => 'bg-purple-50 text-purple-700 border-purple-200',
+                    'kegiatan' => 'bg-amber-50 text-amber-800 border-amber-200',
                     default => 'bg-emerald-50 text-emerald-800 border-emerald-200',
                 };
             @endphp

@@ -182,7 +182,7 @@
                         <td class="px-6 py-4">
                             @php
                                 $roleBadge = match($u->role) {
-                                    'admin' => ['Admin Sekdes', 'bg-purple-100 text-purple-800'],
+                                    'admin' => ['Admin Sekdes', 'bg-emerald-100 text-emerald-800 border border-emerald-300'],
                                     'kepala_desa' => ['Kepala Desa', 'bg-amber-100 text-amber-800'],
                                     'perangkat' => ['Perangkat Desa', 'bg-emerald-100 text-emerald-800'],
                                     'auditor' => ['Auditor', 'bg-blue-100 text-blue-800'],

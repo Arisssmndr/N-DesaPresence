@@ -4,7 +4,7 @@
 <div class="space-y-5 pb-6">
 
     <!-- Profile Header Card -->
-    <div class="sadi-card p-5 bg-gradient-to-br from-[#064E3B] to-[#04392B] text-white border-0 shadow-xl relative overflow-hidden">
+    <div class="sadi-card p-5 text-white border-0 shadow-xl relative overflow-hidden" style="background: linear-gradient(135deg, #064E3B 0%, #04392B 100%) !important;">
         <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-[#C9A84C]/10 rounded-full blur-xl"></div>
 
         <div class="flex items-center gap-4 relative z-10">

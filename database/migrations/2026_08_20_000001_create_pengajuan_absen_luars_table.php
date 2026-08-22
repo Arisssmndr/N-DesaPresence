@@ -18,9 +18,19 @@ return new class extends Migration
 
             // Data Pengajuan
             $table->date('tanggal'); // Tanggal absensi yang dimohonkan
-            $table->enum('jenis', ['kegiatan_sosial', 'dinas_luar']);
-            $table->string('judul', 150); // Ringkasan singkat
-            $table->text('deskripsi');   // Keterangan lengkap kegiatan/tujuan
+            $table->enum('jenis', [
+                'kegiatan_sosial',
+                'dinas_luar',
+                'dinas_luar_undangan',
+                'dinas_luar_pengajuan',
+                'dinas_luar_surat_tugas',
+            ]);
+            $table->string('judul', 150);  // Ringkasan singkat
+            $table->text('deskripsi');     // Keterangan lengkap kegiatan/tujuan
+
+            // Detail Jenis Khusus
+            $table->string('instansi_pengundang', 255)->nullable(); // untuk dinas_luar_undangan
+            $table->string('nomor_surat_tugas', 100)->nullable();   // untuk dinas_luar_surat_tugas
 
             // Bukti
             $table->string('foto_lokasi', 500)->nullable();    // Upload foto (kegiatan_sosial)
@@ -39,14 +49,18 @@ return new class extends Migration
             $table->unique(['pegawai_id', 'tanggal'], 'unique_pengajuan_per_hari');
         });
 
-        // Tambahkan nilai 'pengajuan_luar' ke enum sumber_data pada tabel kehadirans
-        DB::statement("ALTER TABLE kehadirans MODIFY COLUMN sumber_data ENUM('fingerprint', 'manual_admin', 'import_file', 'web_signature', 'pengajuan_luar') DEFAULT 'web_signature'");
+        // Tambahkan nilai 'pengajuan_luar' ke enum sumber_data pada tabel kehadirans (MySQL only)
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE kehadirans MODIFY COLUMN sumber_data ENUM('fingerprint', 'manual_admin', 'import_file', 'web_signature', 'pengajuan_luar') DEFAULT 'web_signature'");
+        }
     }
 
     public function down(): void
     {
         Schema::dropIfExists('pengajuan_absen_luars');
 
-        DB::statement("ALTER TABLE kehadirans MODIFY COLUMN sumber_data ENUM('fingerprint', 'manual_admin', 'import_file', 'web_signature') DEFAULT 'web_signature'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE kehadirans MODIFY COLUMN sumber_data ENUM('fingerprint', 'manual_admin', 'import_file', 'web_signature') DEFAULT 'web_signature'");
+        }
     }
 };

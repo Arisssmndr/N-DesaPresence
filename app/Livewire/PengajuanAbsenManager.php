@@ -164,10 +164,17 @@ class PengajuanAbsenManager extends Component
     // ─── Helper: Buat/Update Record Kehadiran ────────────────────────────────
     private function buatAtauUpdateKehadiran(PengajuanAbsenLuar $pengajuan): void
     {
-        $kehadiran = Kehadiran::firstOrNew([
-            'pegawai_id' => $pengajuan->pegawai_id,
-            'tanggal'    => $pengajuan->tanggal->toDateString(),
-        ]);
+        $dateStr = $pengajuan->tanggal->toDateString();
+        $kehadiran = Kehadiran::where('pegawai_id', $pengajuan->pegawai_id)
+            ->whereDate('tanggal', $dateStr)
+            ->first();
+
+        if (!$kehadiran) {
+            $kehadiran = new Kehadiran([
+                'pegawai_id' => $pengajuan->pegawai_id,
+                'tanggal'    => $dateStr,
+            ]);
+        }
 
         $labelJenis = $pengajuan->label_jenis;
         if ($pengajuan->jenis === 'dinas_luar_undangan' && $pengajuan->instansi_pengundang) {
@@ -200,7 +207,7 @@ class PengajuanAbsenManager extends Component
         $query = PengajuanAbsenLuar::with(['pegawai.jabatan', 'user', 'diprosesoleh'])
             ->when($this->filterStatus, fn($q) => $q->where('status', $this->filterStatus))
             ->when($this->filterJenis, fn($q) => $q->where('jenis', $this->filterJenis))
-            ->when($this->filterTanggal, fn($q) => $q->where('tanggal', $this->filterTanggal))
+            ->when($this->filterTanggal, fn($q) => $q->whereDate('tanggal', $this->filterTanggal))
             ->when($this->filterCari, fn($q) => $q->whereHas('pegawai', function ($sq) {
                 $sq->where('nama_lengkap', 'like', '%' . $this->filterCari . '%');
             }))

@@ -40,7 +40,7 @@
     </script>
     <style>
         body { background-color: #F5F0E8; color: #1C2826; }
-        .sadi-card { background: #FFFFFF; border-radius: 20px; box-shadow: 0px 4px 20px rgba(27, 77, 62, 0.06); border: 1px solid rgba(201, 168, 76, 0.2); }
+        .sadi-card { background-color: #FFFFFF; border-radius: 20px; box-shadow: 0px 4px 20px rgba(27, 77, 62, 0.06); border: 1px solid rgba(201, 168, 76, 0.2); }
         .btn-gold {
             background: linear-gradient(135deg, #E2C268 0%, #C9A84C 100%);
             color: #064E3B;

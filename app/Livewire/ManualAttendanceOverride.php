@@ -30,7 +30,7 @@ class ManualAttendanceOverride extends Component
         return [
             'pegawai_id' => 'required|exists:pegawais,id',
             'tanggal' => 'required|date',
-            'status' => 'required|in:Hadir,Izin,Sakit,Dinas Luar,Alpa',
+            'status' => 'required|in:Hadir,Tepat Waktu,Terlambat,Izin,Sakit,Dinas Luar,Alpa,Libur',
             'keterangan' => 'required|string|min:5|max:255',
         ];
     }

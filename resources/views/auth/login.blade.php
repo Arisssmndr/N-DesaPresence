@@ -74,21 +74,19 @@
                 </button>
             </form>
 
-            <!-- Akun Bawaan Seeder Hint -->
-            <div class="mt-8 pt-6 border-t border-slate-200/70 text-center">
-                <p class="text-[11px] text-slate-500 font-semibold mb-2 uppercase tracking-wider">Kredensial Pengujian (Seeder Defaults)</p>
-                <div class="grid grid-cols-2 gap-2 text-left text-[11px]">
-                    <div class="p-2.5 bg-white rounded-xl border border-[#C9A84C]/30 shadow-sm">
-                        <p class="font-bold text-[#064E3B]">Admin / Sekdes:</p>
-                        <p class="text-slate-600">User: <code class="text-amber-900 font-bold">admin</code></p>
-                        <p class="text-slate-600">Pass: <code class="text-amber-900 font-bold">admin123</code></p>
-                    </div>
-                    <div class="p-2.5 bg-white rounded-xl border border-[#C9A84C]/30 shadow-sm">
-                        <p class="font-bold text-[#064E3B]">Kepala Desa:</p>
-                        <p class="text-slate-600">User: <code class="text-amber-900 font-bold">kades</code></p>
-                        <p class="text-slate-600">Pass: <code class="text-amber-900 font-bold">kades123</code></p>
-                    </div>
-                </div>
+            <!-- Akses Portal Presensi Staf / Pengguna -->
+            <div class="mt-8 pt-6 border-t border-slate-200/70 text-center space-y-2">
+                <p class="text-xs text-slate-500 font-medium">Bukan Administrator / Ingin melakukan Presensi Staf?</p>
+                <a href="{{ route('staf.login') }}"
+                   class="inline-flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100/80 border border-[#064E3B]/20 text-[#064E3B] text-xs font-extrabold shadow-sm transition active:scale-[0.99]">
+                    <svg class="w-4 h-4 text-[#064E3B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    <span>Masuk ke Portal Presensi Staf / Pengguna</span>
+                    <svg class="w-3.5 h-3.5 text-[#064E3B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
             </div>
 
         </div>

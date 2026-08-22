@@ -222,7 +222,7 @@
         </div>
         
         <div class="flex items-center gap-2 self-end sm:self-center">
-            @if(!$isWifiValid)
+            @if(!$isWifiValid && (!$kehadiranHariIni || !$kehadiranHariIni->jam_masuk))
                 <a href="{{ route('staf.ajukan.form') }}" class="px-3.5 py-2 rounded-xl bg-[#064E3B] text-white font-extrabold text-xs shadow hover:bg-[#04392B] transition flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     <span>Ajukan Absen Luar</span>
@@ -272,8 +272,37 @@
 
     <!-- Tombol Aksi Absensi (Berdasarkan Jam & WiFi) -->
     <div class="space-y-3">
+        {{-- Info jika sedang menunggu persetujuan absen luar --}}
+        @if(isset($pengajuanHariIni) && $pengajuanHariIni && $pengajuanHariIni->status === 'menunggu')
+            <div class="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-center space-y-1.5 shadow-sm">
+                <div class="flex items-center justify-center gap-1.5 text-xs font-extrabold text-amber-900">
+                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Pengajuan Absen Luar Sedang Menunggu Persetujuan Admin</span>
+                </div>
+                <p class="text-[11px] text-amber-800">
+                    Anda telah mengajukan <strong>{{ $pengajuanHariIni->judul }}</strong> ({{ $pengajuanHariIni->label_jenis }}). Status presensi akan otomatis terupdate begitu disetujui.
+                </p>
+                <div class="pt-1">
+                    <a href="{{ route('staf.riwayat.pengajuan') }}" class="text-[11px] font-bold text-amber-900 underline">Lihat Detail Pengajuan &rarr;</a>
+                </div>
+            </div>
+        @endif
+
+        {{-- Info jika berstatus Dinas Luar / Izin / Sakit resmi tanpa scan kantor --}}
+        @if($kehadiranHariIni && in_array(strtolower($kehadiranHariIni->status), ['dinas luar', 'izin', 'sakit']) && !$kehadiranHariIni->jam_masuk)
+            <div class="p-4 rounded-2xl bg-indigo-50 border-2 border-indigo-200 text-center space-y-1.5 shadow-sm">
+                <div class="flex items-center justify-center gap-1.5 text-xs font-extrabold text-indigo-900">
+                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Status Presensi Hari Ini: {{ $kehadiranHariIni->status }}</span>
+                </div>
+                <p class="text-[11px] text-indigo-800">
+                    {{ $kehadiranHariIni->keterangan ?? 'Anda tercatat sedang bertugas dinas luar / izin resmi hari ini.' }}
+                </p>
+            </div>
+        @endif
+
         {{-- Tombol Absen Masuk --}}
-        @if(!$kehadiranHariIni || !$kehadiranHariIni->jam_masuk)
+        @if((!$kehadiranHariIni || !$kehadiranHariIni->jam_masuk) && !($kehadiranHariIni && in_array(strtolower($kehadiranHariIni->status), ['dinas luar', 'izin', 'sakit'])))
             @if($bisaAbsenMasuk)
                 <a href="{{ route('staf.absen.form', 'masuk') }}"
                     class="w-full py-4 rounded-2xl btn-gold text-center text-base font-bold shadow-xl active:scale-98 transition duration-150 flex items-center justify-center gap-2">

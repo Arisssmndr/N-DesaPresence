@@ -20,6 +20,7 @@ class UserStafManager extends Component
         'name' => '',
         'username' => '',
         'email' => '',
+        'password' => '',
         'role' => 'perangkat',
         'is_active' => true,
     ];
@@ -35,6 +36,9 @@ class UserStafManager extends Component
 
     protected function rules(): array
     {
+        $isAdministrative = in_array($this->form['role'] ?? '', UserRole::administrativeRoles());
+        $isCreating = empty($this->editingId);
+
         return [
             'form.pegawai_id' => 'nullable|exists:pegawais,id',
             'form.name' => 'required|string|max:150',
@@ -52,6 +56,9 @@ class UserStafManager extends Component
                 'max:100',
                 Rule::unique('users', 'email')->ignore($this->editingId),
             ],
+            'form.password' => ($isAdministrative && $isCreating)
+                ? 'required|string|min:6'
+                : 'nullable|string|min:6',
             'form.role' => 'required|in:' . implode(',', UserRole::values()),
             'form.is_active' => 'boolean',
         ];
@@ -86,6 +93,7 @@ class UserStafManager extends Component
             'name' => $user->name,
             'username' => $user->username,
             'email' => $user->email ?? '',
+            'password' => '',
             'role' => $user->role,
             'is_active' => $user->is_active,
         ];
@@ -101,14 +109,17 @@ class UserStafManager extends Component
             $data['pegawai_id'] = null;
         }
 
+        if (!empty($data['password'])) {
+            $data['password'] = bcrypt($data['password']);
+        } else {
+            unset($data['password']);
+        }
+
         if ($this->editingId) {
             $user = User::findOrFail($this->editingId);
             $user->update($data);
             $pesan = "Update akun pengguna: {$user->name} (@{$user->username})";
         } else {
-            if ($data['role'] !== UserRole::PERANGKAT->value) {
-                $data['password'] = bcrypt(Str::random(12));
-            }
             $user = User::create($data);
             $pesan = "Buat akun pengguna baru: {$user->name} (@{$user->username})";
         }
@@ -173,6 +184,7 @@ class UserStafManager extends Component
             'name' => '',
             'username' => '',
             'email' => '',
+            'password' => '',
             'role' => UserRole::PERANGKAT->value,
             'is_active' => true,
         ];

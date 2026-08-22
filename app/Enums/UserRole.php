@@ -31,7 +31,6 @@ enum UserRole: string
         return [
             self::ADMIN->value,
             self::KEPALA_DESA->value,
-            self::AUDITOR->value,
         ];
     }
 }

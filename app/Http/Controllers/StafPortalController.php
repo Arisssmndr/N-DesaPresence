@@ -43,8 +43,17 @@ class StafPortalController extends Controller
         $isWaktuMasuk = ($nowTime >= $jamMasukMulai && $nowTime <= $jamMasukSelesai);
         $isWaktuPulang = ($nowTime >= $jamPulangMulai && $nowTime <= $jamPulangSelesai);
 
-        $bisaAbsenMasuk = $isWifiValid && $isWaktuMasuk && (!$kehadiranHariIni || !$kehadiranHariIni->jam_masuk);
-        $bisaAbsenPulang = $isWifiValid && $isWaktuPulang && ($kehadiranHariIni && $kehadiranHariIni->jam_masuk && !$kehadiranHariIni->jam_pulang);
+        // Cek pengajuan absen luar hari ini
+        $pengajuanHariIni = \App\Models\PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
+            ->where('tanggal', $today)
+            ->first();
+
+        // Jika pengajuan dinas luar hari ini sudah disetujui atau status kehadiran sudah Dinas Luar / Izin / Sakit
+        $sudahDinasLuarAtauIzin = ($pengajuanHariIni && $pengajuanHariIni->status === 'disetujui') 
+            || ($kehadiranHariIni && in_array(strtolower($kehadiranHariIni->status), ['dinas luar', 'izin', 'sakit']));
+
+        $bisaAbsenMasuk = !$sudahDinasLuarAtauIzin && $isWifiValid && $isWaktuMasuk && (!$kehadiranHariIni || !$kehadiranHariIni->jam_masuk);
+        $bisaAbsenPulang = !$sudahDinasLuarAtauIzin && $isWifiValid && $isWaktuPulang && ($kehadiranHariIni && $kehadiranHariIni->jam_masuk && !$kehadiranHariIni->jam_pulang);
 
         // 5 riwayat kehadiran terakhir
         $riwayatTerakhir = Kehadiran::where('pegawai_id', $pegawai->id)
@@ -75,6 +84,7 @@ class StafPortalController extends Controller
             'user',
             'pegawai',
             'kehadiranHariIni',
+            'pengajuanHariIni',
             'isWifiValid',
             'clientIp',
             'isWaktuMasuk',

@@ -34,8 +34,68 @@
     </div>
     @endif
 
-    {{-- Sudah ada pengajuan hari ini --}}
-    @if($pengajuanHariIni)
+    {{-- 1. SUDAH ABSEN LANGSUNG HARI INI --}}
+    @if(isset($kehadiranHariIni) && $kehadiranHariIni && ($kehadiranHariIni->jam_masuk || in_array(strtolower($kehadiranHariIni->status), ['hadir', 'terlambat', 'dinas luar'])))
+    <div class="sadi-card p-6 bg-gradient-to-br from-emerald-50 via-white to-amber-50 border-2 border-emerald-400 text-center space-y-3.5 shadow-lg rounded-3xl">
+        <div class="w-14 h-14 rounded-2xl bg-emerald-600 border-2 border-[#C9A84C] flex items-center justify-center mx-auto text-white shadow-md">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </div>
+        
+        <div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-extrabold mb-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Presensi Langsung Tercatat</span>
+            </span>
+            <h4 class="font-outfit font-extrabold text-[#064E3B] text-base">Anda Sudah Melakukan Absensi Hari Ini</h4>
+            <p class="text-xs text-slate-600 mt-1 max-w-sm mx-auto">
+                Data kehadiran Anda pada hari ini (<strong class="text-slate-800">{{ \Carbon\Carbon::today()->isoFormat('dddd, D MMMM Y') }}</strong>) sudah tercatat di kantor desa.
+            </p>
+        </div>
+
+        {{-- Detail Kehadiran Hari Ini --}}
+        <div class="grid grid-cols-2 gap-2.5 max-w-xs mx-auto text-left pt-1">
+            <div class="p-3 bg-white rounded-xl border border-emerald-200 shadow-sm text-center">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Jam Masuk</p>
+                <p class="font-mono text-sm font-extrabold text-[#064E3B] mt-0.5">
+                    {{ $kehadiranHariIni->jam_masuk ? substr($kehadiranHariIni->jam_masuk, 0, 5) . ' WIB' : 'Tercatat' }}
+                </p>
+            </div>
+            <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Jam Pulang</p>
+                <p class="font-mono text-sm font-extrabold text-blue-700 mt-0.5">
+                    {{ $kehadiranHariIni->jam_pulang ? substr($kehadiranHariIni->jam_pulang, 0, 5) . ' WIB' : 'Belum Pulang' }}
+                </p>
+            </div>
+        </div>
+
+        <div class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-[11px] text-amber-900 text-left space-y-1">
+            <p class="font-bold flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-amber-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Ketentuan Absen Luar:</span>
+            </p>
+            <p class="text-slate-600 leading-relaxed">
+                Pengajuan Absen Luar (Dinas Luar / Kegiatan Lapangan) hanya dapat diajukan jika Anda <strong>belum</strong> melakukan absensi langsung di kantor desa. Karena kehadiran hari ini sudah tercatat, Anda tidak perlu mengajukan absen luar lagi.
+            </p>
+        </div>
+
+        <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2">
+            <a href="{{ route('staf.beranda') }}"
+               class="btn-sadi-primary w-full sm:w-auto px-5 py-2.5 rounded-xl text-white text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5">
+                <svg class="w-4 h-4 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                <span>Kembali ke Beranda</span>
+            </a>
+            <a href="{{ route('staf.riwayat') }}"
+               class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-50 transition flex items-center justify-center gap-1.5">
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <span>Lihat Riwayat Presensi</span>
+            </a>
+        </div>
+    </div>
+
+    {{-- 2. SUDAH ADA PENGAJUAN ABSEN LUAR HARI INI --}}
+    @elseif($pengajuanHariIni)
     <div class="sadi-card p-5 bg-amber-50 border-2 border-amber-300 text-center space-y-2 shadow-md">
         <div class="w-12 h-12 rounded-2xl bg-amber-100 border-2 border-amber-300 flex items-center justify-center mx-auto">
             <svg class="w-6 h-6 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -50,180 +110,11 @@
         </div>
     </div>
     @else
+    {{-- 3. FORM PENGAJUAN ABSEN LUAR (HANYA JIKA BELUM ABSEN & BELUM MENGAJUKAN) --}}
     {{-- ─────── FORM PENGAJUAN ─────── --}}
     <form action="{{ route('staf.ajukan.store') }}" method="POST" enctype="multipart/form-data"
           id="form-ajukan-absen"
-          x-data="{
-              jenisAbsen: '',
-              previewFoto: null,
-              namaFoto: '',
-              namaDokumen: '',
-              signatureCanvas: null,
-              ctx: null,
-              isDrawing: false,
-              hasSignature: false,
-              
-              // GPS State
-              lat: '',
-              lng: '',
-              alamatGps: '',
-              gpsStatus: 'idle', // 'idle' | 'loading' | 'success' | 'error'
-              gpsErrorMessage: '',
-              
-              initCanvas() {
-                  this.signatureCanvas = this.$refs.sigCanvas;
-                  this.ctx = this.signatureCanvas.getContext('2d');
-                  this.ctx.strokeStyle = '#064E3B';
-                  this.ctx.lineWidth = 2.5;
-                  this.ctx.lineCap = 'round';
-                  this.ctx.lineJoin = 'round';
-              },
-              startDraw(e) {
-                  this.isDrawing = true;
-                  const pos = this.getPos(e);
-                  this.ctx.beginPath();
-                  this.ctx.moveTo(pos.x, pos.y);
-              },
-              draw(e) {
-                  if (!this.isDrawing) return;
-                  e.preventDefault();
-                  const pos = this.getPos(e);
-                  this.ctx.lineTo(pos.x, pos.y);
-                  this.ctx.stroke();
-                  this.hasSignature = true;
-              },
-              stopDraw() { this.isDrawing = false; },
-              getPos(e) {
-                  const rect = this.signatureCanvas.getBoundingClientRect();
-                  const src = e.touches ? e.touches[0] : e;
-                  return { x: src.clientX - rect.left, y: src.clientY - rect.top };
-              },
-              clearSig() {
-                  this.ctx.clearRect(0, 0, this.signatureCanvas.width, this.signatureCanvas.height);
-                  this.hasSignature = false;
-                  this.$refs.ttdInput.value = '';
-              },
-              saveSig() {
-                  if (!this.hasSignature) return false;
-                  this.$refs.ttdInput.value = this.signatureCanvas.toDataURL('image/png');
-                  return true;
-              },
-              
-              // Wajib GPS Functionality
-              requestLocation() {
-                  this.gpsStatus = 'loading';
-                  this.gpsErrorMessage = '';
-                  
-                  if (!navigator.geolocation) {
-                      this.gpsStatus = 'error';
-                      this.gpsErrorMessage = 'Perangkat Anda tidak mendukung fitur Geolocation / GPS.';
-                      this.showGpsEnforceModal();
-                      return;
-                  }
-                  
-                  navigator.geolocation.getCurrentPosition(
-                      (position) => {
-                          this.lat = position.coords.latitude.toFixed(7);
-                          this.lng = position.coords.longitude.toFixed(7);
-                          this.gpsStatus = 'success';
-                          
-                          // Cari reverse geocoding sederhana atau catat koordinat
-                          this.alamatGps = 'Koordinat: ' + this.lat + ', ' + this.lng;
-                          
-                          // SweetAlert notif sukses kunci GPS
-                          if (window.Swal) {
-                              Swal.fire({
-                                  title: 'Lokasi GPS Terkunci',
-                                  text: 'Titik koordinat Anda berhasil diverifikasi (' + this.lat + ', ' + this.lng + ')',
-                                  icon: 'success',
-                                  confirmButtonColor: '#064E3B',
-                                  customClass: {
-                                      popup: 'rounded-3xl border border-[#C9A84C]/30 shadow-2xl',
-                                      confirmButton: 'rounded-xl px-6 py-2.5 font-bold'
-                                  }
-                              });
-                          }
-                      },
-                      (error) => {
-                          this.gpsStatus = 'error';
-                          let msg = 'Izin lokasi ditolak atau GPS belum aktif.';
-                          if (error.code === error.PERMISSION_DENIED) {
-                              msg = 'Anda menolak akses lokasi. Wajib izinkan akses GPS di browser untuk dapat mengajukan absen luar.';
-                          } else if (error.code === error.POSITION_UNAVAILABLE) {
-                              msg = 'Informasi lokasi GPS tidak tersedia pada perangkat Anda.';
-                          } else if (error.code === error.TIMEOUT) {
-                              msg = 'Waktu permintaan lokasi GPS habis. Silakan coba lagi.';
-                          }
-                          this.gpsErrorMessage = msg;
-                          this.showGpsEnforceModal();
-                      },
-                      {
-                          enableHighAccuracy: true,
-                          timeout: 10000,
-                          maximumAge: 0
-                      }
-                  );
-              },
-              
-              showGpsEnforceModal() {
-                  if (window.Swal) {
-                      Swal.fire({
-                          title: 'Aktivasi GPS Wajib!',
-                          text: 'Sesuai standar verifikasi presensi, Anda WAJIB mengaktifkan GPS dan mengizinkan akses lokasi saat mengajukan absen luar.',
-                          icon: 'warning',
-                          confirmButtonText: 'Aktifkan & Izinkan GPS',
-                          confirmButtonColor: '#064E3B',
-                          showCancelButton: false,
-                          allowOutsideClick: false,
-                          allowEscapeKey: false,
-                          customClass: {
-                              popup: 'rounded-3xl border border-[#C9A84C]/40 shadow-2xl',
-                              confirmButton: 'rounded-xl px-6 py-3 font-bold text-sm'
-                          }
-                      }).then((result) => {
-                          if (result.isConfirmed) {
-                              this.requestLocation();
-                          }
-                      });
-                  } else {
-                      alert('Aktivasi GPS Wajib! Silakan izinkan akses lokasi pada browser Anda.');
-                      this.requestLocation();
-                  }
-              },
-              
-              validateAndSubmit(e) {
-                  // Cek apakah GPS sudah terkunci
-                  if (!this.lat || !this.lng || this.gpsStatus !== 'success') {
-                      e.preventDefault();
-                      this.showGpsEnforceModal();
-                      return false;
-                  }
-                  
-                  // Cek tanda tangan
-                  if (!this.hasSignature) {
-                      e.preventDefault();
-                      if (window.Swal) {
-                          Swal.fire({
-                              title: 'Tanda Tangan Kosong',
-                              text: 'Silakan bubuhkan tanda tangan digital Anda terlebih dahulu pada kotak yang disediakan.',
-                              icon: 'warning',
-                              confirmButtonColor: '#064E3B',
-                              customClass: {
-                                  popup: 'rounded-3xl border border-[#C9A84C]/30 shadow-2xl',
-                                  confirmButton: 'rounded-xl px-6 py-2.5 font-bold'
-                              }
-                          });
-                      } else {
-                          alert('Silakan tanda tangani formulir sebelum mengajukan.');
-                      }
-                      return false;
-                  }
-                  
-                  this.saveSig();
-                  return true;
-              }
-          }"
-          x-init="initCanvas(); requestLocation();"
+          x-data="ajukanAbsenForm()"
           @submit="validateAndSubmit($event)">
         @csrf
 
@@ -256,14 +147,14 @@
         </div>
 
         {{-- GPS Live Status Banner --}}
-        <div class="sadi-card p-4 border-2 transition-all duration-200"
+        <div class="sadi-card p-4 border-2 transition-all duration-300"
              :class="{
                  'bg-emerald-50 border-emerald-300': gpsStatus === 'success',
                  'bg-amber-50 border-amber-300': gpsStatus === 'loading',
                  'bg-red-50 border-red-300': gpsStatus === 'error' || gpsStatus === 'idle'
              }">
             <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
                     <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white shrink-0"
                          :class="{
                              'bg-emerald-600': gpsStatus === 'success',
@@ -280,35 +171,62 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                         </template>
                     </div>
-                    <div>
-                        <p class="text-xs font-extrabold"
+                    <div class="min-w-0 flex-1">
+                        {{-- Judul Status --}}
+                        <p class="text-xs font-extrabold leading-tight"
                            :class="{
                                'text-emerald-900': gpsStatus === 'success',
-                               'text-amber-900': gpsStatus === 'loading',
-                               'text-red-900': gpsStatus === 'error' || gpsStatus === 'idle'
+                               'text-amber-900':   gpsStatus === 'loading',
+                               'text-red-900':     gpsStatus === 'error' || gpsStatus === 'idle'
                            }">
-                            <span x-show="gpsStatus === 'success'">📍 Lokasi GPS Terverifikasi</span>
-                            <span x-show="gpsStatus === 'loading'">⏳ Sedang Mengunci Titik GPS...</span>
+                            <span x-show="gpsStatus === 'success'">
+                                📍 GPS Terkunci
+                                <span x-show="gpsAccuracy !== null"
+                                      :class="gpsAccuracy <= 20 ? 'text-emerald-700' : gpsAccuracy <= 50 ? 'text-emerald-600' : gpsAccuracy <= 200 ? 'text-amber-700' : 'text-orange-700'"
+                                      x-text="gpsAccuracy <= 20 ? '— 🔒 Sangat Akurat' : gpsAccuracy <= 50 ? '— ✅ Akurat' : gpsAccuracy <= 200 ? '— ⚠️ Cukup Akurat' : '— 📡 Lemah'"
+                                ></span>
+                            </span>
+                            <span x-show="gpsStatus === 'loading'" x-text="gpsLoadingText"></span>
                             <span x-show="gpsStatus === 'error' || gpsStatus === 'idle'">⚠️ GPS Wajib Diaktifkan</span>
                         </p>
-                        <p class="text-[11px] mt-0.5"
+                        {{-- Detail baris kedua --}}
+                        <p class="text-[11px] mt-0.5 break-all"
                            :class="{
                                'text-emerald-700 font-mono': gpsStatus === 'success',
-                               'text-amber-700': gpsStatus === 'loading',
-                               'text-red-700': gpsStatus === 'error' || gpsStatus === 'idle'
+                               'text-amber-600':             gpsStatus === 'loading',
+                               'text-red-700':               gpsStatus === 'error' || gpsStatus === 'idle'
                            }">
-                            <span x-show="gpsStatus === 'success'" x-text="'Lat: ' + lat + ', Lng: ' + lng"></span>
-                            <span x-show="gpsStatus === 'loading'">Mohon izinkan saat browser meminta akses lokasi</span>
-                            <span x-show="gpsStatus === 'error' || gpsStatus === 'idle'" x-text="gpsErrorMessage || 'Klik tombol di samping untuk mengaktifkan GPS'"></span>
+                            <span x-show="gpsStatus === 'success'"
+                                  x-text="lat + ', ' + lng + (gpsAccuracy ? ' (±' + gpsAccuracy + 'm)' : '')"
+                            ></span>
+                            <span x-show="gpsStatus === 'loading'">
+                                Menunggu sinyal satelit GPS — tetap diam agar sinyal lebih cepat terkunci
+                            </span>
+                            <span x-show="gpsStatus === 'error' || gpsStatus === 'idle'"
+                                  x-text="gpsErrorMessage || 'Klik tombol untuk mengaktifkan GPS'"
+                            ></span>
                         </p>
+                        {{-- Progress bar akurasi (hanya saat loading) --}}
+                        <div x-show="gpsStatus === 'loading'" class="mt-2">
+                            <div class="h-1.5 bg-amber-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-amber-500 rounded-full animate-pulse" style="width: 100%"></div>
+                            </div>
+                            <p class="text-[10px] text-amber-600 mt-1">Akurasi target: ≤50m · Timeout: 25 detik</p>
+                        </div>
                     </div>
                 </div>
 
                 <button type="button" @click="requestLocation()"
-                        class="px-3 py-2 rounded-xl text-xs font-extrabold shrink-0 shadow-sm transition active:scale-95"
-                        :class="gpsStatus === 'success' ? 'bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100' : 'bg-red-600 text-white hover:bg-red-700'">
-                    <span x-show="gpsStatus === 'success'">Segarkan</span>
-                    <span x-show="gpsStatus !== 'success'">Nyalakan GPS</span>
+                        :disabled="gpsStatus === 'loading'"
+                        class="px-3 py-2 rounded-xl text-xs font-extrabold shrink-0 shadow-sm transition active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+                        :class="gpsStatus === 'success'
+                            ? 'bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100'
+                            : gpsStatus === 'loading'
+                            ? 'bg-amber-400 text-white cursor-wait'
+                            : 'bg-red-600 text-white hover:bg-red-700'">
+                    <span x-show="gpsStatus === 'success'">🔄 Perbarui</span>
+                    <span x-show="gpsStatus === 'loading'">⏳ Mengunci...</span>
+                    <span x-show="gpsStatus === 'error' || gpsStatus === 'idle'">📡 Nyalakan GPS</span>
                 </button>
             </div>
         </div>
@@ -564,4 +482,307 @@
     @endif
 
 </div>
+@endsection
+
+@section('scripts')
+<script>
+function ajukanAbsenForm() {
+    return {
+        jenisAbsen: '{{ old('jenis', '') }}',
+        previewFoto: null,
+        namaFoto: '',
+        namaDokumen: '',
+        signatureCanvas: null,
+        ctx: null,
+        isDrawing: false,
+        hasSignature: false,
+        
+        // GPS State
+        lat: '',
+        lng: '',
+        alamatGps: '',
+        gpsStatus: 'idle',       // 'idle' | 'loading' | 'success' | 'error'
+        gpsErrorMessage: '',
+        gpsAccuracy: null,       // Akurasi dalam meter
+        gpsLoadingText: 'Meminta izin akses GPS...',
+        _watchId: null,
+        _watchTimer: null,
+        _bestAccuracy: Infinity,
+
+        init() {
+            this.$nextTick(() => {
+                this.initCanvas();
+            });
+            this.requestLocation();
+        },
+
+        initCanvas() {
+            this.signatureCanvas = this.$refs.sigCanvas;
+            if (!this.signatureCanvas) return;
+            this.ctx = this.signatureCanvas.getContext('2d');
+            this.ctx.strokeStyle = '#064E3B';
+            this.ctx.lineWidth = 2.5;
+            this.ctx.lineCap = 'round';
+            this.ctx.lineJoin = 'round';
+        },
+
+        startDraw(e) {
+            if (!this.ctx) this.initCanvas();
+            this.isDrawing = true;
+            const pos = this.getPos(e);
+            this.ctx.beginPath();
+            this.ctx.moveTo(pos.x, pos.y);
+        },
+
+        draw(e) {
+            if (!this.isDrawing) return;
+            if (!this.ctx) this.initCanvas();
+            e.preventDefault();
+            const pos = this.getPos(e);
+            this.ctx.lineTo(pos.x, pos.y);
+            this.ctx.stroke();
+            this.hasSignature = true;
+        },
+
+        stopDraw() {
+            this.isDrawing = false;
+        },
+
+        getPos(e) {
+            if (!this.signatureCanvas) this.signatureCanvas = this.$refs.sigCanvas;
+            const rect = this.signatureCanvas.getBoundingClientRect();
+            const src = e.touches ? e.touches[0] : e;
+            const scaleX = this.signatureCanvas.width / rect.width;
+            const scaleY = this.signatureCanvas.height / rect.height;
+            return {
+                x: (src.clientX - rect.left) * scaleX,
+                y: (src.clientY - rect.top) * scaleY
+            };
+        },
+
+        clearSig() {
+            if (!this.ctx) this.initCanvas();
+            if (this.signatureCanvas && this.ctx) {
+                this.ctx.clearRect(0, 0, this.signatureCanvas.width, this.signatureCanvas.height);
+            }
+            this.hasSignature = false;
+            if (this.$refs.ttdInput) {
+                this.$refs.ttdInput.value = '';
+            }
+        },
+
+        saveSig() {
+            if (!this.hasSignature) return false;
+            if (!this.signatureCanvas) this.signatureCanvas = this.$refs.sigCanvas;
+            if (this.$refs.ttdInput && this.signatureCanvas) {
+                this.$refs.ttdInput.value = this.signatureCanvas.toDataURL('image/png');
+            }
+            return true;
+        },
+
+        _stopWatch() {
+            if (this._watchId !== null) {
+                navigator.geolocation.clearWatch(this._watchId);
+                this._watchId = null;
+            }
+            if (this._watchTimer !== null) {
+                clearTimeout(this._watchTimer);
+                this._watchTimer = null;
+            }
+        },
+
+        _commitPosition(rawLat, rawLng, accuracy) {
+            this._stopWatch();
+            
+            // Bounding box NKRI (Sabang s/d Merauke, Miangas s/d Rote)
+            const isNKRI = (rawLat >= -11.0 && rawLat <= 6.0)
+                        && (rawLng >=  95.0 && rawLng <= 141.1);
+            
+            if (!isNKRI) {
+                this.gpsStatus       = 'error';
+                this.gpsAccuracy     = null;
+                this.gpsErrorMessage =
+                    'Lokasi terdeteksi di LUAR wilayah Indonesia (' + rawLat.toFixed(5) + ', ' + rawLng.toFixed(5) + '). '
+                  + 'Penyebab: VPN aktif atau proxy luar negeri. '
+                  + 'Nonaktifkan VPN/Proxy, aktifkan GPS perangkat, lalu coba lagi.';
+                this.showGpsEnforceModal();
+                return;
+            }
+            
+            this.lat         = rawLat.toFixed(7);
+            this.lng         = rawLng.toFixed(7);
+            this.gpsAccuracy = Math.round(accuracy);
+            this.gpsStatus   = 'success';
+            this.alamatGps   = 'Koordinat: ' + this.lat + ', ' + this.lng + ' (±' + this.gpsAccuracy + 'm)';
+            
+            const qualityLabel = this.gpsAccuracy <= 20  ? '🔒 Sangat Akurat'
+                               : this.gpsAccuracy <= 50  ? '✅ Akurat'
+                               : this.gpsAccuracy <= 200 ? '⚠️ Cukup Akurat'
+                               : '📡 Akurasi Rendah (sinyal lemah)';
+            
+            if (window.Swal) {
+                Swal.fire({
+                    title: 'Lokasi GPS Terkunci!',
+                    html:  '<p style="font-size:13px;margin-bottom:6px">'
+                         + qualityLabel + ' — <strong>±' + this.gpsAccuracy + ' meter</strong></p>'
+                         + '<p style="font-family:monospace;font-size:11px;color:#065f46">'
+                         + this.lat + ', ' + this.lng + '</p>',
+                    icon: 'success',
+                    confirmButtonColor: '#064E3B',
+                    customClass: {
+                        popup: 'rounded-3xl border border-[#C9A84C]/30 shadow-2xl',
+                        confirmButton: 'rounded-xl px-6 py-2.5 font-bold'
+                    }
+                });
+            }
+        },
+
+        requestLocation() {
+            this._stopWatch();
+            
+            this.gpsStatus       = 'loading';
+            this.gpsErrorMessage = '';
+            this.gpsAccuracy     = null;
+            this._bestAccuracy   = Infinity;
+            this.lat             = '';
+            this.lng             = '';
+            this.gpsLoadingText  = 'Meminta izin akses GPS...';
+            
+            if (!navigator.geolocation) {
+                this.gpsStatus       = 'error';
+                this.gpsErrorMessage = 'Perangkat Anda tidak mendukung Geolocation / GPS.';
+                this.showGpsEnforceModal();
+                return;
+            }
+            
+            this._watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const rawLat  = position.coords.latitude;
+                    const rawLng  = position.coords.longitude;
+                    const acc     = position.coords.accuracy;
+                    
+                    this.gpsLoadingText = 'Mengunci sinyal GPS... akurasi saat ini ±' + Math.round(acc) + 'm';
+                    
+                    if (acc < this._bestAccuracy) {
+                        this._bestAccuracy = acc;
+                        this.lat = rawLat.toFixed(7);
+                        this.lng = rawLng.toFixed(7);
+                        this.gpsAccuracy = Math.round(acc);
+                    }
+                    
+                    if (acc <= 50) {
+                        this._commitPosition(rawLat, rawLng, acc);
+                    }
+                },
+                (error) => {
+                    this._stopWatch();
+                    this.gpsStatus = 'error';
+                    let msg;
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            msg = 'Akses GPS ditolak. Buka pengaturan browser → izinkan Lokasi untuk situs ini, lalu coba lagi.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            msg = 'GPS tidak dapat menentukan posisi. Pastikan GPS fisik perangkat aktif dan tidak terhalang.';
+                            break;
+                        case error.TIMEOUT:
+                            msg = 'Waktu GPS habis. Pindah ke area terbuka agar sinyal satelit lebih kuat, lalu coba lagi.';
+                            break;
+                        default:
+                            msg = 'Gagal mendapatkan lokasi GPS. Silakan coba lagi.';
+                    }
+                    this.gpsErrorMessage = msg;
+                    this.showGpsEnforceModal();
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout:           30000,
+                    maximumAge:        0
+                }
+            );
+            
+            this._watchTimer = setTimeout(() => {
+                if (this.gpsStatus !== 'success') {
+                    if (this.lat && this.lng) {
+                        this._commitPosition(
+                            parseFloat(this.lat),
+                            parseFloat(this.lng),
+                            this._bestAccuracy
+                        );
+                    } else {
+                        this._stopWatch();
+                        this.gpsStatus       = 'error';
+                        this.gpsErrorMessage = 'GPS tidak berhasil mendapatkan sinyal dalam 25 detik. Pindah ke area terbuka (luar ruangan) agar sinyal satelit lebih kuat.';
+                        this.showGpsEnforceModal();
+                    }
+                }
+            }, 25000);
+        },
+
+        showGpsEnforceModal() {
+            if (window.Swal) {
+                Swal.fire({
+                    title: 'GPS Gagal Terkunci',
+                    html: this.gpsErrorMessage
+                        ? '<p style="font-size:13px">' + this.gpsErrorMessage + '</p>'
+                          + '<p style="margin-top:10px;font-size:11px;color:#92400e;background:#fef3c7;padding:8px;border-radius:8px">'
+                          + '💡 <strong>Tips:</strong> Buka app di luar ruangan atau dekat jendela, matikan VPN, aktifkan GPS di pengaturan HP, lalu tap <em>Coba Lagi</em>.</p>'
+                        : '<p>Wajib aktifkan GPS perangkat dan izinkan akses lokasi di browser.</p>',
+                    icon: 'warning',
+                    confirmButtonText: '🔄 Coba Lagi',
+                    confirmButtonColor: '#064E3B',
+                    showCancelButton: false,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    customClass: {
+                        popup: 'rounded-3xl border border-[#C9A84C]/40 shadow-2xl',
+                        confirmButton: 'rounded-xl px-6 py-3 font-bold text-sm'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.requestLocation();
+                    }
+                });
+            } else {
+                alert('GPS gagal: ' + (this.gpsErrorMessage || 'Izinkan akses lokasi pada browser.'));
+                this.requestLocation();
+            }
+        },
+
+        validateAndSubmit(e) {
+            if (!this.lat || !this.lng || this.gpsStatus !== 'success') {
+                e.preventDefault();
+                this.showGpsEnforceModal();
+                return false;
+            }
+            
+            if (!this.hasSignature) {
+                e.preventDefault();
+                if (window.Swal) {
+                    Swal.fire({
+                        title: 'Tanda Tangan Kosong',
+                        text: 'Silakan bubuhkan tanda tangan digital Anda terlebih dahulu pada kotak yang disediakan.',
+                        icon: 'warning',
+                        confirmButtonColor: '#064E3B',
+                        customClass: {
+                            popup: 'rounded-3xl border border-[#C9A84C]/30 shadow-2xl',
+                            confirmButton: 'rounded-xl px-6 py-2.5 font-bold'
+                        }
+                    });
+                } else {
+                    alert('Silakan tanda tangani formulir sebelum mengajukan.');
+                }
+                return false;
+            }
+            
+            this.saveSig();
+            return true;
+        }
+    };
+}
+
+document.addEventListener('alpine:init', () => {
+    Alpine.data('ajukanAbsenForm', ajukanAbsenForm);
+});
+</script>
 @endsection

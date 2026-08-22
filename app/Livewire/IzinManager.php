@@ -155,15 +155,29 @@ class IzinManager extends Component
         $statusAbsen = str_contains($izin->jenis, 'sakit') ? 'Sakit' : 'Izin';
 
         while ($start->lte($end)) {
-            Kehadiran::updateOrCreate(
-                ['pegawai_id' => $izin->pegawai_id, 'tanggal' => $start->toDateString()],
-                [
-                    'status' => $statusAbsen,
-                    'sumber_data' => 'manual_admin',
+            $dateStr = $start->toDateString();
+            $existing = Kehadiran::where('pegawai_id', $izin->pegawai_id)
+                ->where('tanggal', $dateStr)
+                ->first();
+
+            if (!$existing) {
+                Kehadiran::create([
+                    'pegawai_id'        => $izin->pegawai_id,
+                    'tanggal'           => $dateStr,
+                    'status'            => $statusAbsen,
+                    'sumber_data'       => 'manual_admin',
                     'diverifikasi_oleh' => $izin->diproses_oleh ?? auth()->id(),
-                    'keterangan' => "Izin/Sakit (" . ucfirst(str_replace('_', ' ', $izin->jenis)) . "): {$izin->keterangan}"
-                ]
-            );
+                    'keterangan'        => "Izin/Sakit (" . ucfirst(str_replace('_', ' ', $izin->jenis)) . "): {$izin->keterangan}"
+                ]);
+            } elseif (!$existing->jam_masuk) {
+                // Hanya update jika belum ada presensi langsung di kantor
+                $existing->update([
+                    'status'            => $statusAbsen,
+                    'sumber_data'       => 'manual_admin',
+                    'diverifikasi_oleh' => $izin->diproses_oleh ?? auth()->id(),
+                    'keterangan'        => "Izin/Sakit (" . ucfirst(str_replace('_', ' ', $izin->jenis)) . "): {$izin->keterangan}"
+                ]);
+            }
             $start->addDay();
         }
     }

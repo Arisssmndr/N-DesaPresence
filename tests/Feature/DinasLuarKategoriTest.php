@@ -41,8 +41,11 @@ class DinasLuarKategoriTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        // Hapus pengajuan hari ini jika ada
+        // Hapus pengajuan & kehadiran hari ini jika ada
         PengajuanAbsenLuar::where('pegawai_id', $this->pegawai->id)
+            ->where('tanggal', Carbon::today()->toDateString())
+            ->delete();
+        Kehadiran::where('pegawai_id', $this->pegawai->id)
             ->where('tanggal', Carbon::today()->toDateString())
             ->delete();
 
@@ -78,6 +81,9 @@ class DinasLuarKategoriTest extends TestCase
 
         $testDate = Carbon::yesterday()->toDateString();
         PengajuanAbsenLuar::where('pegawai_id', $this->pegawai->id)
+            ->where('tanggal', $testDate)
+            ->delete();
+        Kehadiran::where('pegawai_id', $this->pegawai->id)
             ->where('tanggal', $testDate)
             ->delete();
 
@@ -149,5 +155,54 @@ class DinasLuarKategoriTest extends TestCase
         $kehadiran = Kehadiran::where('pegawai_id', $this->pegawai->id)->where('tanggal', $testDate)->first();
         $this->assertStringContainsString('Dinas Luar (Undangan)', $kehadiran->keterangan);
         $this->assertStringContainsString('DPMD Kabupaten Tasikmalaya', $kehadiran->keterangan);
+    }
+
+    public function test_cannot_submit_pengajuan_absen_luar_if_already_present_directly_at_office()
+    {
+        $this->actingAs($this->user);
+
+        $today = Carbon::today()->toDateString();
+        PengajuanAbsenLuar::where('pegawai_id', $this->pegawai->id)->where('tanggal', $today)->delete();
+        Kehadiran::where('pegawai_id', $this->pegawai->id)->where('tanggal', $today)->delete();
+
+        // Buat data kehadiran langsung (sudah absen masuk di kantor)
+        Kehadiran::create([
+            'pegawai_id' => $this->pegawai->id,
+            'tanggal' => $today,
+            'jam_masuk' => '07:45:00',
+            'status' => 'Hadir',
+            'sumber_data' => 'web_signature',
+        ]);
+
+        // 1. Form pengajuan menampilkan banner peringatan sudah absen
+        $responseForm = $this->get(route('staf.ajukan.form'));
+        $responseForm->assertStatus(200);
+        $responseForm->assertSee('Anda Sudah Melakukan Absensi Hari Ini');
+        $responseForm->assertSee('Presensi Langsung Tercatat');
+        $responseForm->assertDontSee('id="form-ajukan-absen"');
+
+        // 2. Submit form pengajuan ditolak oleh validasi backend
+        $file = UploadedFile::fake()->create('spt.pdf', 500, 'application/pdf');
+        $responseSubmit = $this->from(route('staf.ajukan.form'))->post(route('staf.ajukan.store'), [
+            'tanggal'            => $today,
+            'jenis'              => 'dinas_luar_surat_tugas',
+            'nomor_surat_tugas'  => '090/001/SPT/2026',
+            'judul'              => 'Tugas Lapangan Ditolak Karena Sudah Hadir',
+            'deskripsi'          => 'Uraian kegiatan lapangan...',
+            'file_dokumen'       => $file,
+            'latitude'           => -7.3456789,
+            'longitude'          => 108.1234567,
+            'tanda_tangan'       => 'data:image/png;base64,' . base64_encode('dummy_signature_content_long_enough_to_pass_validation_1234567890'),
+        ]);
+
+        $responseSubmit->assertRedirect(route('staf.ajukan.form'));
+        $responseSubmit->assertSessionHas('error');
+        
+        // Pastikan tidak tersimpan di database
+        $this->assertDatabaseMissing('pengajuan_absen_luars', [
+            'pegawai_id' => $this->pegawai->id,
+            'tanggal'    => $today,
+            'judul'      => 'Tugas Lapangan Ditolak Karena Sudah Hadir',
+        ]);
     }
 }

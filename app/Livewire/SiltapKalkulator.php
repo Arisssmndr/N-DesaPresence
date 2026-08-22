@@ -70,6 +70,8 @@ class SiltapKalkulator extends Component
                 $kehadirans = $kehadiranMap->get($p->id, collect());
 
                 $totalHadir = $kehadirans->whereIn('status', ['Hadir', 'Tepat Waktu', 'Terlambat'])->count();
+                $totalTerlambat = $kehadirans->where('status', 'Terlambat')->count();
+                $totalMenitTerlambat = (int) $kehadirans->sum('terlambat_menit');
                 $totalAlpa = $kehadirans->where('status', 'Alpa')->count();
                 $totalIzin = $kehadirans->whereIn('status', ['Izin', 'Sakit'])->count();
                 $totalDinasLuar = $kehadirans->where('status', 'Dinas Luar')->count();
@@ -86,11 +88,11 @@ class SiltapKalkulator extends Component
                     [
                         'total_hari_kerja' => $totalHariKerja,
                         'total_hadir' => $totalHadir,
-                        'total_terlambat' => 0,
+                        'total_terlambat' => $totalTerlambat,
                         'total_alpa' => $totalAlpa,
                         'total_izin' => $totalIzin,
                         'total_dinas_luar' => $totalDinasLuar,
-                        'total_menit_terlambat' => 0,
+                        'total_menit_terlambat' => $totalMenitTerlambat,
                         'siltap_bruto' => $bruto,
                         'potongan_alpa' => $totalPotonganAlpa,
                         'potongan_terlambat' => 0,

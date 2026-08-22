@@ -165,15 +165,29 @@ class SptManager extends Component
         $end = Carbon::parse($spt->tanggal_selesai);
 
         while ($start->lte($end)) {
-            Kehadiran::updateOrCreate(
-                ['pegawai_id' => $spt->pegawai_id, 'tanggal' => $start->toDateString()],
-                [
-                    'status' => 'Dinas Luar',
-                    'sumber_data' => 'manual_admin',
+            $dateStr = $start->toDateString();
+            $existing = Kehadiran::where('pegawai_id', $spt->pegawai_id)
+                ->where('tanggal', $dateStr)
+                ->first();
+
+            if (!$existing) {
+                Kehadiran::create([
+                    'pegawai_id'        => $spt->pegawai_id,
+                    'tanggal'           => $dateStr,
+                    'status'            => 'Dinas Luar',
+                    'sumber_data'       => 'manual_admin',
                     'diverifikasi_oleh' => $spt->disetujui_oleh ?? auth()->id(),
-                    'keterangan' => "Surat Perintah Tugas: {$spt->nomor_spt} ({$spt->tujuan})"
-                ]
-            );
+                    'keterangan'        => "Surat Perintah Tugas: {$spt->nomor_spt} ({$spt->tujuan})"
+                ]);
+            } elseif (!$existing->jam_masuk) {
+                // Hanya update jika belum ada catatan presensi langsung di kantor
+                $existing->update([
+                    'status'            => 'Dinas Luar',
+                    'sumber_data'       => 'manual_admin',
+                    'diverifikasi_oleh' => $spt->disetujui_oleh ?? auth()->id(),
+                    'keterangan'        => "Surat Perintah Tugas: {$spt->nomor_spt} ({$spt->tujuan})"
+                ]);
+            }
             $start->addDay();
         }
     }

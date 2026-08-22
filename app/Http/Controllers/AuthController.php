@@ -24,12 +24,30 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+        $usernameInput = trim($credentials['username']);
         $remember = $request->boolean('remember');
 
-        if (Auth::attempt(['username' => $credentials['username'], 'password' => $credentials['password'], 'is_active' => true], $remember)) {
+        // Cari user berdasarkan username asli atau alias khusus ('admin' -> Bu Susanti, 'kades' -> Pa Daday Daryat)
+        $user = \App\Models\User::where(function ($q) use ($usernameInput) {
+            $q->where('username', $usernameInput);
+            if ($usernameInput === 'admin') {
+                $q->orWhere('role', \App\Enums\UserRole::ADMIN->value);
+            } elseif ($usernameInput === 'kades') {
+                $q->orWhere('role', \App\Enums\UserRole::KEPALA_DESA->value);
+            }
+        })->where('is_active', true)->first();
+
+        if ($user && $user->password && \Illuminate\Support\Facades\Hash::check($credentials['password'], $user->password)) {
+            // Pastikan hanya role kedinasan (Admin Sekdes & Kepala Desa) yang dapat login ke Admin Panel
+            if (!in_array($user->role, [\App\Enums\UserRole::ADMIN->value, \App\Enums\UserRole::KEPALA_DESA->value])) {
+                throw ValidationException::withMessages([
+                    'username' => 'Akun ini terdaftar sebagai staf perangkat desa. Silakan masuk melalui halaman login staf untuk presensi.',
+                ]);
+            }
+
+            Auth::login($user, $remember);
             $request->session()->regenerate();
 
-            $user = Auth::user();
             $user->update([
                 'last_login_at' => now(),
                 'last_login_ip' => $request->ip(),
@@ -39,7 +57,7 @@ class AuthController extends Controller
                 'user_id' => $user->id,
                 'user_name' => $user->name,
                 'role' => $user->role,
-                'aktivitas' => 'Login ke sistem SADI',
+                'aktivitas' => 'Login ke sistem SADI Panel Kedinasan',
                 'modul' => 'Autentikasi',
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),

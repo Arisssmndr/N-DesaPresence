@@ -70,19 +70,20 @@
                 </button>
             </form>
 
-            <!-- Info Bantuan / Kontak Admin -->
-            <div class="mt-8 pt-6 border-t border-slate-200/70 text-center space-y-1">
-                <p class="text-xs text-slate-500 font-medium">Belum memiliki atau lupa username akun Anda?</p>
-                <p class="text-[11px] text-slate-400">Silakan hubungi Administrator / Sekdes di Kantor Desa Nangtang untuk pengaturan akun.</p>
-                
-                <div class="pt-3">
-                    <a href="{{ route('login') }}" class="inline-flex items-center gap-1.5 text-xs text-[#064E3B] font-bold hover:underline">
-                        <svg class="w-3.5 h-3.5 text-[#064E3B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                        </svg>
-                        <span>Masuk sebagai Admin / Kedinasan</span>
-                    </a>
-                </div>
+            <!-- Akses Login Admin / Kedinasan -->
+            <div class="mt-8 pt-6 border-t border-slate-200/70 text-center space-y-2">
+                <p class="text-xs text-slate-500 font-medium">Administrator, Kepala Desa, atau Auditor?</p>
+                <a href="{{ route('login') }}"
+                   class="inline-flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100/80 border border-[#064E3B]/20 text-[#064E3B] text-xs font-extrabold shadow-sm transition active:scale-[0.99]">
+                    <svg class="w-4 h-4 text-[#064E3B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                    <span>Masuk sebagai Administrator / Kedinasan</span>
+                    <svg class="w-3.5 h-3.5 text-[#064E3B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <p class="text-[10.5px] text-slate-400 pt-1">Belum memiliki / lupa username staf? Hubungi Administrator / Sekdes.</p>
             </div>
 
         </div>

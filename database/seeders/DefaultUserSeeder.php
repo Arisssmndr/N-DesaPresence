@@ -294,59 +294,24 @@ class DefaultUserSeeder extends Seeder
                 ]
             );
 
-            // Buat akun staf untuk presensi (username-only)
+            // Buat akun staf/admin untuk presensi & panel kedinasan (1-to-1 dengan pegawai)
+            $userPassword = match ($item['role']) {
+                'admin'       => Hash::make('admin123'),
+                'kepala_desa' => Hash::make('kades123'),
+                default       => null,
+            };
+
             User::updateOrCreate(
                 ['username' => $item['username']],
                 [
                     'pegawai_id' => $pegawai->id,
-                    'name' => $item['nama'],
-                    'email' => $item['username'] . '@desanangtang.go.id',
-                    'password' => null, // Bebas password untuk login via portal staf
-                    'role' => $item['role'],
-                    'is_active' => true,
+                    'name'       => $item['nama'],
+                    'email'      => $item['username'] . '@desanangtang.go.id',
+                    'password'   => $userPassword,
+                    'role'       => $item['role'],
+                    'is_active'  => true,
                 ]
             );
         }
-
-        // Akun Administrator Sekdes (Login Admin Panel Username + Password)
-        $pegawaiSekdes = Pegawai::where('nipd', '141.1/KEP-01/DES/2020')->first();
-        User::updateOrCreate(
-            ['username' => 'admin'],
-            [
-                'pegawai_id' => $pegawaiSekdes?->id,
-                'name' => 'SUSANTI, S.Pd (Sekretaris Desa / Admin)',
-                'email' => 'admin@desanangtang.go.id',
-                'password' => Hash::make('admin123'),
-                'role' => 'admin',
-                'is_active' => true,
-            ]
-        );
-
-        // Akun Kepala Desa (Login Admin Panel Username + Password)
-        $pegawaiKades = Pegawai::where('nipd', '141.1/Kep.353-Pemdes/2019')->first();
-        User::updateOrCreate(
-            ['username' => 'kades'],
-            [
-                'pegawai_id' => $pegawaiKades?->id,
-                'name' => 'DADAY DARYAT (Kepala Desa)',
-                'email' => 'kades@desanangtang.go.id',
-                'password' => Hash::make('kades123'),
-                'role' => 'kepala_desa',
-                'is_active' => true,
-            ]
-        );
-
-        // Akun Auditor Inspektorat
-        User::updateOrCreate(
-            ['username' => 'auditor'],
-            [
-                'pegawai_id' => null,
-                'name' => 'Auditor Inspektorat Kab. Tasikmalaya',
-                'email' => 'auditor@pemkab.go.id',
-                'password' => Hash::make('auditor123'),
-                'role' => 'auditor',
-                'is_active' => true,
-            ]
-        );
     }
 }

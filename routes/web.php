@@ -24,6 +24,7 @@ use App\Livewire\KonfigurasiWifiManager;
 use App\Livewire\KonfigurasiAbsensiManager;
 use App\Livewire\UserStafManager;
 use App\Livewire\PengajuanAbsenManager;
+use App\Livewire\AdminProfilManager;
 
 // Redirect root to staff portal if guest, or appropriate dashboard
 Route::get('/', function () {
@@ -72,39 +73,37 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:15,1')->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Authenticated Admin / Kades / Auditor Routes
-Route::middleware(['auth'])->group(function () {
+// Authenticated Admin / Kades Routes
+Route::middleware(['auth', 'role:admin,kepala_desa'])->group(function () {
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
+    Route::get('/pegawai', PegawaiManager::class)->name('pegawai.index');
+    Route::get('/shift', ShiftManager::class)->name('shift.index');
+    Route::get('/hari-libur', HariLiburManager::class)->name('hari-libur.index');
+    Route::get('/log-absensi', AttendanceImporter::class)->name('attendance.import');
+    Route::get('/override-absensi', ManualAttendanceOverride::class)->name('attendance.override');
+    Route::get('/spt', SptManager::class)->name('spt.index');
+    Route::get('/izin', IzinManager::class)->name('izin.index');
+    Route::get('/pengumuman', PengumumanManager::class)->name('pengumuman.index');
+    
+    // Pengajuan Absen Luar — Admin Approval
+    Route::get('/pengajuan-absen', PengajuanAbsenManager::class)->name('pengajuan-absen.index');
 
-    Route::middleware(['role:admin,kepala_desa,auditor'])->group(function () {
-        Route::get('/pegawai', PegawaiManager::class)->name('pegawai.index');
-        Route::get('/shift', ShiftManager::class)->name('shift.index');
-        Route::get('/hari-libur', HariLiburManager::class)->name('hari-libur.index');
-        Route::get('/log-absensi', AttendanceImporter::class)->name('attendance.import');
-        Route::get('/override-absensi', ManualAttendanceOverride::class)->name('attendance.override');
-        Route::get('/spt', SptManager::class)->name('spt.index');
-        Route::get('/izin', IzinManager::class)->name('izin.index');
-        Route::get('/pengumuman', PengumumanManager::class)->name('pengumuman.index');
-        
-        // Pengajuan Absen Luar — Admin Approval
-        Route::get('/pengajuan-absen', PengajuanAbsenManager::class)->name('pengajuan-absen.index');
+    // Pengaturan Sistem
+    Route::get('/pengaturan-profil', AdminProfilManager::class)->name('admin.profil');
+    Route::get('/akun-staf', UserStafManager::class)->name('user-staf.index');
+    Route::get('/konfigurasi-absensi', KonfigurasiAbsensiManager::class)->name('konfigurasi-absensi.index');
+    Route::get('/konfigurasi-wifi', KonfigurasiWifiManager::class)->name('konfigurasi-wifi.index');
 
-        // Pengaturan Sistem
-        Route::get('/akun-staf', UserStafManager::class)->name('user-staf.index');
-        Route::get('/konfigurasi-absensi', KonfigurasiAbsensiManager::class)->name('konfigurasi-absensi.index');
-        Route::get('/konfigurasi-wifi', KonfigurasiWifiManager::class)->name('konfigurasi-wifi.index');
+    // Phase 4 Routes (Matriks, Siltap, PDF SPJ, Analitik)
+    Route::get('/matriks', MatriksPresensi::class)->name('matriks.index');
+    Route::get('/siltap', SiltapKalkulator::class)->name('siltap.index');
+    Route::get('/analitik', AnalitikDashboard::class)->name('analitik.index');
+    Route::get('/spj-pdf', [SpjReportController::class, 'downloadPdf'])->name('spj.pdf');
 
-        // Phase 4 Routes (Matriks, Siltap, PDF SPJ, Analitik)
-        Route::get('/matriks', MatriksPresensi::class)->name('matriks.index');
-        Route::get('/siltap', SiltapKalkulator::class)->name('siltap.index');
-        Route::get('/analitik', AnalitikDashboard::class)->name('analitik.index');
-        Route::get('/spj-pdf', [SpjReportController::class, 'downloadPdf'])->name('spj.pdf');
-
-        // Phase 5 Routes (Pusat Laporan — Standar Nasional RI)
-        Route::get('/laporan', PusatLaporan::class)->name('laporan.index');
-        Route::get('/laporan/harian-pdf', [LaporanController::class, 'laporanHarian'])->name('laporan.harian');
-        Route::get('/laporan/bulanan-pdf', [LaporanController::class, 'laporanBulanan'])->name('laporan.bulanan');
-        Route::get('/laporan/tahunan-pdf', [LaporanController::class, 'laporanTahunan'])->name('laporan.tahunan');
-        Route::get('/laporan/siltap-pdf', [LaporanController::class, 'laporanSiltap'])->name('laporan.siltap');
-    });
+    // Phase 5 Routes (Pusat Laporan — Standar Nasional RI)
+    Route::get('/laporan', PusatLaporan::class)->name('laporan.index');
+    Route::get('/laporan/harian-pdf', [LaporanController::class, 'laporanHarian'])->name('laporan.harian');
+    Route::get('/laporan/bulanan-pdf', [LaporanController::class, 'laporanBulanan'])->name('laporan.bulanan');
+    Route::get('/laporan/tahunan-pdf', [LaporanController::class, 'laporanTahunan'])->name('laporan.tahunan');
+    Route::get('/laporan/siltap-pdf', [LaporanController::class, 'laporanSiltap'])->name('laporan.siltap');
 });

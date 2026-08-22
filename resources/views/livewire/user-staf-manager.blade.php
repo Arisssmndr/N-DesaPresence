@@ -98,6 +98,16 @@
                 @error('form.role') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
+            <div class="sm:col-span-2">
+                <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    Password / Kata Sandi {{ $editingId ? '(Kosongkan jika tidak ingin diubah)' : '(Opsional - default: admin123 untuk role Admin/Kades)' }}
+                </label>
+                <input type="password" wire:model="form.password" placeholder="{{ $editingId ? 'Masukkan password baru jika ingin mengubah' : 'Password login minimal 6 karakter' }}"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#064E3B] focus:ring-2 focus:ring-[#064E3B]/10">
+                @error('form.password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <p class="text-[11px] text-slate-400 mt-1">Staf biasa/perangkat dapat login tanpa password menggunakan username via portal mobile WiFi Desa.</p>
+            </div>
+
             <div class="flex items-center gap-3 sm:col-span-2 pt-2">
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" wire:model="form.is_active" class="sr-only peer">

@@ -28,7 +28,6 @@ class StafAuthController extends Controller
         $username = trim($request->username);
 
         $user = User::where('username', $username)
-            ->whereIn('role', [\App\Enums\UserRole::PERANGKAT->value, \App\Enums\UserRole::STAF->value, \App\Enums\UserRole::KEPALA_DESA->value, \App\Enums\UserRole::ADMIN->value])
             ->where('is_active', true)
             ->first();
 
@@ -47,7 +46,7 @@ class StafAuthController extends Controller
             ]);
         }
 
-        // Login user tanpa password
+        // Login akun untuk portal presensi mandiri staf desa
         Auth::login($user, true);
         $request->session()->regenerate();
 

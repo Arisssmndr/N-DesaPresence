@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\PengajuanAbsenLuar;
+use App\Models\Kehadiran;
 use Carbon\Carbon;
 
 class PengajuanAbsenLuarController extends Controller
@@ -23,13 +24,19 @@ class PengajuanAbsenLuarController extends Controller
                 ->with('error', 'Data kepegawaian Anda tidak ditemukan.');
         }
 
-        // Cek apakah sudah ada pengajuan hari ini
         $today = Carbon::today()->toDateString();
+
+        // Cek apakah sudah ada catatan kehadiran langsung di kantor hari ini
+        $kehadiranHariIni = Kehadiran::where('pegawai_id', $pegawai->id)
+            ->where('tanggal', $today)
+            ->first();
+
+        // Cek apakah sudah ada pengajuan absen luar hari ini
         $pengajuanHariIni = PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
             ->where('tanggal', $today)
             ->first();
 
-        return view('staf.ajukan-absen', compact('user', 'pegawai', 'pengajuanHariIni', 'today'));
+        return view('staf.ajukan-absen', compact('user', 'pegawai', 'kehadiranHariIni', 'pengajuanHariIni', 'today'));
     }
 
     /**
@@ -53,8 +60,9 @@ class PengajuanAbsenLuarController extends Controller
             'deskripsi'            => 'required|string|max:2000',
             'foto_lokasi'          => 'required_if:jenis,kegiatan_sosial,dinas_luar_pengajuan|nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'file_dokumen'         => 'required_if:jenis,dinas_luar_undangan,dinas_luar_surat_tugas,dinas_luar|nullable|mimes:pdf,jpeg,png,jpg,webp|max:5120',
-            'latitude'             => 'required|numeric',
-            'longitude'            => 'required|numeric',
+            // Bounding box wilayah Indonesia: lat -11 s/d 6, lng 95 s/d 141
+            'latitude'             => 'required|numeric|between:-11,6',
+            'longitude'            => 'required|numeric|between:95,141',
             'alamat_gps'           => 'nullable|string|max:255',
             'tanda_tangan'         => 'required|string|min:100',
         ], [
@@ -62,17 +70,31 @@ class PengajuanAbsenLuarController extends Controller
             'foto_lokasi.required_if'          => 'Foto bukti situasi / lokasi wajib diunggah.',
             'file_dokumen.required_if'         => 'Dokumen resmi / surat tugas / undangan wajib diunggah.',
             'latitude.required'                => 'Titik lokasi GPS wajib diaktifkan sebelum mengajukan.',
+            'latitude.between'                 => 'Koordinat GPS tidak valid (di luar wilayah Indonesia). Matikan VPN, aktifkan GPS presisi tinggi, lalu coba lagi.',
             'longitude.required'               => 'Titik lokasi GPS wajib diaktifkan sebelum mengajukan.',
+            'longitude.between'                => 'Koordinat GPS tidak valid (di luar wilayah Indonesia). Matikan VPN, aktifkan GPS presisi tinggi, lalu coba lagi.',
             'tanda_tangan.required'            => 'Tanda tangan digital wajib diisi.',
         ]);
 
-        // Cek duplikasi pengajuan pada tanggal yang sama
+        // 1. Cek apakah sudah ada catatan kehadiran langsung di kantor pada tanggal yang diajukan
+        $kehadiran = Kehadiran::where('pegawai_id', $pegawai->id)
+            ->where('tanggal', $request->tanggal)
+            ->first();
+
+        if ($kehadiran && ($kehadiran->jam_masuk || in_array(strtolower($kehadiran->status), ['hadir', 'terlambat', 'dinas luar']))) {
+            $info = $kehadiran->jam_masuk 
+                ? 'Absen Masuk pukul ' . substr($kehadiran->jam_masuk, 0, 5) . ' WIB' 
+                : 'Status: ' . $kehadiran->status;
+            return back()->with('error', 'Anda sudah tercatat melakukan absensi kehadiran langsung di kantor pada tanggal ' . Carbon::parse($request->tanggal)->isoFormat('D MMMM Y') . ' (' . $info . '). Pengajuan absen luar hanya dapat dilakukan jika belum ada riwayat kehadiran langsung pada tanggal tersebut.');
+        }
+
+        // 2. Cek duplikasi pengajuan pada tanggal yang sama
         $existing = PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
             ->where('tanggal', $request->tanggal)
             ->first();
 
         if ($existing) {
-            return back()->with('error', 'Anda sudah memiliki pengajuan absen luar untuk tanggal ' . Carbon::parse($request->tanggal)->isoFormat('D MMMM Y') . '. Satu pengajuan per hari.');
+            return back()->with('error', 'Anda sudah memiliki pengajuan absen luar untuk tanggal ' . Carbon::parse($request->tanggal)->isoFormat('D MMMM Y') . ' (Status: ' . $existing->label_status . '). Satu pengajuan per hari.');
         }
 
         $data = [

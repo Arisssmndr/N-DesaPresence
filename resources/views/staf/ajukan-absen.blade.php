@@ -118,10 +118,12 @@
           @submit="validateAndSubmit($event)">
         @csrf
 
-        {{-- Hidden GPS fields --}}
+        {{-- Hidden GPS & Location metadata fields --}}
         <input type="hidden" name="latitude" :value="lat">
         <input type="hidden" name="longitude" :value="lng">
         <input type="hidden" name="alamat_gps" :value="alamatGps">
+        <input type="hidden" name="sumber_koordinat" :value="sumberKoordinat">
+        <input type="hidden" name="akurasi_gps_meter" :value="gpsAccuracy">
 
         {{-- 1. Header & Info Staf --}}
         <div class="sadi-card p-5 bg-white shadow-md space-y-1.5">
@@ -146,89 +148,118 @@
             </div>
         </div>
 
-        {{-- GPS Live Status Banner --}}
-        <div class="sadi-card p-4 border-2 transition-all duration-300"
+        {{-- GPS Live Status Banner (Multi-Strategy: GPS Hardware -> IP Geolocation -> Input Manual) --}}
+        <div class="sadi-card p-4 border-2 transition-all duration-300 shadow-md space-y-3"
              :class="{
-                 'bg-emerald-50 border-emerald-300': gpsStatus === 'success',
+                 'bg-gradient-to-br from-emerald-50 via-white to-emerald-50 border-emerald-400': gpsStatus === 'success',
                  'bg-amber-50 border-amber-300': gpsStatus === 'loading',
-                 'bg-red-50 border-red-300': gpsStatus === 'error' || gpsStatus === 'idle'
+                 'bg-rose-50 border-rose-300': gpsStatus === 'error' || gpsStatus === 'idle'
              }">
-            <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3 flex-1 min-w-0">
-                    <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white shrink-0"
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+                    <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-sm"
                          :class="{
                              'bg-emerald-600': gpsStatus === 'success',
                              'bg-amber-500 animate-pulse': gpsStatus === 'loading',
-                             'bg-red-600': gpsStatus === 'error' || gpsStatus === 'idle'
+                             'bg-rose-600': gpsStatus === 'error' || gpsStatus === 'idle'
                          }">
                         <template x-if="gpsStatus === 'success'">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         </template>
                         <template x-if="gpsStatus === 'loading'">
-                            <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         </template>
                         <template x-if="gpsStatus === 'error' || gpsStatus === 'idle'">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                         </template>
                     </div>
+                    
                     <div class="min-w-0 flex-1">
-                        {{-- Judul Status --}}
-                        <p class="text-xs font-extrabold leading-tight"
-                           :class="{
-                               'text-emerald-900': gpsStatus === 'success',
-                               'text-amber-900':   gpsStatus === 'loading',
-                               'text-red-900':     gpsStatus === 'error' || gpsStatus === 'idle'
-                           }">
-                            <span x-show="gpsStatus === 'success'">
-                                📍 GPS Terkunci
-                                <span x-show="gpsAccuracy !== null"
-                                      :class="gpsAccuracy <= 20 ? 'text-emerald-700' : gpsAccuracy <= 50 ? 'text-emerald-600' : gpsAccuracy <= 200 ? 'text-amber-700' : 'text-orange-700'"
-                                      x-text="gpsAccuracy <= 20 ? '— 🔒 Sangat Akurat' : gpsAccuracy <= 50 ? '— ✅ Akurat' : gpsAccuracy <= 200 ? '— ⚠️ Cukup Akurat' : '— 📡 Lemah'"
-                                ></span>
-                            </span>
-                            <span x-show="gpsStatus === 'loading'" x-text="gpsLoadingText"></span>
-                            <span x-show="gpsStatus === 'error' || gpsStatus === 'idle'">⚠️ GPS Wajib Diaktifkan</span>
-                        </p>
-                        {{-- Detail baris kedua --}}
-                        <p class="text-[11px] mt-0.5 break-all"
-                           :class="{
-                               'text-emerald-700 font-mono': gpsStatus === 'success',
-                               'text-amber-600':             gpsStatus === 'loading',
-                               'text-red-700':               gpsStatus === 'error' || gpsStatus === 'idle'
-                           }">
-                            <span x-show="gpsStatus === 'success'"
-                                  x-text="lat + ', ' + lng + (gpsAccuracy ? ' (±' + gpsAccuracy + 'm)' : '')"
-                            ></span>
-                            <span x-show="gpsStatus === 'loading'">
-                                Menunggu sinyal satelit GPS — tetap diam agar sinyal lebih cepat terkunci
-                            </span>
-                            <span x-show="gpsStatus === 'error' || gpsStatus === 'idle'"
-                                  x-text="gpsErrorMessage || 'Klik tombol untuk mengaktifkan GPS'"
-                            ></span>
-                        </p>
-                        {{-- Progress bar akurasi (hanya saat loading) --}}
-                        <div x-show="gpsStatus === 'loading'" class="mt-2">
-                            <div class="h-1.5 bg-amber-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-amber-500 rounded-full animate-pulse" style="width: 100%"></div>
-                            </div>
-                            <p class="text-[10px] text-amber-600 mt-1">Akurasi target: ≤50m · Timeout: 25 detik</p>
+                        {{-- Judul & Badge Sumber --}}
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <p class="text-xs font-extrabold leading-tight"
+                               :class="{
+                                   'text-emerald-900': gpsStatus === 'success',
+                                   'text-amber-900':   gpsStatus === 'loading',
+                                   'text-rose-900':     gpsStatus === 'error' || gpsStatus === 'idle'
+                               }">
+                                <span x-show="gpsStatus === 'success'">📍 Lokasi Terkunci</span>
+                                <span x-show="gpsStatus === 'loading'" x-text="gpsLoadingText"></span>
+                                <span x-show="gpsStatus === 'error' || gpsStatus === 'idle'">⚠️ Lokasi Belum Terkunci</span>
+                            </p>
+
+                            <template x-if="gpsStatus === 'success'">
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold border"
+                                      :class="{
+                                          'bg-emerald-100 text-emerald-800 border-emerald-300': sumberKoordinat === 'gps',
+                                          'bg-blue-100 text-blue-800 border-blue-300': sumberKoordinat === 'ip_geolocation',
+                                          'bg-purple-100 text-purple-800 border-purple-300': sumberKoordinat === 'manual'
+                                      }"
+                                      x-text="sumberKoordinat === 'gps' ? '🛰️ GPS Fisik (±' + (gpsAccuracy || '—') + 'm)' : (sumberKoordinat === 'ip_geolocation' ? '📡 Estimasi Jaringan IP' : '✏️ Input Manual')">
+                                </span>
+                            </template>
                         </div>
+
+                        {{-- Baris Detail Koordinat --}}
+                        <p class="text-[11px] mt-0.5 font-mono font-bold"
+                           :class="{
+                               'text-emerald-800': gpsStatus === 'success',
+                               'text-amber-700':   gpsStatus === 'loading',
+                               'text-rose-700':    gpsStatus === 'error' || gpsStatus === 'idle'
+                           }">
+                            <span x-show="gpsStatus === 'success'" x-text="lat + ', ' + lng"></span>
+                            <span x-show="gpsStatus === 'loading'">Menghubungkan satelit GPS & verifikasi wilayah Indonesia...</span>
+                            <span x-show="gpsStatus === 'error' || gpsStatus === 'idle'" x-text="gpsErrorMessage || 'Wajib aktifkan lokasi untuk membuktikan Anda berada di lokasi tugas dinas.'"></span>
+                        </p>
                     </div>
                 </div>
 
-                <button type="button" @click="requestLocation()"
-                        :disabled="gpsStatus === 'loading'"
-                        class="px-3 py-2 rounded-xl text-xs font-extrabold shrink-0 shadow-sm transition active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
-                        :class="gpsStatus === 'success'
-                            ? 'bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100'
-                            : gpsStatus === 'loading'
-                            ? 'bg-amber-400 text-white cursor-wait'
-                            : 'bg-red-600 text-white hover:bg-red-700'">
-                    <span x-show="gpsStatus === 'success'">🔄 Perbarui</span>
-                    <span x-show="gpsStatus === 'loading'">⏳ Mengunci...</span>
-                    <span x-show="gpsStatus === 'error' || gpsStatus === 'idle'">📡 Nyalakan GPS</span>
-                </button>
+                {{-- Action Buttons Toolbar --}}
+                <div class="flex items-center gap-1.5 flex-wrap self-end sm:self-center shrink-0">
+                    <button type="button" @click="requestLocation()"
+                            :disabled="gpsStatus === 'loading'"
+                            class="px-3 py-1.5 rounded-xl text-xs font-extrabold shadow-xs transition active:scale-95 disabled:opacity-60 cursor-pointer"
+                            :class="gpsStatus === 'success'
+                                ? 'bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50'
+                                : 'bg-[#064E3B] text-white hover:bg-[#04392B]'">
+                        <span x-show="gpsStatus === 'success'">🔄 Refresh GPS</span>
+                        <span x-show="gpsStatus === 'loading'">⏳ Mengunci...</span>
+                        <span x-show="gpsStatus === 'error' || gpsStatus === 'idle'">📡 Kunci GPS</span>
+                    </button>
+
+                    <button type="button" @click="requestIpLocation()"
+                            x-show="gpsStatus !== 'loading'"
+                            class="px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 transition shadow-xs cursor-pointer active:scale-95"
+                            title="Gunakan perkiraan lokasi dari koneksi internet/provider jika GPS lambat">
+                        <span>📡 Auto IP</span>
+                    </button>
+
+                    <button type="button" @click="openManualModal()"
+                            class="px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 transition shadow-xs cursor-pointer active:scale-95"
+                            title="Masukkan koordinat secara manual jika GPS terkendala">
+                        <span>✏️ Manual</span>
+                    </button>
+
+                    <template x-if="lat && lng">
+                        <a :href="'https://maps.google.com/?q=' + lat + ',' + lng" target="_blank"
+                           class="px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 transition shadow-xs flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            <span>Peta</span>
+                        </a>
+                    </template>
+                </div>
             </div>
+
+            {{-- Alamat Deskriptif dari Reverse Geocoding --}}
+            <template x-if="gpsStatus === 'success'">
+                <div class="p-2.5 rounded-xl bg-white/90 border border-emerald-200 text-xs flex items-start gap-2 shadow-2xs">
+                    <svg class="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <div class="flex-1 min-w-0">
+                        <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">Verifikasi Wilayah Penugasan:</span>
+                        <p class="font-bold text-slate-900 leading-snug break-words" x-text="alamatGps || 'Memuat detail nama kelurahan / kecamatan...'"></p>
+                    </div>
+                </div>
+            </template>
         </div>
 
         {{-- 2. Pilih Jenis Pengajuan --}}
@@ -481,6 +512,77 @@
     </form>
     @endif
 
+    <!-- MODAL INPUT KOORDINAT MANUAL -->
+    <div x-show="showManualModal"
+         x-transition.opacity
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4"
+         style="display: none;"
+         @keydown.escape.window="showManualModal = false">
+        <div @click.away="showManualModal = false"
+             class="bg-white text-slate-800 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border-2 border-[#C9A84C] my-6 flex flex-col">
+            
+            <div class="px-5 py-4 bg-[#064E3B] text-white flex items-center justify-between border-b border-[#C9A84C]/40">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-[#E2C268]"></span>
+                    <h3 class="font-outfit font-extrabold text-sm text-white">Input Titik Koordinat Manual</h3>
+                </div>
+                <button type="button" @click="showManualModal = false" class="p-1 text-emerald-200 hover:text-white cursor-pointer text-lg font-bold">
+                    ✕
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4 text-xs">
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 space-y-1">
+                    <p class="font-bold flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Petunjuk Koordinat:</span>
+                    </p>
+                    <p class="text-slate-600 leading-relaxed">
+                        Jika satelit GPS perangkat Anda sedang lemah, Anda dapat menyalin angka koordinat dari <strong>Google Maps</strong> (tekan lama titik lokasi di Google Maps → salin angka lintang & bujur). Koordinat wajib berada di wilayah Indonesia.
+                    </p>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">
+                            Latitude (Garis Lintang) <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" step="any" x-model="manualLat" placeholder="Contoh: -7.3481234"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 focus:border-[#064E3B] focus:ring-2 focus:ring-[#064E3B]/20 outline-none">
+                        <p class="text-[10px] text-slate-400 mt-0.5">Batas wilayah Indonesia: -11.0 s/d 6.0</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">
+                            Longitude (Garis Bujur) <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" step="any" x-model="manualLng" placeholder="Contoh: 108.1234567"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 focus:border-[#064E3B] focus:ring-2 focus:ring-[#064E3B]/20 outline-none">
+                        <p class="text-[10px] text-slate-400 mt-0.5">Batas wilayah Indonesia: 95.0 s/d 141.1</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">
+                            Nama Tempat / Instansi Lokasi Tugas
+                        </label>
+                        <input type="text" x-model="manualPlaceName" placeholder="Contoh: Kantor Kecamatan Cigalontang"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-900 focus:border-[#064E3B] focus:ring-2 focus:ring-[#064E3B]/20 outline-none">
+                    </div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-2">
+                    <button type="button" @click="showManualModal = false" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="button" @click="applyManualCoordinates()" class="px-5 py-2.5 rounded-xl btn-sadi-primary text-white font-extrabold shadow-md transition cursor-pointer flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Terapkan Koordinat</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
 
@@ -497,17 +599,24 @@ function ajukanAbsenForm() {
         isDrawing: false,
         hasSignature: false,
         
-        // GPS State
+        // Location State
         lat: '',
         lng: '',
         alamatGps: '',
+        sumberKoordinat: 'gps',  // 'gps' | 'ip_geolocation' | 'manual'
         gpsStatus: 'idle',       // 'idle' | 'loading' | 'success' | 'error'
         gpsErrorMessage: '',
-        gpsAccuracy: null,       // Akurasi dalam meter
+        gpsAccuracy: null,       // meter
         gpsLoadingText: 'Meminta izin akses GPS...',
         _watchId: null,
         _watchTimer: null,
         _bestAccuracy: Infinity,
+
+        // Manual Input State
+        showManualModal: false,
+        manualLat: '',
+        manualLng: '',
+        manualPlaceName: '',
 
         init() {
             this.$nextTick(() => {
@@ -591,49 +700,69 @@ function ajukanAbsenForm() {
             }
         },
 
-        _commitPosition(rawLat, rawLng, accuracy) {
+        _validateNkri(lat, lng) {
+            return (lat >= -11.0 && lat <= 6.0) && (lng >= 95.0 && lng <= 141.1);
+        },
+
+        _commitPosition(rawLat, rawLng, accuracy = null, source = 'gps', placeName = '') {
             this._stopWatch();
             
-            // Bounding box NKRI (Sabang s/d Merauke, Miangas s/d Rote)
-            const isNKRI = (rawLat >= -11.0 && rawLat <= 6.0)
-                        && (rawLng >=  95.0 && rawLng <= 141.1);
+            const isNKRI = this._validateNkri(rawLat, rawLng);
             
             if (!isNKRI) {
                 this.gpsStatus       = 'error';
                 this.gpsAccuracy     = null;
                 this.gpsErrorMessage =
-                    'Lokasi terdeteksi di LUAR wilayah Indonesia (' + rawLat.toFixed(5) + ', ' + rawLng.toFixed(5) + '). '
+                    'Koordinat terdeteksi di LUAR wilayah Indonesia (' + rawLat.toFixed(5) + ', ' + rawLng.toFixed(5) + '). '
                   + 'Penyebab: VPN aktif atau proxy luar negeri. '
                   + 'Nonaktifkan VPN/Proxy, aktifkan GPS perangkat, lalu coba lagi.';
                 this.showGpsEnforceModal();
                 return;
             }
             
-            this.lat         = rawLat.toFixed(7);
-            this.lng         = rawLng.toFixed(7);
-            this.gpsAccuracy = Math.round(accuracy);
-            this.gpsStatus   = 'success';
-            this.alamatGps   = 'Koordinat: ' + this.lat + ', ' + this.lng + ' (±' + this.gpsAccuracy + 'm)';
+            this.lat             = rawLat.toFixed(7);
+            this.lng             = rawLng.toFixed(7);
+            this.sumberKoordinat = source;
+            this.gpsAccuracy     = accuracy ? Math.round(accuracy) : null;
+            this.gpsStatus       = 'success';
             
-            const qualityLabel = this.gpsAccuracy <= 20  ? '🔒 Sangat Akurat'
-                               : this.gpsAccuracy <= 50  ? '✅ Akurat'
-                               : this.gpsAccuracy <= 200 ? '⚠️ Cukup Akurat'
-                               : '📡 Akurasi Rendah (sinyal lemah)';
+            const sourceLabel = source === 'gps'
+                ? 'GPS Fisik (±' + (this.gpsAccuracy || 0) + 'm)'
+                : (source === 'ip_geolocation' ? 'Estimasi Jaringan Provider' : 'Input Manual');
+
+            this.alamatGps = (placeName ? placeName + ' — ' : '') + 'Koordinat: ' + this.lat + ', ' + this.lng + ' (' + sourceLabel + ')';
             
-            if (window.Swal) {
-                Swal.fire({
-                    title: 'Lokasi GPS Terkunci!',
-                    html:  '<p style="font-size:13px;margin-bottom:6px">'
-                         + qualityLabel + ' — <strong>±' + this.gpsAccuracy + ' meter</strong></p>'
-                         + '<p style="font-family:monospace;font-size:11px;color:#065f46">'
-                         + this.lat + ', ' + this.lng + '</p>',
-                    icon: 'success',
-                    confirmButtonColor: '#064E3B',
-                    customClass: {
-                        popup: 'rounded-3xl border border-[#C9A84C]/30 shadow-2xl',
-                        confirmButton: 'rounded-xl px-6 py-2.5 font-bold'
-                    }
+            // Lakukan reverse geocoding untuk melengkapi nama desa / kecamatan
+            this.reverseGeocode(rawLat, rawLng, placeName);
+        },
+
+        async reverseGeocode(lat, lng, customPlace = '') {
+            try {
+                // Gunakan BigDataCloud free client geocoder (CORS friendly) atau OpenStreetMap Nominatim
+                const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=id`, {
+                    headers: { 'Accept': 'application/json' }
                 });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const locality = data.locality || data.principalSubdivisionCity || '';
+                    const district = data.city || data.localityInfo?.administrative?.[3]?.name || '';
+                    const province = data.principalSubdivision || '';
+                    const country  = data.countryName || 'Indonesia';
+
+                    let parts = [];
+                    if (customPlace) parts.push(customPlace);
+                    if (locality) parts.push(locality);
+                    if (district && district !== locality) parts.push(district);
+                    if (province) parts.push(province);
+                    if (country && !parts.includes(country)) parts.push(country);
+
+                    if (parts.length > 0) {
+                        this.alamatGps = parts.join(', ') + ` [${this.lat}, ${this.lng}]`;
+                    }
+                }
+            } catch (e) {
+                console.warn('Reverse geocode lookup skipped:', e);
             }
         },
 
@@ -646,12 +775,11 @@ function ajukanAbsenForm() {
             this._bestAccuracy   = Infinity;
             this.lat             = '';
             this.lng             = '';
-            this.gpsLoadingText  = 'Meminta izin akses GPS...';
+            this.gpsLoadingText  = 'Mengakses satelit GPS presisi tinggi...';
             
             if (!navigator.geolocation) {
-                this.gpsStatus       = 'error';
-                this.gpsErrorMessage = 'Perangkat Anda tidak mendukung Geolocation / GPS.';
-                this.showGpsEnforceModal();
+                this.gpsLoadingText = 'Browser tidak mendukung GPS. Mencoba deteksi IP...';
+                this.requestIpLocation();
                 return;
             }
             
@@ -661,7 +789,7 @@ function ajukanAbsenForm() {
                     const rawLng  = position.coords.longitude;
                     const acc     = position.coords.accuracy;
                     
-                    this.gpsLoadingText = 'Mengunci sinyal GPS... akurasi saat ini ±' + Math.round(acc) + 'm';
+                    this.gpsLoadingText = 'Mengunci sinyal GPS... Akurasi saat ini ±' + Math.round(acc) + 'm';
                     
                     if (acc < this._bestAccuracy) {
                         this._bestAccuracy = acc;
@@ -670,82 +798,160 @@ function ajukanAbsenForm() {
                         this.gpsAccuracy = Math.round(acc);
                     }
                     
-                    if (acc <= 50) {
-                        this._commitPosition(rawLat, rawLng, acc);
+                    // Jika akurasi <= 30m, langsung kunci!
+                    if (acc <= 30) {
+                        this._commitPosition(rawLat, rawLng, acc, 'gps');
                     }
                 },
                 (error) => {
                     this._stopWatch();
-                    this.gpsStatus = 'error';
-                    let msg;
-                    switch (error.code) {
-                        case error.PERMISSION_DENIED:
-                            msg = 'Akses GPS ditolak. Buka pengaturan browser → izinkan Lokasi untuk situs ini, lalu coba lagi.';
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            msg = 'GPS tidak dapat menentukan posisi. Pastikan GPS fisik perangkat aktif dan tidak terhalang.';
-                            break;
-                        case error.TIMEOUT:
-                            msg = 'Waktu GPS habis. Pindah ke area terbuka agar sinyal satelit lebih kuat, lalu coba lagi.';
-                            break;
-                        default:
-                            msg = 'Gagal mendapatkan lokasi GPS. Silakan coba lagi.';
-                    }
-                    this.gpsErrorMessage = msg;
-                    this.showGpsEnforceModal();
+                    console.warn('Geolocation Hardware Error:', error);
+                    // Jika GPS ditolak atau gagal, fallback otomatis ke deteksi IP
+                    this.requestIpLocation();
                 },
                 {
                     enableHighAccuracy: true,
-                    timeout:           30000,
+                    timeout:           20000,
                     maximumAge:        0
                 }
             );
             
+            // Timeout 15 detik: jika ada akurasi yang memadai (<= 150m), gunakan. Jika tidak, fallback ke IP.
             this._watchTimer = setTimeout(() => {
                 if (this.gpsStatus !== 'success') {
-                    if (this.lat && this.lng) {
-                        this._commitPosition(
-                            parseFloat(this.lat),
-                            parseFloat(this.lng),
-                            this._bestAccuracy
-                        );
+                    if (this.lat && this.lng && this._bestAccuracy <= 200) {
+                        this._commitPosition(parseFloat(this.lat), parseFloat(this.lng), this._bestAccuracy, 'gps');
                     } else {
-                        this._stopWatch();
-                        this.gpsStatus       = 'error';
-                        this.gpsErrorMessage = 'GPS tidak berhasil mendapatkan sinyal dalam 25 detik. Pindah ke area terbuka (luar ruangan) agar sinyal satelit lebih kuat.';
-                        this.showGpsEnforceModal();
+                        this.requestIpLocation();
                     }
                 }
-            }, 25000);
+            }, 15000);
+        },
+
+        async requestIpLocation() {
+            this.gpsLoadingText = 'Mengambil perkiraan lokasi dari jaringan internet...';
+            try {
+                // Coba endpoint 1: ipapi.co
+                let lat = null, lng = null, place = '';
+                const res = await fetch('https://ipapi.co/json/', { timeout: 6000 });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.latitude && data.longitude) {
+                        lat = parseFloat(data.latitude);
+                        lng = parseFloat(data.longitude);
+                        place = (data.city ? data.city + ', ' : '') + (data.region || '');
+                    }
+                }
+
+                // Fallback jika endpoint 1 gagal
+                if (!lat || !lng) {
+                    const res2 = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=id');
+                    if (res2.ok) {
+                        const data2 = await res2.json();
+                        if (data2.latitude && data2.longitude) {
+                            lat = parseFloat(data2.latitude);
+                            lng = parseFloat(data2.longitude);
+                            place = data2.locality || data2.city || '';
+                        }
+                    }
+                }
+
+                if (lat && lng && this._validateNkri(lat, lng)) {
+                    this._commitPosition(lat, lng, 500, 'ip_geolocation', place);
+                    if (window.Swal) {
+                        Swal.fire({
+                            title: 'Lokasi Terdeteksi (IP)',
+                            html: '<p style="font-size:13px">Lokasi diperkirakan dari jaringan internet provider Anda.</p>'
+                                + '<p style="font-family:monospace;font-size:11px;color:#064E3B;margin-top:6px"><strong>' + this.lat + ', ' + this.lng + '</strong></p>',
+                            icon: 'info',
+                            confirmButtonColor: '#064E3B',
+                            customClass: {
+                                popup: 'rounded-3xl border border-[#C9A84C]/30 shadow-2xl',
+                                confirmButton: 'rounded-xl px-6 py-2 font-bold text-xs'
+                            }
+                        });
+                    }
+                    return;
+                }
+            } catch (err) {
+                console.error('IP Geolocation error:', err);
+            }
+
+            // Jika GPS & IP dua-duanya gagal, beri pesan error & tawarkan manual input
+            this._stopWatch();
+            this.gpsStatus = 'error';
+            this.gpsErrorMessage = 'Gagal mendeteksi lokasi otomatis. Silakan gunakan tombol "Input Manual" untuk memasukkan titik koordinat.';
+            this.showGpsEnforceModal();
+        },
+
+        openManualModal() {
+            this.manualLat = this.lat || '';
+            this.manualLng = this.lng || '';
+            this.manualPlaceName = '';
+            this.showManualModal = true;
+        },
+
+        applyManualCoordinates() {
+            const rawLat = parseFloat(this.manualLat);
+            const rawLng = parseFloat(this.manualLng);
+
+            if (isNaN(rawLat) || isNaN(rawLng)) {
+                alert('Harap isi Latitude dan Longitude dengan angka yang valid.');
+                return;
+            }
+
+            if (!this._validateNkri(rawLat, rawLng)) {
+                alert('Koordinat di luar wilayah NKRI (Indonesia). Latitude harus antara -11.0 s/d 6.0 dan Longitude 95.0 s/d 141.1.');
+                return;
+            }
+
+            this.showManualModal = false;
+            this._commitPosition(rawLat, rawLng, null, 'manual', this.manualPlaceName);
+
+            if (window.Swal) {
+                Swal.fire({
+                    title: 'Koordinat Manual Diterapkan!',
+                    html: '<p style="font-size:12px">Titik koordinat berhasil diterapkan dan diverifikasi di wilayah Indonesia.</p>'
+                        + '<p style="font-family:monospace;font-size:11px;color:#064E3B;margin-top:4px">' + this.lat + ', ' + this.lng + '</p>',
+                    icon: 'success',
+                    confirmButtonColor: '#064E3B',
+                    customClass: {
+                        popup: 'rounded-3xl border border-[#C9A84C]/30 shadow-2xl',
+                        confirmButton: 'rounded-xl px-6 py-2.5 font-bold'
+                    }
+                });
+            }
         },
 
         showGpsEnforceModal() {
             if (window.Swal) {
                 Swal.fire({
-                    title: 'GPS Gagal Terkunci',
+                    title: 'Lokasi Belum Terkunci',
                     html: this.gpsErrorMessage
                         ? '<p style="font-size:13px">' + this.gpsErrorMessage + '</p>'
                           + '<p style="margin-top:10px;font-size:11px;color:#92400e;background:#fef3c7;padding:8px;border-radius:8px">'
-                          + '💡 <strong>Tips:</strong> Buka app di luar ruangan atau dekat jendela, matikan VPN, aktifkan GPS di pengaturan HP, lalu tap <em>Coba Lagi</em>.</p>'
-                        : '<p>Wajib aktifkan GPS perangkat dan izinkan akses lokasi di browser.</p>',
+                          + '💡 <strong>Tips:</strong> Nyalakan GPS perangkat, matikan VPN, atau gunakan tombol <em>Input Manual</em> jika berada di dalam gedung.</p>'
+                        : '<p>Wajib mengunci titik lokasi penugasan sebelum mengajukan.</p>',
                     icon: 'warning',
-                    confirmButtonText: '🔄 Coba Lagi',
+                    showCancelButton: true,
+                    confirmButtonText: '🔄 Kunci Ulang GPS',
+                    cancelButtonText: '✏️ Input Manual',
                     confirmButtonColor: '#064E3B',
-                    showCancelButton: false,
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
+                    cancelButtonColor: '#475569',
                     customClass: {
                         popup: 'rounded-3xl border border-[#C9A84C]/40 shadow-2xl',
-                        confirmButton: 'rounded-xl px-6 py-3 font-bold text-sm'
+                        confirmButton: 'rounded-xl px-5 py-2.5 font-bold text-xs',
+                        cancelButton: 'rounded-xl px-5 py-2.5 font-bold text-xs'
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         this.requestLocation();
+                    } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        this.openManualModal();
                     }
                 });
             } else {
-                alert('GPS gagal: ' + (this.gpsErrorMessage || 'Izinkan akses lokasi pada browser.'));
-                this.requestLocation();
+                alert('Lokasi belum terkunci. Silakan refresh atau input manual.');
             }
         },
 
@@ -786,3 +992,4 @@ document.addEventListener('alpine:init', () => {
 });
 </script>
 @endsection
+

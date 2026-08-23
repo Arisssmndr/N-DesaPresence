@@ -158,10 +158,12 @@ class JadwalPiketManager extends Component
             'tanggal'    => $besokStr,
         ]);
 
-        $kehadiranBesok->status = 'Hadir';
-        $kehadiranBesok->sumber_data = 'manual_admin';
-        $kehadiranBesok->diverifikasi_oleh = auth()->id();
-        $kehadiranBesok->keterangan = "Lepas Piket (Tugas Piket Malam tgl " . $piket->tanggal_piket->format('d/m/Y') . ")";
+        $kehadiranBesok->status             = 'Hadir';
+        $kehadiranBesok->jam_masuk          = $piket->waktu_absen ? $piket->waktu_absen->format('H:i:s') : '07:30:00';
+        $kehadiranBesok->tanda_tangan_masuk = $piket->tanda_tangan;
+        $kehadiranBesok->sumber_data        = 'manual_admin';
+        $kehadiranBesok->diverifikasi_oleh  = auth()->id();
+        $kehadiranBesok->keterangan         = "Lepas Piket (Tugas Piket Malam tgl " . $piket->tanggal_piket->format('d/m/Y') . ")";
         $kehadiranBesok->save();
 
         $msg = "Piket {$piket->pegawai->nama_lengkap} dikonfirmasi hadir. Presensi Lepas Piket hari berikutnya ({$besokStr}) otomatis dicatat.";

@@ -184,7 +184,11 @@
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         <span>SPT Kedinasan</span>
                     </a>
-                    @php $jmlIzinMenunggu = \App\Models\IzinSakit::where('status','menunggu')->count(); @endphp
+                    @php 
+                        $jmlIzinMenunggu = \Illuminate\Support\Facades\Cache::remember('sidebar_izin_menunggu_count', 30, function() {
+                            return \App\Models\IzinSakit::where('status','menunggu')->count();
+                        });
+                    @endphp
                     <a href="{{ route('izin.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('izin.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                         <span class="flex-1">Izin & Sakit</span>
@@ -197,7 +201,11 @@
                         <span>Jadwal Piket</span>
                     </a>
                     {{-- ═══ PENGAJUAN ABSEN LUAR (dengan badge notifikasi) ═══ --}}
-                    @php $jmlPengajuanMenunggu = \App\Models\PengajuanAbsenLuar::where('status','menunggu')->count(); @endphp
+                    @php 
+                        $jmlPengajuanMenunggu = \Illuminate\Support\Facades\Cache::remember('sidebar_pengajuan_menunggu_count', 30, function() {
+                            return \App\Models\PengajuanAbsenLuar::where('status','menunggu')->count();
+                        });
+                    @endphp
                     <a href="{{ route('pengajuan-absen.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('pengajuan-absen.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 4h.01M9 12h.01M9 16h.01M13 12h4m-4 4h2"/></svg>
                         <span class="flex-1">Absen Luar</span>
@@ -302,12 +310,12 @@
                     </div>
                 </div>
 
-                <!-- Right Action Bar: Search, Bell, User Profile -->
+                <!-- Right Action Bar: Clock/Date badge, Bell, User Profile -->
                 <div class="flex items-center gap-4">
-                    <!-- Search Input -->
-                    <div class="relative hidden sm:block">
-                        <input type="text" placeholder="Cari..." class="w-56 pl-9 pr-4 py-2 text-xs rounded-full bg-white/80 border border-[#C9A84C]/30 focus:outline-none focus:ring-2 focus:ring-[#C9A84C] text-slate-700 shadow-sm">
-                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <!-- Tanggal & Jam Realtime Info -->
+                    <div class="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#C9A84C]/30 text-xs font-semibold text-slate-700 shadow-xs">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>{{ now()->translatedFormat('l, d M Y') }}</span>
                     </div>
 
                     <!-- Bell Notifications (Livewire Component with Dynamic Badge & Dropdown) -->

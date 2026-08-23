@@ -506,46 +506,82 @@
     @endif
 
     <!-- Status Jaringan WiFi Banner -->
-    <div class="p-4 rounded-2xl {{ $isWifiValid ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border-2 border-red-200' }} flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl {{ $isWifiValid ? 'bg-emerald-600 text-white' : 'bg-red-500 text-white' }} flex items-center justify-center shrink-0 shadow-sm">
-                @if($isWifiValid)
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
-                @else
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728M15.536 8.464a5 5 0 010 7.072M12 12h.01M8.464 8.464a5 5 0 000 7.072M5.636 5.636a9 9 0 000 12.728"/></svg>
+    <div x-data="{
+            clientNetType: '',
+            init() {
+                if (navigator.connection) {
+                    const conn = navigator.connection;
+                    this.clientNetType = conn.type || conn.effectiveType || '';
+                    conn.addEventListener('change', () => {
+                        this.clientNetType = conn.type || conn.effectiveType || '';
+                    });
+                }
+            }
+         }"
+         class="p-4 rounded-2xl {{ $isWifiValid ? 'bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border-2 border-emerald-300' : 'bg-gradient-to-r from-rose-50 via-white to-amber-50 border-2 border-rose-300' }} shadow-md transition-all">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+            <div class="flex items-start sm:items-center gap-3.5">
+                <div class="w-11 h-11 rounded-2xl {{ $isWifiValid ? 'bg-[#064E3B] text-[#E2C268] border border-[#C9A84C]' : 'bg-rose-600 text-white shadow-md' }} flex items-center justify-center shrink-0">
+                    @if($isWifiValid)
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
+                    @else
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.364 5.636a9 9 0 010 12.728M15.536 8.464a5 5 0 010 7.072M12 12h.01M8.464 8.464a5 5 0 000 7.072M5.636 5.636a9 9 0 000 12.728"/></svg>
+                    @endif
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <p class="text-xs font-extrabold {{ $isWifiValid ? 'text-[#064E3B]' : 'text-rose-900' }} flex items-center gap-1.5">
+                            @if($isWifiValid)
+                                <span>🔒 Terhubung ke WiFi Kantor Desa</span>
+                                @if(!empty($wifiDiagnosis['matched_network']))
+                                    <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold">({{ $wifiDiagnosis['matched_network'] }})</span>
+                                @endif
+                            @else
+                                <span>⚠️ Di Luar Jaringan WiFi Kantor Desa</span>
+                            @endif
+                        </p>
+                        <template x-if="clientNetType">
+                            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-bold uppercase" x-text="'Koneksi: ' + clientNetType"></span>
+                        </template>
+                    </div>
+
+                    <p class="text-[11px] {{ $isWifiValid ? 'text-emerald-700' : 'text-rose-700' }} mt-0.5 leading-snug">
+                        @if($isWifiValid)
+                            Koneksi IP terverifikasi valid. Anda dapat melakukan presensi langsung di kantor desa.
+                        @else
+                            Perangkat Anda terdeteksi menggunakan <strong>Data Seluler / WiFi Luar</strong>. Absen langsung di kantor hanya dapat dilakukan saat terhubung WiFi desa.
+                        @endif
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 self-start sm:self-center shrink-0">
+                @if(!$isWifiValid && (!$kehadiranHariIni || !$kehadiranHariIni->jam_masuk))
+                    <a href="{{ route('staf.ajukan.form') }}" class="px-3.5 py-2 rounded-xl bg-[#064E3B] text-white font-extrabold text-xs shadow hover:bg-[#04392B] transition flex items-center gap-1.5 active:scale-95">
+                        <svg class="w-3.5 h-3.5 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Ajukan Absen Luar</span>
+                    </a>
                 @endif
-            </div>
-            <div>
-                <p class="text-xs font-extrabold {{ $isWifiValid ? 'text-emerald-900' : 'text-red-900' }} flex items-center gap-1.5">
-                    @if($isWifiValid)
-                        <svg class="w-3.5 h-3.5 text-emerald-600 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        <span>Terhubung Jaringan WiFi Kantor Desa</span>
-                    @else
-                        <svg class="w-3.5 h-3.5 text-red-600 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                        <span>Tidak Terhubung WiFi Kantor Desa</span>
-                    @endif
-                </p>
-                <p class="text-[11px] {{ $isWifiValid ? 'text-emerald-700' : 'text-red-700' }} mt-0.5 leading-snug">
-                    @if($isWifiValid)
-                        Koneksi valid dan terverifikasi untuk tanda tangan presensi digital langsung di kantor.
-                    @else
-                        Jika Anda sedang <strong>Dinas Luar</strong> atau <strong>Tugas Lapangan</strong>, silakan ajukan melalui menu <strong>Absen Luar</strong>.
-                    @endif
-                </p>
+                <div class="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-center shadow-xs">
+                    <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">IP Klien</span>
+                    <span class="text-[11px] font-mono font-extrabold {{ $isWifiValid ? 'text-emerald-800' : 'text-rose-800' }}">
+                        {{ $clientIp }}
+                    </span>
+                </div>
             </div>
         </div>
-        
-        <div class="flex items-center gap-2 self-end sm:self-center">
-            @if(!$isWifiValid && (!$kehadiranHariIni || !$kehadiranHariIni->jam_masuk))
-                <a href="{{ route('staf.ajukan.form') }}" class="px-3.5 py-2 rounded-xl bg-[#064E3B] text-white font-extrabold text-xs shadow hover:bg-[#04392B] transition flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    <span>Ajukan Absen Luar</span>
-                </a>
-            @endif
-            <span class="text-[10px] font-mono font-bold px-2 py-1 rounded bg-white/80 border border-slate-200 {{ $isWifiValid ? 'text-emerald-800' : 'text-red-800' }} shrink-0">
-                {{ $clientIp }}
+
+        @if(!$isWifiValid)
+        <div class="mt-3 pt-2.5 border-t border-rose-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[10.5px] text-rose-800">
+            <span class="flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Sedang dinas luar atau kegiatan lapangan? Ajukan lewat formulir <strong>Absen Luar</strong> untuk diverifikasi Admin.</span>
             </span>
+            <button type="button" onclick="window.location.reload()" class="font-extrabold text-[#064E3B] underline hover:text-emerald-900 cursor-pointer shrink-0">
+                🔄 Cek Ulang Koneksi
+            </button>
         </div>
+        @endif
     </div>
 
     <!-- Status Presensi Hari Ini Card -->

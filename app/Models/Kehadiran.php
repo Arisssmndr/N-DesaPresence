@@ -42,9 +42,13 @@ class Kehadiran extends Model
         if (!$this->tanda_tangan_masuk) {
             return null;
         }
-        return str_starts_with($this->tanda_tangan_masuk, 'data:')
-            ? $this->tanda_tangan_masuk
-            : \Illuminate\Support\Facades\Storage::url($this->tanda_tangan_masuk);
+        if (str_starts_with($this->tanda_tangan_masuk, 'data:')) {
+            return $this->tanda_tangan_masuk;
+        }
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($this->tanda_tangan_masuk)) {
+            return \Illuminate\Support\Facades\Storage::url($this->tanda_tangan_masuk);
+        }
+        return null;
     }
 
     public function getTandaTanganPulangSrcAttribute(): ?string
@@ -52,9 +56,13 @@ class Kehadiran extends Model
         if (!$this->tanda_tangan_pulang) {
             return null;
         }
-        return str_starts_with($this->tanda_tangan_pulang, 'data:')
-            ? $this->tanda_tangan_pulang
-            : \Illuminate\Support\Facades\Storage::url($this->tanda_tangan_pulang);
+        if (str_starts_with($this->tanda_tangan_pulang, 'data:')) {
+            return $this->tanda_tangan_pulang;
+        }
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($this->tanda_tangan_pulang)) {
+            return \Illuminate\Support\Facades\Storage::url($this->tanda_tangan_pulang);
+        }
+        return null;
     }
 
     public function getPdfTandaTanganMasukAttribute(): ?string

@@ -81,6 +81,54 @@ class AbsensiSignatureService
     }
 
     /**
+     * Diagnosis lengkap status koneksi WiFi klien.
+     */
+    public function getWifiDiagnosis(string $clientIp): array
+    {
+        $daftarWifi = KonfigurasiWifi::aktif()->get();
+        $matchedWifi = null;
+
+        foreach ($daftarWifi as $wifi) {
+            $ipConfig = trim($wifi->ip_address);
+
+            // Cek CIDR (contoh: 192.168.1.0/24)
+            if (str_contains($ipConfig, '/')) {
+                if ($this->ipInCidr($clientIp, $ipConfig)) {
+                    $matchedWifi = $wifi;
+                    break;
+                }
+            } elseif (str_contains($ipConfig, '*')) {
+                // Wildcard (contoh: 192.168.1.*)
+                $pattern = '/^' . str_replace('\*', '\d+', preg_quote($ipConfig, '/')) . '$/';
+                if (preg_match($pattern, $clientIp)) {
+                    $matchedWifi = $wifi;
+                    break;
+                }
+            } else {
+                // Exact match
+                if ($clientIp === $ipConfig) {
+                    $matchedWifi = $wifi;
+                    break;
+                }
+            }
+        }
+
+        $isValid = !is_null($matchedWifi);
+        $wifiNames = $daftarWifi->pluck('nama_jaringan')->filter()->values()->toArray();
+
+        return [
+            'is_valid'          => $isValid,
+            'client_ip'         => $clientIp,
+            'matched_network'   => $matchedWifi ? $matchedWifi->nama_jaringan : null,
+            'active_networks'   => $wifiNames,
+            'rejection_reason'  => $isValid ? null : ($daftarWifi->isEmpty()
+                ? 'Belum ada konfigurasi WiFi kantor desa yang aktif di sistem.'
+                : 'Alamat IP (' . $clientIp . ') tidak terdaftar dalam whitelist WiFi Kantor Desa Nangtang.'),
+        ];
+    }
+
+
+    /**
      * Proses absen masuk dengan tanda tangan (dengan database transaction & row lock).
      */
     public function prosesAbsenMasuk(Pegawai $pegawai, string $signatureBase64, string $ipAddress): array

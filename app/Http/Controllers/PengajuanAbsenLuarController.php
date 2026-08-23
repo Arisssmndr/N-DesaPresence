@@ -62,10 +62,12 @@ class PengajuanAbsenLuarController extends Controller
             'deskripsi'            => 'required|string|max:2000',
             'foto_lokasi'          => 'required_if:jenis,kegiatan_sosial,dinas_luar_pengajuan|nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'file_dokumen'         => 'required_if:jenis,dinas_luar_undangan,dinas_luar_surat_tugas,dinas_luar|nullable|mimes:pdf,jpeg,png,jpg,webp|max:5120',
-            // Bounding box wilayah Indonesia: lat -11 s/d 6, lng 95 s/d 141
+            // Bounding box wilayah Indonesia: lat -11 s/d 6, lng 95 s/d 141.1
             'latitude'             => 'required|numeric|between:-11,6',
-            'longitude'            => 'required|numeric|between:95,141',
+            'longitude'            => 'required|numeric|between:95,141.1',
             'alamat_gps'           => 'nullable|string|max:255',
+            'sumber_koordinat'     => 'nullable|in:gps,ip_geolocation,manual',
+            'akurasi_gps_meter'    => 'nullable|numeric|min:0',
             'tanda_tangan'         => 'required|string|min:100',
         ], [
             'tanggal.after_or_equal'           => 'Pengajuan absen luar maksimal untuk 30 hari ke belakang.',
@@ -73,9 +75,9 @@ class PengajuanAbsenLuarController extends Controller
             'foto_lokasi.required_if'          => 'Foto bukti situasi / lokasi wajib diunggah.',
             'file_dokumen.required_if'         => 'Dokumen resmi / surat tugas / undangan wajib diunggah.',
             'latitude.required'                => 'Titik lokasi GPS wajib diaktifkan sebelum mengajukan.',
-            'latitude.between'                 => 'Koordinat GPS tidak valid (di luar wilayah Indonesia). Matikan VPN, aktifkan GPS presisi tinggi, lalu coba lagi.',
+            'latitude.between'                 => 'Koordinat lokasi tidak valid (di luar wilayah Indonesia). Matikan VPN, aktifkan GPS presisi tinggi, lalu coba lagi.',
             'longitude.required'               => 'Titik lokasi GPS wajib diaktifkan sebelum mengajukan.',
-            'longitude.between'                => 'Koordinat GPS tidak valid (di luar wilayah Indonesia). Matikan VPN, aktifkan GPS presisi tinggi, lalu coba lagi.',
+            'longitude.between'                => 'Koordinat lokasi tidak valid (di luar wilayah Indonesia). Matikan VPN, aktifkan GPS presisi tinggi, lalu coba lagi.',
             'tanda_tangan.required'            => 'Tanda tangan digital wajib diisi.',
         ]);
 
@@ -112,6 +114,8 @@ class PengajuanAbsenLuarController extends Controller
             'latitude'            => $request->latitude,
             'longitude'           => $request->longitude,
             'alamat_gps'          => $request->alamat_gps,
+            'sumber_koordinat'    => $request->sumber_koordinat ?: 'gps',
+            'akurasi_gps_meter'   => $request->filled('akurasi_gps_meter') ? round((float) $request->akurasi_gps_meter) : null,
             'tanda_tangan'        => $request->tanda_tangan,
             'status'              => 'menunggu',
         ];

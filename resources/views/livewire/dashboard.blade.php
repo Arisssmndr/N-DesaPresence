@@ -96,17 +96,17 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
-                            <th class="py-3 px-3">Nama Pegawai</th>
-                            <th class="py-3 px-3">Jabatan</th>
-                            <th class="py-3 px-3">Jam Masuk</th>
-                            <th class="py-3 px-3">Jam Pulang</th>
-                            <th class="py-3 px-3 text-right">Status Badge</th>
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-[#064E3B] text-white">
+                        <tr>
+                            <th class="py-3 px-3 font-extrabold text-white">Nama Pegawai</th>
+                            <th class="py-3 px-3 font-extrabold text-white">Jabatan</th>
+                            <th class="py-3 px-3 font-extrabold text-white">Jam Masuk</th>
+                            <th class="py-3 px-3 font-extrabold text-white">Jam Pulang</th>
+                            <th class="py-3 px-3 text-right font-extrabold text-[#E2C268]">Status Badge</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 font-medium">
+                    <tbody class="divide-y divide-slate-100 font-medium bg-white">
                         @forelse ($listAbsenHariIni as $a)
                             <tr class="hover:bg-slate-50/70 transition">
                                 <td class="py-3 px-3">

@@ -30,7 +30,8 @@ class StafPortalController extends Controller
 
         // Cek WiFi Desa
         $clientIp = $this->signatureService->resolveClientIp($request);
-        $isWifiValid = $this->signatureService->validasiIpWifi($clientIp);
+        $wifiDiagnosis = $this->signatureService->getWifiDiagnosis($clientIp);
+        $isWifiValid = $wifiDiagnosis['is_valid'];
 
         // Cek Waktu Absensi dari cache batch
         $jadwal = KonfigurasiAbsensi::getJadwal();
@@ -108,17 +109,21 @@ class StafPortalController extends Controller
             // Otomatis pastikan kehadiran hari ini berstatus Lepas Piket HANYA jika belum ada absen fisik
             if (!$kehadiranHariIni) {
                 $kehadiranHariIni = Kehadiran::create([
-                    'pegawai_id'        => $pegawai->id,
-                    'tanggal'           => $today,
-                    'status'            => 'Hadir',
-                    'sumber_data'       => 'manual_admin',
-                    'diverifikasi_oleh' => $piketKemarin->created_by ?? 1,
-                    'keterangan'        => 'Lepas Piket (Tugas Piket Malam tgl ' . $piketKemarin->tanggal_piket->format('d/m/Y') . ')'
+                    'pegawai_id'          => $pegawai->id,
+                    'tanggal'             => $today,
+                    'status'              => 'Hadir',
+                    'jam_masuk'           => $piketKemarin->waktu_absen ? $piketKemarin->waktu_absen->format('H:i:s') : '07:30:00',
+                    'tanda_tangan_masuk'  => $piketKemarin->tanda_tangan,
+                    'sumber_data'         => 'manual_admin',
+                    'diverifikasi_oleh'   => $piketKemarin->created_by ?? 1,
+                    'keterangan'          => 'Lepas Piket (Tugas Piket Malam tgl ' . $piketKemarin->tanggal_piket->format('d/m/Y') . ')'
                 ]);
             } elseif (!$kehadiranHariIni->jam_masuk && !str_contains($kehadiranHariIni->keterangan ?? '', 'Lepas Piket') && $kehadiranHariIni->sumber_data === 'manual_admin') {
                 $kehadiranHariIni->update([
-                    'status'     => 'Hadir',
-                    'keterangan' => 'Lepas Piket (Tugas Piket Malam tgl ' . $piketKemarin->tanggal_piket->format('d/m/Y') . ')'
+                    'status'              => 'Hadir',
+                    'jam_masuk'           => $piketKemarin->waktu_absen ? $piketKemarin->waktu_absen->format('H:i:s') : '07:30:00',
+                    'tanda_tangan_masuk'  => $piketKemarin->tanda_tangan,
+                    'keterangan'          => 'Lepas Piket (Tugas Piket Malam tgl ' . $piketKemarin->tanggal_piket->format('d/m/Y') . ')'
                 ]);
             }
         }
@@ -130,6 +135,7 @@ class StafPortalController extends Controller
             'pengajuanHariIni',
             'isWifiValid',
             'clientIp',
+            'wifiDiagnosis',
             'isWaktuMasuk',
             'isWaktuPulang',
             'bisaAbsenMasuk',
@@ -177,15 +183,17 @@ class StafPortalController extends Controller
             'ip_absen'     => $clientIp,
         ]);
 
-        // Otomatis tandai presensi hari berikutnya sebagai "Lepas Piket"
+        // Otomatis tandai presensi hari berikutnya sebagai "Lepas Piket" dengan tanda tangan bukti
         $besokStr = Carbon::parse($piket->tanggal_piket)->addDay()->toDateString();
         $kehadiranBesok = Kehadiran::firstOrNew([
             'pegawai_id' => $pegawai->id,
             'tanggal'    => $besokStr,
         ]);
-        $kehadiranBesok->status = 'Hadir';
-        $kehadiranBesok->sumber_data = 'manual_admin';
-        $kehadiranBesok->keterangan = "Lepas Piket (Tugas Piket Malam tgl " . $piket->tanggal_piket->format('d/m/Y') . ")";
+        $kehadiranBesok->status             = 'Hadir';
+        $kehadiranBesok->jam_masuk          = now()->format('H:i:s');
+        $kehadiranBesok->tanda_tangan_masuk = $validated['tanda_tangan'];
+        $kehadiranBesok->sumber_data        = 'manual_admin';
+        $kehadiranBesok->keterangan         = "Lepas Piket (Tugas Piket Malam tgl " . $piket->tanggal_piket->format('d/m/Y') . ")";
         $kehadiranBesok->save();
 
         \App\Models\AuditLog::create([
@@ -209,10 +217,10 @@ class StafPortalController extends Controller
         }
 
         $clientIp = $this->signatureService->resolveClientIp($request);
-        $isWifiValid = $this->signatureService->validasiIpWifi($clientIp);
+        $wifiDiagnosis = $this->signatureService->getWifiDiagnosis($clientIp);
 
-        if (!$isWifiValid) {
-            return redirect()->route('staf.beranda')->with('error', 'Absensi hanya bisa dilakukan jika terhubung ke WiFi Desa Nangtang.');
+        if (!$wifiDiagnosis['is_valid']) {
+            return redirect()->route('staf.beranda')->with('error', 'Akses Ditolak: Anda sedang menggunakan koneksi di luar WiFi Kantor Desa (IP: ' . $clientIp . '). Hubungkan ke WiFi Kantor Desa atau ajukan Absen Luar jika sedang dinas luar.');
         }
 
         $jadwal = KonfigurasiAbsensi::getJadwal();
@@ -230,7 +238,7 @@ class StafPortalController extends Controller
             return redirect()->route('staf.beranda')->with('error', "Belum/sudah lewat waktu absen pulang ({$jamPulangMulai} - {$jamPulangSelesai}).");
         }
 
-        return view('staf.absen', compact('user', 'pegawai', 'jenis', 'clientIp'));
+        return view('staf.absen', compact('user', 'pegawai', 'jenis', 'clientIp', 'wifiDiagnosis'));
     }
 
     public function submitAbsen(Request $request)
@@ -248,10 +256,15 @@ class StafPortalController extends Controller
         }
 
         $clientIp = $this->signatureService->resolveClientIp($request);
+        $wifiDiagnosis = $this->signatureService->getWifiDiagnosis($clientIp);
 
         // Validasi WiFi
-        if (!$this->signatureService->validasiIpWifi($clientIp)) {
-            return response()->json(['status' => 'error', 'message' => 'Akses ditolak. Anda harus terhubung ke jaringan WiFi Desa Nangtang.'], 403);
+        if (!$wifiDiagnosis['is_valid']) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Akses ditolak: Presensi langsung hanya dapat dilakukan saat terhubung ke WiFi Kantor Desa Nangtang (IP Anda: ' . $clientIp . '). Jika sedang bertugas dinas luar, silakan gunakan fitur Pengajuan Absen Luar.',
+                'diagnosis' => $wifiDiagnosis,
+            ], 403);
         }
 
         if ($request->jenis === 'masuk') {

@@ -99,15 +99,18 @@
                                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">Nonaktif</span>
                                 @endif
                             </td>
-                            <td class="py-3 px-4 text-right space-x-2">
-                                <button wire:click="openEditModal({{ $p->id }})" class="p-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition cursor-pointer" title="Edit Pegawai & Akun">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            <td class="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
+                                <button wire:click="openEditModal({{ $p->id }})" class="p-2 rounded-lg bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-300 transition shadow-2xs cursor-pointer inline-flex items-center gap-1 text-xs font-bold" title="Edit Pegawai & Akun">
+                                    <svg class="w-3.5 h-3.5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    <span>Edit</span>
                                 </button>
-                                <button wire:click="toggleStatus({{ $p->id }})" class="p-1.5 rounded-lg {{ $p->status_aktif ? 'bg-red-50 text-red-700 hover:bg-red-100' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' }} transition cursor-pointer" title="{{ $p->status_aktif ? 'Nonaktifkan' : 'Aktifkan' }}">
+                                <button wire:click="toggleStatus({{ $p->id }})" class="p-2 rounded-lg {{ $p->status_aktif ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300' }} transition shadow-2xs cursor-pointer inline-flex items-center gap-1 text-xs font-bold" title="{{ $p->status_aktif ? 'Nonaktifkan' : 'Aktifkan' }}">
                                     @if ($p->status_aktif)
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                        <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                        <span>Nonaktifkan</span>
                                     @else
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        <svg class="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        <span>Aktifkan</span>
                                     @endif
                                 </button>
                             </td>

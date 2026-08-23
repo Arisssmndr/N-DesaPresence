@@ -50,16 +50,33 @@ class ManualAttendanceOverride extends Component
             }
         }
 
+        // Jika override berstatus Hadir/Terlambat, lampirkan sampel TTD digital pegawai jika tersedia
+        $ttdMasuk = null;
+        if (in_array($this->status, ['Hadir', 'Tepat Waktu', 'Terlambat'])) {
+            $ttdMasuk = Kehadiran::where('pegawai_id', $this->pegawai_id)
+                ->whereNotNull('tanda_tangan_masuk')
+                ->latest('tanggal')
+                ->value('tanda_tangan_masuk');
+
+            if (!$ttdMasuk) {
+                $ttdMasuk = \App\Models\PengajuanAbsenLuar::where('pegawai_id', $this->pegawai_id)
+                    ->whereNotNull('tanda_tangan')
+                    ->latest('tanggal')
+                    ->value('tanda_tangan');
+            }
+        }
+
         $kehadiran = Kehadiran::updateOrCreate(
             ['pegawai_id' => $this->pegawai_id, 'tanggal' => $this->tanggal],
             [
-                'jam_masuk' => $this->jam_masuk ? $this->jam_masuk . ':00' : null,
-                'jam_pulang' => $this->jam_pulang ? $this->jam_pulang . ':00' : null,
-                'durasi_kerja_menit' => $durasiMenit,
-                'status' => $this->status,
-                'sumber_data' => 'manual_admin',
-                'keterangan' => $this->keterangan,
-                'diverifikasi_oleh' => auth()->id(),
+                'jam_masuk'           => $this->jam_masuk ? $this->jam_masuk . ':00' : null,
+                'jam_pulang'          => $this->jam_pulang ? $this->jam_pulang . ':00' : null,
+                'durasi_kerja_menit'  => $durasiMenit,
+                'status'              => $this->status,
+                'sumber_data'         => 'manual_admin',
+                'tanda_tangan_masuk'  => $ttdMasuk,
+                'keterangan'          => $this->keterangan,
+                'diverifikasi_oleh'   => auth()->id(),
             ]
         );
 

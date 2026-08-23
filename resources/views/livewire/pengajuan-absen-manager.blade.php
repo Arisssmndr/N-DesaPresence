@@ -108,6 +108,12 @@
                             @if($p->nomor_surat_tugas)
                             <p class="text-[10px] text-slate-600 font-mono truncate">SPT: {{ $p->nomor_surat_tugas }}</p>
                             @endif
+                            @if($p->latitude && $p->longitude)
+                            <p class="text-[9.5px] text-emerald-800 font-semibold flex items-center gap-1 mt-0.5">
+                                <svg class="w-3 h-3 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                                <span class="truncate">{{ $p->label_sumber_koordinat }}</span>
+                            </p>
+                            @endif
                         </td>
                         <td class="px-3 py-2.5 whitespace-nowrap text-center border-r border-slate-100">
                             <span class="text-[11px] font-bold px-2 py-0.5 rounded-md border inline-block {{ $p->badge_class }}">
@@ -216,14 +222,26 @@
                     <p class="text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200 leading-relaxed">{{ $selected->deskripsi }}</p>
                 </div>
 
-                {{-- Koordinat GPS --}}
+                {{-- Koordinat GPS & Lokasi --}}
                 @if($selected->latitude && $selected->longitude)
-                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-                    <p class="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-[#064E3B] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <span>Validasi Lokasi GPS Staf</span>
-                    </p>
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
                     <div class="flex items-center justify-between gap-2">
+                        <p class="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-[#064E3B] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span>Validasi Lokasi Penugasan</span>
+                        </p>
+                        <span class="text-[10px] font-extrabold px-2 py-0.5 rounded border {{ $selected->badge_sumber_koordinat }}">
+                            {{ $selected->label_sumber_koordinat }}
+                        </span>
+                    </div>
+
+                    @if($selected->alamat_gps)
+                    <p class="text-xs font-semibold text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200 leading-snug">
+                        📍 {{ $selected->alamat_gps }}
+                    </p>
+                    @endif
+
+                    <div class="flex items-center justify-between gap-2 pt-1">
                         <span class="font-mono text-xs font-bold text-slate-900">{{ $selected->latitude }}, {{ $selected->longitude }}</span>
                         <a href="https://maps.google.com/?q={{ $selected->latitude }},{{ $selected->longitude }}" target="_blank"
                            class="btn-sadi-primary px-3 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-xs cursor-pointer">

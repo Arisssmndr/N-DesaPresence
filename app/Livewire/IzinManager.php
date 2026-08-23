@@ -16,6 +16,10 @@ class IzinManager extends Component
     use WithPagination, WithFileUploads;
 
     public bool $showModal = false;
+    public bool $showRejectModal = false;
+    public ?int $selectedIzinId = null;
+    public ?IzinSakit $selectedIzin = null;
+    public string $catatanPenolakan = '';
 
     public ?int $pegawai_id = null;
     public string $jenis = 'izin_pribadi';
@@ -141,20 +145,46 @@ class IzinManager extends Component
         });
     }
 
-    public function reject(int $id)
+    public function konfirmasiTolak(int $id)
     {
+        $this->selectedIzinId = $id;
+        $this->selectedIzin = IzinSakit::with('pegawai')->findOrFail($id);
+        $this->catatanPenolakan = '';
+        $this->showRejectModal = true;
+    }
+
+    public function tutupRejectModal()
+    {
+        $this->showRejectModal = false;
+        $this->selectedIzinId = null;
+        $this->selectedIzin = null;
+        $this->catatanPenolakan = '';
+    }
+
+    public function reject()
+    {
+        $this->validate([
+            'catatanPenolakan' => 'required|string|min:5|max:500',
+        ], [
+            'catatanPenolakan.required' => 'Wajib mengisi alasan penolakan.',
+            'catatanPenolakan.min' => 'Alasan penolakan minimal 5 karakter.',
+        ]);
+
+        $id = $this->selectedIzinId;
+
         \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
             $izin = IzinSakit::where('id', $id)->lockForUpdate()->firstOrFail();
             $izin->update([
                 'status' => 'ditolak',
                 'diproses_oleh' => auth()->id(),
+                'keterangan' => $izin->keterangan . ' [Ditolak: ' . $this->catatanPenolakan . ']',
             ]);
 
             AuditLog::create([
                 'user_id' => auth()->id(),
                 'user_name' => auth()->user()->name ?? 'Admin',
                 'role' => auth()->user()->role ?? 'Admin',
-                'aktivitas' => "Menolak izin {$izin->jenis} untuk {$izin->pegawai->nama_lengkap}",
+                'aktivitas' => "Menolak izin {$izin->jenis} untuk {$izin->pegawai->nama_lengkap} (Alasan: {$this->catatanPenolakan})",
                 'modul' => 'Izin & Sakit',
             ]);
 
@@ -162,6 +192,7 @@ class IzinManager extends Component
             session()->flash('success', $msg);
             $this->dispatch('notify', message: $msg, type: 'info');
             $this->dispatch('refresh-notifications');
+            $this->tutupRejectModal();
         });
     }
 

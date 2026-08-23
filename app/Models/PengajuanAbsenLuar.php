@@ -23,6 +23,8 @@ class PengajuanAbsenLuar extends Model
         'latitude',
         'longitude',
         'alamat_gps',
+        'sumber_koordinat',
+        'akurasi_gps_meter',
         'tanda_tangan',
         'status',
         'catatan_admin',
@@ -31,8 +33,11 @@ class PengajuanAbsenLuar extends Model
     ];
 
     protected $casts = [
-        'tanggal'      => 'date',
-        'diproses_pada' => 'datetime',
+        'tanggal'            => 'date',
+        'diproses_pada'      => 'datetime',
+        'akurasi_gps_meter'  => 'integer',
+        'latitude'           => 'decimal:8',
+        'longitude'          => 'decimal:8',
     ];
 
     // ─── Relasi ──────────────────────────────────────────────────────────────
@@ -103,8 +108,28 @@ class PengajuanAbsenLuar extends Model
         return match ($this->status) {
             'menunggu'   => 'bg-amber-50 text-amber-900 border-amber-300',
             'disetujui'  => 'bg-emerald-50 text-[#064E3B] border-emerald-300',
-            'ditolak'    => 'bg-slate-100 text-slate-700 border-slate-300',
+            'ditolak'    => 'bg-rose-50 text-rose-700 border-rose-300 font-bold',
             default      => 'bg-slate-100 text-slate-800 border-slate-200',
+        };
+    }
+
+    public function getLabelSumberKoordinatAttribute(): string
+    {
+        return match ($this->sumber_koordinat) {
+            'gps'             => 'GPS Fisik Presisi' . ($this->akurasi_gps_meter ? ' (±' . $this->akurasi_gps_meter . 'm)' : ''),
+            'ip_geolocation'  => 'Estimasi Jaringan IP',
+            'manual'          => 'Input Manual Terverifikasi',
+            default           => 'GPS',
+        };
+    }
+
+    public function getBadgeSumberKoordinatAttribute(): string
+    {
+        return match ($this->sumber_koordinat) {
+            'gps'             => 'bg-emerald-50 text-emerald-800 border-emerald-300',
+            'ip_geolocation'  => 'bg-blue-50 text-blue-800 border-blue-300',
+            'manual'          => 'bg-purple-50 text-purple-800 border-purple-300',
+            default           => 'bg-slate-100 text-slate-800 border-slate-200',
         };
     }
 
@@ -118,3 +143,4 @@ class PengajuanAbsenLuar extends Model
             : \Illuminate\Support\Facades\Storage::url($this->tanda_tangan);
     }
 }
+

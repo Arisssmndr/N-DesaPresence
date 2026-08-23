@@ -154,15 +154,19 @@
 
                             {{-- Status Asli --}}
                             <td class="py-2.5 px-2.5 text-center border-r border-slate-100">
-                                <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold border inline-block
+                                <span class="px-2 py-0.5 rounded-md text-[11px] font-bold border inline-block
                                     @if(in_array($item['status_asli'], ['Hadir', 'Tepat Waktu']))
-                                        bg-slate-100 text-slate-800 border-slate-300
-                                    @elseif(in_array($item['status_asli'], ['Izin', 'Sakit', 'Dinas Luar']))
-                                        bg-slate-100 text-slate-800 border-slate-300
+                                        bg-emerald-50 text-emerald-800 border-emerald-300
+                                    @elseif($item['status_asli'] === 'Terlambat')
+                                        bg-amber-50 text-amber-800 border-amber-300
+                                    @elseif(in_array($item['status_asli'], ['Izin', 'Sakit']))
+                                        bg-teal-50 text-teal-800 border-teal-300
+                                    @elseif($item['status_asli'] === 'Dinas Luar')
+                                        bg-blue-50 text-blue-800 border-blue-300
                                     @elseif($item['status_asli'] === 'Libur')
-                                        bg-slate-50 text-slate-500 border-slate-200
+                                        bg-slate-100 text-slate-600 border-slate-300
                                     @else
-                                        bg-slate-100 text-slate-700 border-slate-300
+                                        bg-rose-50 text-rose-700 border-rose-300
                                     @endif">
                                     {{ $item['status_asli'] }}
                                 </span>

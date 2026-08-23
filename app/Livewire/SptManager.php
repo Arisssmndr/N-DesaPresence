@@ -17,6 +17,10 @@ class SptManager extends Component
     use WithPagination, WithFileUploads;
 
     public bool $showModal = false;
+    public bool $showRejectModal = false;
+    public ?int $selectedSptId = null;
+    public ?SuratPerintahTugas $selectedSpt = null;
+    public string $catatanPenolakan = '';
     public ?int $sptId = null;
 
     public ?int $pegawai_id = null;
@@ -154,20 +158,46 @@ class SptManager extends Component
         });
     }
 
-    public function reject(int $id)
+    public function konfirmasiTolak(int $id)
     {
+        $this->selectedSptId = $id;
+        $this->selectedSpt = SuratPerintahTugas::with('pegawai')->findOrFail($id);
+        $this->catatanPenolakan = '';
+        $this->showRejectModal = true;
+    }
+
+    public function tutupRejectModal()
+    {
+        $this->showRejectModal = false;
+        $this->selectedSptId = null;
+        $this->selectedSpt = null;
+        $this->catatanPenolakan = '';
+    }
+
+    public function reject()
+    {
+        $this->validate([
+            'catatanPenolakan' => 'required|string|min:5|max:500',
+        ], [
+            'catatanPenolakan.required' => 'Wajib mengisi alasan penolakan SPT.',
+            'catatanPenolakan.min' => 'Alasan penolakan minimal 5 karakter.',
+        ]);
+
+        $id = $this->selectedSptId;
+
         \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
             $spt = SuratPerintahTugas::where('id', $id)->lockForUpdate()->firstOrFail();
             $spt->update([
                 'status' => 'ditolak',
                 'disetujui_oleh' => auth()->id(),
+                'keperluan' => $spt->keperluan . ' [Ditolak: ' . $this->catatanPenolakan . ']',
             ]);
 
             AuditLog::create([
                 'user_id' => auth()->id(),
                 'user_name' => auth()->user()->name ?? 'Admin',
                 'role' => auth()->user()->role ?? 'Kepala Desa',
-                'aktivitas' => "Menolak SPT {$spt->nomor_spt} untuk {$spt->pegawai->nama_lengkap}",
+                'aktivitas' => "Menolak SPT {$spt->nomor_spt} untuk {$spt->pegawai->nama_lengkap} (Alasan: {$this->catatanPenolakan})",
                 'modul' => 'Surat Perintah Tugas',
             ]);
 
@@ -175,6 +205,7 @@ class SptManager extends Component
             session()->flash('success', $msg);
             $this->dispatch('notify', message: $msg, type: 'info');
             $this->dispatch('refresh-notifications');
+            $this->tutupRejectModal();
         });
     }
 

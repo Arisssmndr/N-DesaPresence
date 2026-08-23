@@ -23,7 +23,7 @@
             width: 100%;
             border-bottom: 3px double #000;
             padding-bottom: 3px;
-            margin-bottom: 7px; /* Jarak enter standar naskah dinas dari Kop Surat */
+            margin-bottom: 7px;
         }
         .kop-logo-cell {
             width: 58px;
@@ -86,7 +86,7 @@
             line-height: 1.15;
         }
 
-        /* ══════════ JUDUL DOKUMEN (TANPA NOMOR SURAT) ══════════ */
+        /* ══════════ JUDUL DOKUMEN ══════════ */
         .doc-title { 
             text-align: center; 
             margin: 0 0 6px 0; 
@@ -147,7 +147,7 @@
             font-size: 7.2pt;
         }
 
-        /* STATUS STYLING (FORMAL BLACK) */
+        /* STATUS STYLING */
         .status-text {
             color: #000;
             font-size: 7.2pt;
@@ -158,7 +158,7 @@
             font-weight: bold;
         }
 
-        /* TTD CELL IN TABLE (PROPORSIONAL, RAPI & PAS MENYESUAIKAN KOLOM) */
+        /* TTD CELL IN TABLE */
         .ttd-col {
             height: 24px;
             min-height: 24px;
@@ -204,7 +204,7 @@
             margin: 0 0 0 2px;
         }
 
-        /* TANDA TANGAN PEJABAT PENGESAH (ENTER 4X LEBIH LEGA) */
+        /* TANDA TANGAN PEJABAT PENGESAH */
         .ttd-table {
             width: 100%;
             margin-top: 6px;
@@ -219,7 +219,7 @@
             color: #000;
         }
         .ttd-space { 
-            height: 44px; /* Ruang 4x Enter yang sangat lega untuk tanda tangan basah & stempel resmi */
+            height: 44px;
         }
         .ttd-name {
             font-weight: bold;
@@ -271,7 +271,7 @@
         </tr>
     </table>
 
-    <!-- ══════════ JUDUL DOKUMEN (TANPA NOMOR SURAT) ══════════ -->
+    <!-- ══════════ JUDUL DOKUMEN ══════════ -->
     <div class="doc-title">
         <h2>DAFTAR HADIR & REKAPITULASI PRESENSI HARIAN</h2>
     </div>
@@ -304,13 +304,14 @@
             @php $no = 1; @endphp
             @foreach ($pegawais as $p)
                 @php
-                    $k = $p->kehadirans->first();
+                    $k = $p->resolved_kehadiran;
                     if ($k) {
-                        $statusLabel = match($k->status) {
+                        $statusVal = $k->status_disesuaikan ?? $k->status;
+                        $statusLabel = match($statusVal) {
                             'Tepat Waktu' => 'Hadir',
-                            default       => $k->status,
+                            default       => $statusVal,
                         };
-                        $statusClass = match($k->status) {
+                        $statusClass = match($statusVal) {
                             'Tepat Waktu', 'Hadir' => 'status-bold',
                             'Terlambat'            => 'status-text',
                             'Izin'                 => 'status-text',
@@ -330,6 +331,7 @@
                         : '-';
                     $rowClass = ($no % 2 === 0) ? 'even' : '';
                     $currentNo = $no;
+                    $ttdPdf = $k ? ($k->pdf_tanda_tangan ?? $k->pdf_tanda_tangan_masuk ?? $k->pdf_tanda_tangan_pulang) : null;
                 @endphp
                 <tr class="{{ $rowClass }}">
                     <td>{{ $no++ }}</td>
@@ -349,9 +351,9 @@
                             {{-- Format Ganjil (Kiri) --}}
                             <div class="ttd-box-left">
                                 <span class="ttd-num">{{ $currentNo }}.</span>
-                                @if($k && ($k->pdf_tanda_tangan_masuk || $k->pdf_tanda_tangan_pulang))
-                                    <img src="{{ $k->pdf_tanda_tangan_masuk ?? $k->pdf_tanda_tangan_pulang }}" class="ttd-img" alt="TTD">
-                                @elseif($k && in_array($k->status, ['Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar']))
+                                @if($ttdPdf)
+                                    <img src="{{ $ttdPdf }}" class="ttd-img" alt="TTD">
+                                @elseif($k && in_array($k->status_disesuaikan ?? $k->status, ['Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar']))
                                     <span style="font-size:7.5pt; font-style:italic; font-weight:bold;">[Sah Hadir]</span>
                                 @else
                                     <span class="ttd-dots">....................</span>
@@ -361,9 +363,9 @@
                             {{-- Format Genap (Kanan/Tengah) --}}
                             <div class="ttd-box-right">
                                 <span class="ttd-num">{{ $currentNo }}.</span>
-                                @if($k && ($k->pdf_tanda_tangan_masuk || $k->pdf_tanda_tangan_pulang))
-                                    <img src="{{ $k->pdf_tanda_tangan_masuk ?? $k->pdf_tanda_tangan_pulang }}" class="ttd-img" alt="TTD">
-                                @elseif($k && in_array($k->status, ['Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar']))
+                                @if($ttdPdf)
+                                    <img src="{{ $ttdPdf }}" class="ttd-img" alt="TTD">
+                                @elseif($k && in_array($k->status_disesuaikan ?? $k->status, ['Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar']))
                                     <span style="font-size:7.5pt; font-style:italic; font-weight:bold;">[Sah Hadir]</span>
                                 @else
                                     <span class="ttd-dots">....................</span>
@@ -384,7 +386,7 @@
         </tfoot>
     </table>
 
-    <!-- ══════════ TANDA TANGAN PEJABAT PENGESAH (ENTER 4X LEBIH LEGA) ══════════ -->
+    <!-- ══════════ TANDA TANGAN PEJABAT PENGESAH ══════════ -->
     <div class="no-break">
         <table class="ttd-table" cellspacing="0" cellpadding="0">
             <tr>

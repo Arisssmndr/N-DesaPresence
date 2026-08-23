@@ -26,6 +26,8 @@ use App\Livewire\KonfigurasiAbsensiManager;
 use App\Livewire\UserStafManager;
 use App\Livewire\PengajuanAbsenManager;
 use App\Livewire\AdminProfilManager;
+use App\Livewire\LaporanDisesuaikanManager;
+use App\Http\Controllers\LaporanDisesuaikanController;
 
 // Redirect root to staff portal if guest, or appropriate dashboard
 Route::get('/', function () {
@@ -114,3 +116,15 @@ Route::middleware(['auth', 'role:admin,kepala_desa'])->group(function () {
     Route::get('/laporan/bulanan-pdf', [LaporanController::class, 'laporanBulanan'])->name('laporan.bulanan');
     Route::get('/laporan/tahunan-pdf', [LaporanController::class, 'laporanTahunan'])->name('laporan.tahunan');
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SEKDES / ADMIN KHUSUS — Laporan Disesuaikan (Shadow Layer untuk Administrasi)
+// ─────────────────────────────────────────────────────────────────────────────
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/laporan-disesuaikan', LaporanDisesuaikanManager::class)->name('laporan-disesuaikan.index');
+    Route::get('/laporan-disesuaikan/harian-pdf', [LaporanDisesuaikanController::class, 'laporanHarian'])->name('laporan-disesuaikan.harian');
+    Route::get('/laporan-disesuaikan/bulanan-pdf', [LaporanDisesuaikanController::class, 'laporanBulanan'])->name('laporan-disesuaikan.bulanan');
+    Route::get('/laporan-disesuaikan/tahunan-pdf', [LaporanDisesuaikanController::class, 'laporanTahunan'])->name('laporan-disesuaikan.tahunan');
+    Route::get('/laporan-disesuaikan/rentang-pdf', [LaporanDisesuaikanController::class, 'laporanRentang'])->name('laporan-disesuaikan.rentang');
+});
+

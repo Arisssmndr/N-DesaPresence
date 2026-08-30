@@ -16,8 +16,10 @@ return new class extends Migration
             $table->string('ip_absensi_pulang', 45)->nullable()->after('ip_absensi_masuk');
         });
 
-        // Update enum sumber_data to include 'web_signature'
-        DB::statement("ALTER TABLE kehadirans MODIFY COLUMN sumber_data ENUM('fingerprint', 'manual_admin', 'import_file', 'web_signature') DEFAULT 'web_signature'");
+        // Update enum sumber_data to include 'web_signature' (MySQL only)
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE kehadirans MODIFY COLUMN sumber_data ENUM('fingerprint', 'manual_admin', 'import_file', 'web_signature') DEFAULT 'web_signature'");
+        }
     }
 
     public function down(): void
@@ -26,6 +28,8 @@ return new class extends Migration
             $table->dropColumn(['tanda_tangan_masuk', 'tanda_tangan_pulang', 'ip_absensi_masuk', 'ip_absensi_pulang']);
         });
 
-        DB::statement("ALTER TABLE kehadirans MODIFY COLUMN sumber_data ENUM('fingerprint', 'manual_admin', 'import_file') DEFAULT 'fingerprint'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE kehadirans MODIFY COLUMN sumber_data ENUM('fingerprint', 'manual_admin', 'import_file') DEFAULT 'fingerprint'");
+        }
     }
 };

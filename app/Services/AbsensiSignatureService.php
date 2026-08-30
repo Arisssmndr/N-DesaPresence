@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Kehadiran;
 use App\Models\KonfigurasiWifi;
+use App\Models\WifiAccessLog;
 use App\Models\Pegawai;
 use App\Models\SuratPerintahTugas;
 use App\Models\AuditLog;
@@ -11,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class AbsensiSignatureService
@@ -22,6 +24,51 @@ class AbsensiSignatureService
     public function resolveClientIp(Request $request): string
     {
         return $request->ip() ?: '127.0.0.1';
+    }
+
+    /**
+     * Mengambil daftar WiFi aktif dari cache (TTL: 5 menit / 300 detik).
+     */
+    public function getDaftarWifiAktif()
+    {
+        return Cache::remember('konfigurasi_wifi_aktif', 300, function () {
+            return KonfigurasiWifi::aktif()->get();
+        });
+    }
+
+    /**
+     * Invalidate cache konfigurasi WiFi ketika ada perubahan di admin.
+     */
+    public function invalidateWifiCache(): void
+    {
+        Cache::forget('konfigurasi_wifi_aktif');
+    }
+
+    /**
+     * Catat log akses & verifikasi WiFi ke tabel audit wifi_access_logs.
+     */
+    public function catatWifiAccessLog(
+        string $clientIp,
+        string $jenisAksi,
+        string $hasil,
+        ?int $pegawaiId = null,
+        ?string $alasanDitolak = null,
+        ?string $matchedWifi = null,
+        ?string $userAgent = null
+    ): void {
+        try {
+            WifiAccessLog::create([
+                'client_ip'      => $clientIp,
+                'pegawai_id'     => $pegawaiId,
+                'jenis_aksi'     => $jenisAksi,
+                'hasil'          => $hasil,
+                'alasan_ditolak' => $alasanDitolak,
+                'matched_wifi'   => $matchedWifi,
+                'user_agent'     => $userAgent ? Str::limit($userAgent, 500) : null,
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /**
@@ -53,7 +100,7 @@ class AbsensiSignatureService
      */
     public function validasiIpWifi(string $clientIp): bool
     {
-        $daftarWifi = KonfigurasiWifi::aktif()->get();
+        $daftarWifi = $this->getDaftarWifiAktif();
 
         foreach ($daftarWifi as $wifi) {
             $ipConfig = trim($wifi->ip_address);
@@ -81,6 +128,54 @@ class AbsensiSignatureService
     }
 
     /**
+     * Diagnosis lengkap status koneksi WiFi klien.
+     */
+    public function getWifiDiagnosis(string $clientIp): array
+    {
+        $daftarWifi = $this->getDaftarWifiAktif();
+        $matchedWifi = null;
+
+        foreach ($daftarWifi as $wifi) {
+            $ipConfig = trim($wifi->ip_address);
+
+            // Cek CIDR (contoh: 192.168.1.0/24)
+            if (str_contains($ipConfig, '/')) {
+                if ($this->ipInCidr($clientIp, $ipConfig)) {
+                    $matchedWifi = $wifi;
+                    break;
+                }
+            } elseif (str_contains($ipConfig, '*')) {
+                // Wildcard (contoh: 192.168.1.*)
+                $pattern = '/^' . str_replace('\*', '\d+', preg_quote($ipConfig, '/')) . '$/';
+                if (preg_match($pattern, $clientIp)) {
+                    $matchedWifi = $wifi;
+                    break;
+                }
+            } else {
+                // Exact match
+                if ($clientIp === $ipConfig) {
+                    $matchedWifi = $wifi;
+                    break;
+                }
+            }
+        }
+
+        $isValid = !is_null($matchedWifi);
+        $wifiNames = $daftarWifi->pluck('nama_jaringan')->filter()->values()->toArray();
+
+        return [
+            'is_valid'          => $isValid,
+            'client_ip'         => $clientIp,
+            'matched_network'   => $matchedWifi ? $matchedWifi->nama_jaringan : null,
+            'active_networks'   => $wifiNames,
+            'rejection_reason'  => $isValid ? null : ($daftarWifi->isEmpty()
+                ? 'Belum ada konfigurasi WiFi kantor desa yang aktif di sistem.'
+                : 'Alamat IP (' . $clientIp . ') tidak terhubung ke jaringan WiFi Kantor Desa Nangtang.'),
+        ];
+    }
+
+
+    /**
      * Proses absen masuk dengan tanda tangan (dengan database transaction & row lock).
      */
     public function prosesAbsenMasuk(Pegawai $pegawai, string $signatureBase64, string $ipAddress): array
@@ -91,7 +186,7 @@ class AbsensiSignatureService
         return DB::transaction(function () use ($pegawai, $signatureBase64, $ipAddress, $tanggal, $jamMasuk) {
             // Lock record hari ini jika ada untuk mencegah double tap / race condition
             $existing = Kehadiran::where('pegawai_id', $pegawai->id)
-                ->where('tanggal', $tanggal)
+                ->whereDate('tanggal', $tanggal)
                 ->lockForUpdate()
                 ->first();
 
@@ -113,13 +208,33 @@ class AbsensiSignatureService
                 ->whereDate('tanggal_selesai', '>=', $tanggal)
                 ->exists();
 
-            $statusKehadiran = $adaSPT ? 'Dinas Luar' : 'Hadir';
+            $statusKehadiran = 'Hadir';
+            $terlambatMenit = 0;
+
+            if ($adaSPT) {
+                $statusKehadiran = 'Dinas Luar';
+            } else {
+                $shift = $pegawai->shift ?? \App\Models\ShiftKerja::where('is_active', true)->first();
+                if ($shift && $shift->jam_masuk) {
+                    $jadwalMasuk = Carbon::createFromTimeString($shift->jam_masuk);
+                    $toleransi = (int) ($shift->toleransi_menit ?? 0);
+                    $batasTepatWaktu = $jadwalMasuk->copy()->addMinutes($toleransi);
+                    $waktuMasuk = Carbon::createFromTimeString($jamMasuk);
+
+                    if ($waktuMasuk->gt($batasTepatWaktu)) {
+                        $statusKehadiran = 'Terlambat';
+                        $terlambatMenit = (int) $jadwalMasuk->diffInMinutes($waktuMasuk);
+                    } else {
+                        $statusKehadiran = 'Tepat Waktu';
+                    }
+                }
+            }
 
             $kehadiran = Kehadiran::updateOrCreate(
                 ['pegawai_id' => $pegawai->id, 'tanggal' => $tanggal],
                 [
                     'jam_masuk'           => $jamMasuk,
-                    'terlambat_menit'     => 0,
+                    'terlambat_menit'     => $terlambatMenit,
                     'status'              => $statusKehadiran,
                     'sumber_data'         => 'web_signature',
                     'tanda_tangan_masuk'  => $signaturePath,
@@ -127,13 +242,23 @@ class AbsensiSignatureService
                 ]
             );
 
+            $ketTerlambat = $terlambatMenit > 0 ? " (Terlambat {$terlambatMenit} menit)" : "";
+
             AuditLog::create([
                 'user_name' => $pegawai->nama_lengkap,
                 'role'      => $pegawai->jabatan->nama_jabatan ?? 'Perangkat Desa',
-                'aktivitas' => "Absen masuk via tanda tangan web ({$statusKehadiran}) pukul {$jamMasuk} dari IP {$ipAddress}",
+                'aktivitas' => "Absen masuk via tanda tangan web ({$statusKehadiran}{$ketTerlambat}) pukul {$jamMasuk} dari IP {$ipAddress}",
                 'modul'     => 'Absensi Tanda Tangan',
                 'ip_address'=> $ipAddress,
             ]);
+
+            $this->catatWifiAccessLog(
+                clientIp: $ipAddress,
+                jenisAksi: 'absen_masuk',
+                hasil: 'diizinkan',
+                pegawaiId: $pegawai->id,
+                matchedWifi: 'WiFi Terverifikasi'
+            );
 
             return [
                 'status'  => 'berhasil',
@@ -154,7 +279,7 @@ class AbsensiSignatureService
 
         return DB::transaction(function () use ($pegawai, $signatureBase64, $ipAddress, $tanggal, $jamPulang) {
             $kehadiran = Kehadiran::where('pegawai_id', $pegawai->id)
-                ->where('tanggal', $tanggal)
+                ->whereDate('tanggal', $tanggal)
                 ->lockForUpdate()
                 ->first();
 
@@ -190,6 +315,14 @@ class AbsensiSignatureService
                 'modul'     => 'Absensi Tanda Tangan',
                 'ip_address'=> $ipAddress,
             ]);
+
+            $this->catatWifiAccessLog(
+                clientIp: $ipAddress,
+                jenisAksi: 'absen_pulang',
+                hasil: 'diizinkan',
+                pegawaiId: $pegawai->id,
+                matchedWifi: 'WiFi Terverifikasi'
+            );
 
             return [
                 'status'  => 'berhasil',

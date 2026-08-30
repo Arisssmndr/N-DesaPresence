@@ -16,6 +16,15 @@ class CheckWifiNetwork
         $clientIp = $this->wifiService->resolveClientIp($request);
 
         if (!$this->wifiService->validasiIpWifi($clientIp)) {
+            // Catat log keamanan akses ditolak
+            $this->wifiService->catatWifiAccessLog(
+                clientIp: $clientIp,
+                jenisAksi: 'portal_akses',
+                hasil: 'ditolak',
+                alasanDitolak: 'IP klien tidak terdaftar pada whitelist WiFi Desa Nangtang',
+                userAgent: $request->userAgent()
+            );
+
             // Jika request AJAX/API, return JSON
             if ($request->expectsJson()) {
                 return response()->json([

@@ -15,18 +15,18 @@
     <!-- Data Table -->
     <div class="sadi-card overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
-                        <th class="py-3.5 px-4">Pegawai</th>
-                        <th class="py-3.5 px-4">Jenis Izin</th>
-                        <th class="py-3.5 px-4">Tanggal & Durasi</th>
-                        <th class="py-3.5 px-4">Keterangan</th>
-                        <th class="py-3.5 px-4 text-center">Status</th>
-                        <th class="py-3.5 px-4 text-right">Aksi</th>
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-[#064E3B] text-white">
+                    <tr>
+                        <th class="py-3 px-4 font-extrabold text-white">Pegawai</th>
+                        <th class="py-3 px-4 font-extrabold text-white">Jenis Izin</th>
+                        <th class="py-3 px-4 font-extrabold text-white">Tanggal & Durasi</th>
+                        <th class="py-3 px-4 font-extrabold text-white">Keterangan</th>
+                        <th class="py-3 px-4 text-center font-extrabold text-[#E2C268]">Status</th>
+                        <th class="py-3 px-4 text-right font-extrabold text-[#E2C268]">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 font-medium">
+                <tbody class="divide-y divide-slate-100 font-medium bg-white">
                     @forelse ($izins as $i)
                         <tr class="hover:bg-slate-50/70 transition">
                             <td class="py-3 px-4 font-bold text-slate-800">
@@ -34,13 +34,19 @@
                                 <p class="text-[10px] text-slate-400 font-normal">{{ $i->pegawai->jabatan->nama_jabatan ?? '' }}</p>
                             </td>
                             <td class="py-3 px-4">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">
-                                    {{ ucfirst(str_replace('_', ' ', $i->jenis)) }}
-                                </span>
+                                @if(str_contains($i->jenis, 'sakit'))
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                                        {{ ucfirst(str_replace('_', ' ', $i->jenis)) }}
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 border border-teal-200">
+                                        {{ ucfirst(str_replace('_', ' ', $i->jenis)) }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="py-3 px-4 text-slate-700 font-mono text-[11px]">
                                 {{ $i->tanggal_mulai->format('d/m/Y') }} — {{ $i->tanggal_selesai->format('d/m/Y') }}
-                                <p class="text-[10px] text-purple-700 font-bold font-sans">({{ $i->jumlah_hari }} Hari)</p>
+                                <p class="text-[10px] text-teal-700 font-bold font-sans">({{ $i->jumlah_hari }} Hari)</p>
                             </td>
                             <td class="py-3 px-4 max-w-xs text-slate-600">
                                 {{ $i->keterangan }}
@@ -57,17 +63,19 @@
                                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-300">Ditolak</span>
                                 @endswitch
                             </td>
-                            <td class="py-3 px-4 text-right space-x-1">
-                                @if ($i->status === 'menunggu' && auth()->user()->isAdmin())
-                                    <button wire:click="approve({{ $i->id }})" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[11px] hover:bg-emerald-700 transition">
-                                        Setujui
+                            <td class="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
+                                @if ($i->status === 'menunggu' && (auth()->user()->isAdmin() || auth()->user()->isKades()))
+                                    <button wire:click="approve({{ $i->id }})" class="px-3 py-1.5 rounded-lg bg-[#064E3B] text-white font-bold text-[11px] hover:bg-[#04392B] border border-[#064E3B] transition shadow-xs cursor-pointer inline-flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                        <span>Setujui</span>
                                     </button>
-                                    <button wire:click="reject({{ $i->id }})" class="px-2.5 py-1 rounded-lg bg-red-50 text-red-600 font-bold text-[11px] hover:bg-red-100 transition">
-                                        Tolak
+                                    <button wire:click="konfirmasiTolak({{ $i->id }})" class="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold text-[11px] hover:bg-rose-700 border border-rose-700 transition shadow-xs cursor-pointer inline-flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <span>Tolak</span>
                                     </button>
                                 @endif
                                 @if ($i->file_lampiran)
-                                    <a href="{{ Storage::url($i->file_lampiran) }}" target="_blank" class="p-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition inline-block" title="Lihat Surat Dokter / Lampiran">
+                                    <a href="{{ Storage::url($i->file_lampiran) }}" target="_blank" class="p-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition inline-block align-middle cursor-pointer" title="Lihat Surat Dokter / Lampiran">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     </a>
                                 @endif
@@ -83,18 +91,18 @@
                 </tbody>
             </table>
         </div>
-        <div class="px-4 py-3 border-t border-slate-100">
+        <div class="px-4 py-3 border-t border-slate-100 bg-white">
             {{ $izins->links() }}
         </div>
     </div>
 
     <!-- Modal Form Izin -->
     @if ($showModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-[#C9A84C]/30 my-8">
                 <div class="px-6 py-4 bg-[#064E3B] text-white flex items-center justify-between">
                     <h3 class="font-outfit text-base font-bold text-white">Form Pengajuan Izin / Sakit Digital</h3>
-                    <button wire:click="closeModal" class="p-1 rounded-lg hover:bg-emerald-800 text-emerald-200 hover:text-white transition">
+                    <button wire:click="closeModal" class="p-1 rounded-lg hover:bg-emerald-800 text-emerald-200 hover:text-white transition cursor-pointer">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -151,10 +159,42 @@
                     </div>
 
                     <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-                        <button type="button" wire:click="closeModal" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">Batal</button>
-                        <button type="submit" class="px-6 py-2 rounded-xl text-xs font-bold bg-[#064E3B] text-white hover:bg-[#04392B] transition">Simpan Pengajuan</button>
+                        <button type="button" wire:click="closeModal" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">Batal</button>
+                        <button type="submit" class="btn-sadi-primary px-6 py-2 rounded-xl text-xs font-bold text-white transition cursor-pointer">Simpan Pengajuan</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    @endif
+
+    <!-- Modal Konfirmasi Reject Izin -->
+    @if ($showRejectModal && $selectedIzin)
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden border-2 border-rose-300 p-6 space-y-4">
+                <div class="text-center space-y-2">
+                    <div class="w-12 h-12 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center mx-auto text-rose-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </div>
+                    <h3 class="font-outfit font-extrabold text-slate-900 text-base">Tolak Pengajuan Izin/Sakit</h3>
+                    <p class="text-xs text-slate-600">Pengajuan dari <strong>{{ $selectedIzin->pegawai->nama_lengkap ?? 'Perangkat' }}</strong> akan ditolak.</p>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Alasan Penolakan <span class="text-rose-500">*</span></label>
+                    <textarea wire:model="catatanPenolakan" rows="3" placeholder="Tuliskan alasan penolakan izin ini..."
+                        class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs text-slate-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none resize-none"></textarea>
+                    @error('catatanPenolakan')
+                    <p class="text-[11px] text-rose-600 font-bold">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="flex gap-2.5">
+                    <button wire:click="tutupRejectModal" class="flex-1 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition text-xs cursor-pointer">Batal</button>
+                    <button wire:click="reject" class="flex-[2] py-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold transition text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <span>Tolak Sekarang</span>
+                    </button>
+                </div>
             </div>
         </div>
     @endif

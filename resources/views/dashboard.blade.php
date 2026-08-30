@@ -15,7 +15,7 @@
                     default                   => 'Selamat Malam',
                 };
             @endphp
-            <h1 class="font-outfit text-3xl font-bold text-[#064E3B] tracking-tight">SISTEM ABSENSI DESA NANGTANG</h1>
+            <h1 class="font-outfit text-3xl font-bold text-[#064E3B] tracking-tight">N-DESAPRESENCE DESA NANGTANG</h1>
             <p class="text-sm text-slate-600 mt-1 font-medium">{{ $greeting }}, <span class="text-[#064E3B] font-bold">{{ auth()->user()->name }}</span> ({{ auth()->user()->role }})</p>
         </div>
         <div class="flex items-center gap-2">
@@ -55,8 +55,8 @@
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Izin / Sakit</p>
                 <p class="font-outfit text-3xl font-extrabold text-slate-800 mt-1">1</p>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center shadow-inner">
-                <svg class="w-6 h-6 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <div class="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center shadow-inner">
+                <svg class="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
         </div>
 
@@ -151,7 +151,7 @@
                 <div class="space-y-3 text-xs">
                     <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
                         <p class="font-bold text-slate-800">Admin Desa (Sekdes)</p>
-                        <p class="text-[11px] text-slate-600">Login ke sistem SADI</p>
+                        <p class="text-[11px] text-slate-600">Login ke sistem N-DesaPresence</p>
                         <p class="text-[10px] text-slate-400 mt-1">{{ now()->format('H:i:s WIB') }}</p>
                     </div>
                 </div>

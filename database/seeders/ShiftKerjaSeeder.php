@@ -19,16 +19,5 @@ class ShiftKerjaSeeder extends Seeder
                 'is_active' => true,
             ]
         );
-
-        ShiftKerja::updateOrCreate(
-            ['id' => 2],
-            [
-                'nama_shift' => 'Shift Malam Linmas',
-                'jam_masuk' => '20:00:00',
-                'jam_pulang' => '06:00:00',
-                'toleransi_menit' => 30,
-                'is_active' => true,
-            ]
-        );
     }
 }

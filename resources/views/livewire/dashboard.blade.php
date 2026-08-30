@@ -12,7 +12,7 @@
                     default                   => 'Selamat Malam',
                 };
             @endphp
-            <h1 class="font-outfit text-3xl font-bold text-[#064E3B] tracking-tight">PRESENCE DESA NANGTANG</h1>
+            <h1 class="font-outfit text-3xl font-bold text-[#064E3B] tracking-tight">N-DESAPRESENCE DESA NANGTANG</h1>
             <p class="text-sm text-slate-600 mt-1 font-medium">{{ $greeting }}, <span class="text-[#064E3B] font-bold">{{ auth()->user()->name }}</span> ({{ ucfirst(auth()->user()->role) }})</p>
         </div>
 
@@ -40,39 +40,39 @@
             </div>
         </div>
 
-        <!-- Belum Masuk -->
+        <!-- Izin -->
+        <div class="sadi-card p-6 flex items-center justify-between relative overflow-hidden">
+            <div class="relative z-10">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Izin</p>
+                <p class="font-outfit text-3xl font-extrabold text-amber-700 mt-1">{{ $statistik['izin'] }}</p>
+                <p class="text-[10px] text-amber-600 font-medium mt-1">Disetujui hari ini</p>
+            </div>
+            <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shadow-inner border border-amber-200 shrink-0">
+                <svg class="w-7 h-7 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+        </div>
+
+        <!-- Sakit -->
+        <div class="sadi-card p-6 flex items-center justify-between relative overflow-hidden">
+            <div class="relative z-10">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Sakit</p>
+                <p class="font-outfit text-3xl font-extrabold text-purple-700 mt-1">{{ $statistik['sakit'] }}</p>
+                <p class="text-[10px] text-purple-600 font-medium mt-1">Disetujui hari ini</p>
+            </div>
+            <div class="w-14 h-14 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center shadow-inner border border-purple-200 shrink-0">
+                <svg class="w-7 h-7 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            </div>
+        </div>
+
+        <!-- Belum Scan / Alpa -->
         <div class="sadi-card p-6 flex items-center justify-between relative overflow-hidden">
             <div class="relative z-10">
                 <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Belum Masuk</p>
                 <p class="font-outfit text-3xl font-extrabold text-slate-500 mt-1">{{ $statistik['belumMasuk'] }}</p>
-                <p class="text-[10px] text-slate-400 font-medium mt-1">Pegawai belum melakukan scan</p>
+                <p class="text-[10px] text-slate-400 font-medium mt-1">Pegawai belum presensi</p>
             </div>
             <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center shadow-inner border border-slate-200 shrink-0">
                 <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </div>
-        </div>
-
-        <!-- Izin / Sakit -->
-        <div class="sadi-card p-6 flex items-center justify-between relative overflow-hidden">
-            <div class="relative z-10">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Izin / Sakit</p>
-                <p class="font-outfit text-3xl font-extrabold text-purple-700 mt-1">{{ $statistik['izinSakit'] }}</p>
-                <p class="text-[10px] text-purple-600 font-medium mt-1">Pengajuan disetujui</p>
-            </div>
-            <div class="w-14 h-14 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center shadow-inner border border-purple-200 shrink-0">
-                <svg class="w-7 h-7 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            </div>
-        </div>
-
-        <!-- Dinas Luar (SPT) -->
-        <div class="sadi-card p-6 flex items-center justify-between relative overflow-hidden">
-            <div class="relative z-10">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Dinas Luar (SPT)</p>
-                <p class="font-outfit text-3xl font-extrabold text-blue-700 mt-1">{{ $statistik['dinasLuar'] }}</p>
-                <p class="text-[10px] text-blue-600 font-medium mt-1">Tugas resmi di luar kantor</p>
-            </div>
-            <div class="w-14 h-14 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center shadow-inner border border-blue-200 shrink-0">
-                <svg class="w-7 h-7 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             </div>
         </div>
 
@@ -96,17 +96,17 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
-                            <th class="py-3 px-3">Nama Pegawai</th>
-                            <th class="py-3 px-3">Jabatan</th>
-                            <th class="py-3 px-3">Jam Masuk</th>
-                            <th class="py-3 px-3">Jam Pulang</th>
-                            <th class="py-3 px-3 text-right">Status Badge</th>
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-[#064E3B] text-white">
+                        <tr>
+                            <th class="py-3 px-3 font-extrabold text-white">Nama Pegawai</th>
+                            <th class="py-3 px-3 font-extrabold text-white">Jabatan</th>
+                            <th class="py-3 px-3 font-extrabold text-white">Jam Masuk</th>
+                            <th class="py-3 px-3 font-extrabold text-white">Jam Pulang</th>
+                            <th class="py-3 px-3 text-right font-extrabold text-[#E2C268]">Status Badge</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 font-medium">
+                    <tbody class="divide-y divide-slate-100 font-medium bg-white">
                         @forelse ($listAbsenHariIni as $a)
                             <tr class="hover:bg-slate-50/70 transition">
                                 <td class="py-3 px-3">
@@ -131,13 +131,11 @@
                                         @case('Hadir')
                                         @case('Tepat Waktu')
                                         @case('Terlambat')
+                                        @case('Dinas Luar')
                                             <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Hadir</span>
                                             @break
-                                        @case('Dinas Luar')
-                                            <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-300">Dinas Luar</span>
-                                            @break
                                         @case('Izin')
-                                            <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-300">Izin</span>
+                                            <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">Izin</span>
                                             @break
                                         @case('Sakit')
                                             <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-300">Sakit</span>

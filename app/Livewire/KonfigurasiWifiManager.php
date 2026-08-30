@@ -3,12 +3,21 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\WithPagination;
 use App\Models\KonfigurasiWifi;
+use App\Models\WifiAccessLog;
+use App\Models\Kehadiran;
 use App\Models\AuditLog;
-use Illuminate\Validation\Rule;
+use App\Services\AbsensiSignatureService;
+use Carbon\Carbon;
 
 class KonfigurasiWifiManager extends Component
 {
+    use WithPagination;
+
+    public string $activeTab = 'konfigurasi'; // 'konfigurasi' | 'logs'
+
+    // Form WiFi
     public array $form = [
         'nama_jaringan' => '',
         'ip_address'    => '',
@@ -18,6 +27,11 @@ class KonfigurasiWifiManager extends Component
 
     public ?int $editingId = null;
     public bool $showForm = false;
+
+    // Filter Logs
+    public string $filterHasil = 'semua'; // semua, diizinkan, ditolak
+    public string $filterAksi = 'semua';  // semua, portal_akses, absen_masuk, absen_pulang
+    public string $searchLog = '';
 
     protected function rules(): array
     {
@@ -35,6 +49,26 @@ class KonfigurasiWifiManager extends Component
             'form.nama_jaringan.required' => 'Nama jaringan wajib diisi.',
             'form.ip_address.required'    => 'Alamat IP wajib diisi.',
         ];
+    }
+
+    public function updatedActiveTab(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterHasil(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterAksi(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSearchLog(): void
+    {
+        $this->resetPage();
     }
 
     public function tambahBaru(): void
@@ -61,6 +95,11 @@ class KonfigurasiWifiManager extends Component
     {
         $this->validate();
 
+        if ($this->form['is_active']) {
+            // Kebijakan 1 Jaringan Resmi Desa Aktif: Nonaktifkan jaringan lainnya
+            KonfigurasiWifi::where('id', '!=', $this->editingId ?? 0)->update(['is_active' => false]);
+        }
+
         if ($this->editingId) {
             $wifi = KonfigurasiWifi::findOrFail($this->editingId);
             $wifi->update($this->form);
@@ -69,6 +108,9 @@ class KonfigurasiWifiManager extends Component
             KonfigurasiWifi::create($this->form);
             $aksi = "Tambah konfigurasi WiFi baru: {$this->form['nama_jaringan']} ({$this->form['ip_address']})";
         }
+
+        // Invalidate cache
+        app(AbsensiSignatureService::class)->invalidateWifiCache();
 
         AuditLog::create([
             'user_id'   => auth()->id(),
@@ -89,9 +131,19 @@ class KonfigurasiWifiManager extends Component
     public function toggleAktif(int $id): void
     {
         $wifi = KonfigurasiWifi::findOrFail($id);
-        $wifi->update(['is_active' => !$wifi->is_active]);
-        $status = $wifi->fresh()->is_active ? 'diaktifkan' : 'dinonaktifkan';
-        $msg = "Jaringan \"{$wifi->nama_jaringan}\" berhasil {$status}.";
+        if (!$wifi->is_active) {
+            // Kebijakan 1 Jaringan Resmi Desa Aktif: Mengaktifkan jaringan ini akan otomatis menonaktifkan jaringan lainnya
+            KonfigurasiWifi::where('id', '!=', $id)->update(['is_active' => false]);
+            $wifi->update(['is_active' => true]);
+            $msg = "Jaringan \"{$wifi->nama_jaringan}\" berhasil diaktifkan sebagai Jaringan WiFi Utama Kantor Desa.";
+        } else {
+            $wifi->update(['is_active' => false]);
+            $msg = "Jaringan \"{$wifi->nama_jaringan}\" dinonaktifkan.";
+        }
+
+        // Invalidate cache
+        app(AbsensiSignatureService::class)->invalidateWifiCache();
+
         session()->flash('success', $msg);
         $this->dispatch('notify', message: $msg, type: 'info');
     }
@@ -101,6 +153,9 @@ class KonfigurasiWifiManager extends Component
         $wifi = KonfigurasiWifi::findOrFail($id);
         $nama = $wifi->nama_jaringan;
         $wifi->delete();
+
+        // Invalidate cache
+        app(AbsensiSignatureService::class)->invalidateWifiCache();
 
         AuditLog::create([
             'user_id'   => auth()->id(),
@@ -163,10 +218,46 @@ class KonfigurasiWifiManager extends Component
         $parts = explode('.', $clientIp);
         $subnetSaran = count($parts) === 4 ? $parts[0] . '.' . $parts[1] . '.' . $parts[2] . '.*' : $clientIp;
 
+        // Metrics
+        $today = Carbon::today();
+        $totalDiizinkanHariIni = WifiAccessLog::whereDate('created_at', $today)->where('hasil', 'diizinkan')->count();
+        $totalDitolakHariIni   = WifiAccessLog::whereDate('created_at', $today)->where('hasil', 'ditolak')->count();
+        $wifiUtama = KonfigurasiWifi::where('is_active', true)->first();
+        $terakhirAktivitas = WifiAccessLog::with('pegawai')->latest()->first();
+
+        // Logs Query
+        $logsQuery = WifiAccessLog::with('pegawai.jabatan')->latest();
+
+        if ($this->filterHasil !== 'semua') {
+            $logsQuery->where('hasil', $this->filterHasil);
+        }
+
+        if ($this->filterAksi !== 'semua') {
+            $logsQuery->where('jenis_aksi', $this->filterAksi);
+        }
+
+        if (trim($this->searchLog) !== '') {
+            $term = '%' . trim($this->searchLog) . '%';
+            $logsQuery->where(function ($q) use ($term) {
+                $q->where('client_ip', 'like', $term)
+                  ->orWhere('alasan_ditolak', 'like', $term)
+                  ->orWhereHas('pegawai', function ($qp) use ($term) {
+                      $qp->where('nama_lengkap', 'like', $term);
+                  });
+            });
+        }
+
+        $logs = $logsQuery->paginate(15);
+
         return view('livewire.konfigurasi-wifi-manager', [
-            'daftarWifi'  => KonfigurasiWifi::latest()->get(),
-            'clientIp'    => $clientIp,
-            'subnetSaran' => $subnetSaran,
-        ])->layout('layouts.app', ['title' => 'Konfigurasi WiFi Absensi — Presence Desa']);
+            'daftarWifi'            => KonfigurasiWifi::latest()->get(),
+            'clientIp'              => $clientIp,
+            'subnetSaran'           => $subnetSaran,
+            'logs'                  => $logs,
+            'totalDiizinkanHariIni' => $totalDiizinkanHariIni,
+            'totalDitolakHariIni'   => $totalDitolakHariIni,
+            'wifiUtama'             => $wifiUtama,
+            'terakhirAktivitas'     => $terakhirAktivitas,
+        ])->layout('layouts.app', ['title' => 'Konfigurasi WiFi Absensi — N-DesaPresence']);
     }
 }

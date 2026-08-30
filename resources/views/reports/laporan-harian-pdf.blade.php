@@ -158,12 +158,14 @@
             font-weight: bold;
         }
 
-        /* TTD CELL IN TABLE (BESAR, JELAS, PROFESIONAL & ALAMI SEPERTI ASLI) */
+        /* TTD CELL IN TABLE (PROPORSIONAL, RAPI & PAS MENYESUAIKAN KOLOM) */
         .ttd-col {
-            height: 38px;
-            min-height: 38px;
+            height: 24px;
+            min-height: 24px;
+            max-height: 28px;
             vertical-align: middle !important;
-            padding: 0 4px !important;
+            padding: 1px 3px !important;
+            overflow: hidden;
         }
         .ttd-box-left {
             text-align: left;
@@ -174,32 +176,32 @@
         .ttd-box-right {
             text-align: left;
             width: 100%;
-            padding-left: 16px;
+            padding-left: 10px;
             display: block;
             white-space: nowrap;
         }
         .ttd-num {
-            font-size: 8pt;
+            font-size: 7pt;
             font-weight: bold;
-            margin-right: 4px;
+            margin-right: 3px;
             display: inline-block;
             vertical-align: middle;
         }
         .ttd-dots {
-            font-size: 7.8pt;
+            font-size: 7pt;
             color: #555;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             display: inline-block;
             vertical-align: middle;
         }
         .ttd-img {
-            height: 48px;
-            max-height: 50px;
+            height: 22px;
+            max-height: 22px;
             width: auto;
-            max-width: 125px;
+            max-width: 65px;
             vertical-align: middle;
             display: inline-block;
-            margin: -6px 0 -6px 2px;
+            margin: 0 0 0 2px;
         }
 
         /* TANDA TANGAN PEJABAT PENGESAH (ENTER 4X LEBIH LEGA) */
@@ -303,25 +305,22 @@
             @foreach ($pegawais as $p)
                 @php
                     $k = $p->kehadirans->first();
-                    if ($isWeekend || $hariLiburs) {
-                        $statusLabel = 'Libur';
-                        $statusClass = 'status-text';
-                    } elseif (!$k) {
-                        $statusLabel = 'Alpa';
-                        $statusClass = 'status-bold';
-                    } else {
+                    if ($k) {
                         $statusLabel = match($k->status) {
-                            'Tepat Waktu' => 'Hadir',
-                            default       => $k->status,
+                            'Tepat Waktu', 'Terlambat', 'Dinas Luar' => 'Hadir',
+                            default                                  => $k->status,
                         };
                         $statusClass = match($k->status) {
-                            'Tepat Waktu', 'Hadir' => 'status-bold',
-                            'Terlambat'            => 'status-text',
-                            'Izin'                 => 'status-text',
-                            'Sakit'                => 'status-text',
-                            'Dinas Luar'           => 'status-bold',
-                            default                => 'status-bold',
+                            'Tepat Waktu', 'Hadir', 'Dinas Luar' => 'status-bold',
+                            'Izin', 'Sakit'                      => 'status-text',
+                            default                              => 'status-bold',
                         };
+                    } elseif ($isWeekend || $hariLiburs) {
+                        $statusLabel = 'Libur';
+                        $statusClass = 'status-text';
+                    } else {
+                        $statusLabel = 'Alpa';
+                        $statusClass = 'status-bold';
                     }
                     $durasi = ($k && $k->durasi_kerja_menit)
                         ? floor($k->durasi_kerja_menit/60).'j '.($k->durasi_kerja_menit % 60).'m'
@@ -376,7 +375,7 @@
             <tr>
                 <td colspan="6" style="text-align:right; font-weight:bold;">TOTAL KEHADIRAN HARI INI :</td>
                 <td colspan="2" style="font-weight:bold; text-align:center; color:#000;">
-                    {{ $rekap['hadir'] + $rekap['terlambat'] + $rekap['dinas'] }} / {{ $pegawais->count() }} Pegawai
+                    {{ $rekap['hadir'] }} / {{ $pegawais->count() }} Pegawai
                 </td>
             </tr>
         </tfoot>

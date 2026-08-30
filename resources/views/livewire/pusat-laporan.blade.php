@@ -154,66 +154,6 @@
                 <span>Cetak / Unduh PDF Tahunan</span>
             </a>
         </div>
-
-        {{-- ── CARD 4: LAPORAN SILTAP ── --}}
-        <div class="sadi-card p-6 flex flex-col justify-between gap-5 hover:shadow-md transition-all duration-200 border border-[#C9A84C]/30 bg-white">
-            <div class="space-y-5">
-                {{-- Header Card --}}
-                <div class="flex items-start gap-4">
-                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow shrink-0" style="background-color: #064E3B; border: 1.5px solid #C9A84C;">
-                        <svg class="w-6 h-6 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                        </svg>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h2 class="font-outfit text-lg font-bold text-slate-900">Daftar Pembayaran Siltap</h2>
-                        <p class="text-xs text-slate-600 mt-1 leading-relaxed">Daftar pembayaran penghasilan tetap & tunjangan perangkat desa setelah potongan absensi. Format A4 Portrait.</p>
-                        <div class="flex flex-wrap gap-1.5 mt-2.5">
-                            <span class="text-[10px] px-2.5 py-0.5 bg-emerald-50 text-[#064E3B] border border-emerald-200 rounded-md font-bold">A4 Portrait</span>
-                            <span class="text-[10px] px-2.5 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-semibold">Bruto & Neto</span>
-                            <span class="text-[10px] px-2.5 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-semibold">Kolom TTD Penerima</span>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Filter --}}
-                <div class="space-y-2 bg-[#F9F8F5] rounded-xl p-4 border border-slate-200">
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Pilih Periode Siltap</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-[11px] text-slate-600 font-semibold mb-1 block">Bulan</label>
-                            <select wire:model.live="bulanSiltap" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-[#064E3B] focus:border-[#064E3B] outline-none transition text-slate-900 font-semibold cursor-pointer">
-                                @foreach ($listBulan as $num => $nama)
-                                    <option value="{{ $num }}">{{ $nama }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[11px] text-slate-600 font-semibold mb-1 block">Tahun</label>
-                            <select wire:model.live="tahunSiltap" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-[#064E3B] focus:border-[#064E3B] outline-none transition text-slate-900 font-semibold cursor-pointer">
-                                @foreach ($tahunOptions as $t)
-                                    <option value="{{ $t }}">{{ $t }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <p class="text-[10px] text-amber-900 bg-amber-50 border border-amber-200 rounded-md px-2.5 py-1.5 mt-2 font-medium">
-                        * Pastikan kalkulasi Siltap sudah dijalankan di menu <strong>Kalkulasi Siltap</strong> sebelum mencetak laporan ini.
-                    </p>
-                </div>
-            </div>
-
-            {{-- Button --}}
-            <a href="{{ $urlSiltap }}" target="_blank"
-                style="background-color: #064E3B; color: #FFFFFF; border: 1px solid #C9A84C;"
-                class="inline-flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl font-outfit text-sm font-bold shadow hover:bg-[#04392B] transition cursor-pointer">
-                <svg class="w-4 h-4 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                </svg>
-                <span>Cetak / Unduh Daftar Siltap</span>
-            </a>
-        </div>
-
     </div>
 
     {{-- ===== INFO STANDAR ===== --}}
@@ -230,12 +170,11 @@
                     Semua berkas laporan resmi dicetak menggunakan kop surat baku <strong>Pemerintah Desa Nangtang</strong> lengkap dengan penomoran dokumen kedinasan, kolom tanda tangan Kepala Desa, dan paraf Sekretaris Desa.
                 </p>
                 <div class="flex flex-wrap gap-2 mt-3 text-[11px] font-semibold text-slate-700">
-                    <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded">H = Hadir Tepat Waktu</span>
-                    <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded">T = Terlambat</span>
-                    <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded">A = Alpa / Tanpa Keterangan</span>
-                    <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded">I = Izin / Sakit</span>
-                    <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded">D = Dinas Luar (SPT)</span>
-                    <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded">L = Libur / Akhir Pekan</span>
+                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded font-bold">H = Hadir</span>
+                    <span class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded font-bold">I = Izin</span>
+                    <span class="px-2.5 py-1 bg-purple-50 text-purple-800 border border-purple-200 rounded font-bold">S = Sakit</span>
+                    <span class="px-2.5 py-1 bg-red-50 text-red-800 border border-red-200 rounded font-bold">A = Alpa / Tanpa Keterangan</span>
+                    <span class="px-2.5 py-1 bg-slate-100 text-slate-600 border border-slate-200 rounded">L = Libur / Akhir Pekan</span>
                 </div>
             </div>
         </div>

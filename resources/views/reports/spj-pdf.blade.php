@@ -149,18 +149,16 @@
 
         /* Attendance Status Colors */
         .code-H { background-color: #dcfce7; font-weight: bold; color: #166534; }
-        .code-T { background-color: #fef3c7; font-weight: bold; color: #92400e; }
+        .code-I { background-color: #fef3c7; font-weight: bold; color: #92400e; }
+        .code-S { background-color: #f3e8ff; font-weight: bold; color: #6b21a8; }
         .code-A { background-color: #fee2e2; font-weight: bold; color: #991b1b; }
-        .code-I { background-color: #f3e8ff; font-weight: bold; color: #6b21a8; }
-        .code-D { background-color: #dbeafe; font-weight: bold; color: #1e40af; }
         .code-L { background-color: #f1f5f9; color: #64748b; font-size: 5.8pt; }
         .code-- { background-color: #fafafa; color: #94a3b8; }
 
         /* Summary Column Backgrounds */
         .sum-H { background-color: #dcfce7; font-weight: bold; color: #166534; }
-        .sum-T { background-color: #fef3c7; font-weight: bold; color: #92400e; }
-        .sum-I { background-color: #f3e8ff; font-weight: bold; color: #6b21a8; }
-        .sum-D { background-color: #dbeafe; font-weight: bold; color: #1e40af; }
+        .sum-I { background-color: #fef3c7; font-weight: bold; color: #92400e; }
+        .sum-S { background-color: #f3e8ff; font-weight: bold; color: #6b21a8; }
         .sum-A { background-color: #fee2e2; font-weight: bold; color: #991b1b; }
 
         /* ══════════ KETERANGAN ══════════ */
@@ -234,20 +232,19 @@
         <thead>
             <tr>
                 <th rowspan="2" style="width: 22px;">No</th>
-                <th rowspan="2" style="width: 135px;">Nama Perangkat Desa</th>
-                <th rowspan="2" style="width: 95px;">Jabatan</th>
+                <th rowspan="2" style="width: 145px;">Nama Perangkat Desa</th>
+                <th rowspan="2" style="width: 105px;">Jabatan</th>
                 <th colspan="{{ $daysInMonth }}" class="sub">TANGGAL</th>
-                <th colspan="5" class="sub">REKAPITULASI</th>
+                <th colspan="4" class="sub">REKAPITULASI</th>
             </tr>
             <tr>
                 @for ($d = 1; $d <= $daysInMonth; $d++)
                     <th style="width: 14px; font-size: 6.5pt;">{{ $d }}</th>
                 @endfor
-                <th style="width: 18px; font-size: 7.5pt;">H</th>
-                <th style="width: 18px; font-size: 7.5pt;">T</th>
-                <th style="width: 18px; font-size: 7.5pt;">I</th>
-                <th style="width: 18px; font-size: 7.5pt;">D</th>
-                <th style="width: 18px; font-size: 7.5pt;">A</th>
+                <th style="width: 20px; font-size: 7.5pt;">H</th>
+                <th style="width: 20px; font-size: 7.5pt;">I</th>
+                <th style="width: 20px; font-size: 7.5pt;">S</th>
+                <th style="width: 20px; font-size: 7.5pt;">A</th>
             </tr>
         </thead>
         <tbody>
@@ -261,9 +258,8 @@
                         <td class="code-{{ $code }}">{{ $code }}</td>
                     @endfor
                     <td class="sum-H">{{ $summary[$p->id]['H'] ?? 0 }}</td>
-                    <td class="sum-T">{{ $summary[$p->id]['T'] ?? 0 }}</td>
                     <td class="sum-I">{{ $summary[$p->id]['I'] ?? 0 }}</td>
-                    <td class="sum-D">{{ $summary[$p->id]['D'] ?? 0 }}</td>
+                    <td class="sum-S">{{ $summary[$p->id]['S'] ?? 0 }}</td>
                     <td class="sum-A">{{ $summary[$p->id]['A'] ?? 0 }}</td>
                 </tr>
             @endforeach
@@ -271,7 +267,7 @@
     </table>
 
     <div class="keterangan-row">
-        <em>Keterangan:</em> <strong>H</strong> = Hadir Tepat Waktu &nbsp;|&nbsp; <strong>T</strong> = Terlambat &nbsp;|&nbsp; <strong>I</strong> = Izin/Sakit &nbsp;|&nbsp; <strong>D</strong> = Dinas Luar (SPT) &nbsp;|&nbsp; <strong>A</strong> = Alpa/Tanpa Keterangan &nbsp;|&nbsp; <strong>L</strong> = Libur/Akhir Pekan
+        <em>Keterangan:</em> <strong>H</strong> = Hadir &nbsp;|&nbsp; <strong>I</strong> = Izin &nbsp;|&nbsp; <strong>S</strong> = Sakit &nbsp;|&nbsp; <strong>A</strong> = Alpa/Tanpa Keterangan &nbsp;|&nbsp; <strong>L</strong> = Libur/Akhir Pekan
     </div>
 
     <!-- ══════════ LEMBAR TANDA TANGAN RESMI KADES & SEKDES ══════════ -->

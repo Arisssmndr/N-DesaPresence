@@ -27,14 +27,19 @@ class KalenderNasionalTest extends TestCase
 
     public function test_kalender_nasional_database_sync()
     {
+        // Hapus data hari libur yang di-seed agar sinkronisasi bisa insert baru
+        \App\Models\HariLibur::truncate();
+
         $service = new KalenderNasionalService();
         $count = $service->sinkronkanKeDatabase(2026);
 
         $this->assertGreaterThan(0, $count);
-        $this->assertDatabaseHas('hari_liburs', [
-            'tanggal' => '2026-08-17',
-        ]);
+        // Gunakan whereDate agar kompatibel dengan SQLite (menyimpan tanggal sebagai datetime)
+        $hariMerdeka = \App\Models\HariLibur::whereDate('tanggal', '2026-08-17')->first();
+        $this->assertNotNull($hariMerdeka, 'Hari Kemerdekaan 2026-08-17 tidak ditemukan di database');
+
     }
+
 
     public function test_dashboard_renders_kalender_nasional_widget()
     {

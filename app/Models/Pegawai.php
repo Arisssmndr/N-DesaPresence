@@ -53,11 +53,6 @@ class Pegawai extends Model
         return $this->hasMany(IzinSakit::class);
     }
 
-    public function rekapSiltaps(): HasMany
-    {
-        return $this->hasMany(RekapSiltap::class);
-    }
-
     public function riwayatJabatans(): HasMany
     {
         return $this->hasMany(RiwayatJabatan::class);
@@ -66,5 +61,10 @@ class Pegawai extends Model
     public function pengajuanAbsenLuars(): HasMany
     {
         return $this->hasMany(PengajuanAbsenLuar::class);
+    }
+
+    public function jadwalPikets(): HasMany
+    {
+        return $this->hasMany(JadwalPiket::class);
     }
 }

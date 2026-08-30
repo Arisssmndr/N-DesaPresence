@@ -23,6 +23,8 @@ class PengajuanAbsenLuar extends Model
         'latitude',
         'longitude',
         'alamat_gps',
+        'sumber_koordinat',
+        'akurasi_gps_meter',
         'tanda_tangan',
         'status',
         'catatan_admin',
@@ -31,8 +33,11 @@ class PengajuanAbsenLuar extends Model
     ];
 
     protected $casts = [
-        'tanggal'      => 'date',
-        'diproses_pada' => 'datetime',
+        'tanggal'            => 'date',
+        'diproses_pada'      => 'datetime',
+        'akurasi_gps_meter'  => 'integer',
+        'latitude'           => 'decimal:8',
+        'longitude'          => 'decimal:8',
     ];
 
     // ─── Relasi ──────────────────────────────────────────────────────────────
@@ -85,20 +90,13 @@ class PengajuanAbsenLuar extends Model
 
     public function getJenisBadgeClassAttribute(): string
     {
-        return match ($this->jenis) {
-            'dinas_luar_undangan'    => 'bg-indigo-50 text-indigo-800 border-indigo-200',
-            'dinas_luar_pengajuan'   => 'bg-teal-50 text-teal-800 border-teal-200',
-            'dinas_luar_surat_tugas' => 'bg-blue-50 text-blue-800 border-blue-200',
-            'kegiatan_sosial'        => 'bg-pink-50 text-pink-800 border-pink-200',
-            'dinas_luar'             => 'bg-blue-50 text-blue-800 border-blue-200',
-            default                  => 'bg-slate-100 text-slate-800 border-slate-200',
-        };
+        return 'bg-slate-100 text-slate-800 border-slate-200';
     }
 
     public function getLabelStatusAttribute(): string
     {
         return match ($this->status) {
-            'menunggu'   => 'Menunggu Persetujuan',
+            'menunggu'   => 'Menunggu',
             'disetujui'  => 'Disetujui',
             'ditolak'    => 'Ditolak',
             default      => $this->status,
@@ -108,10 +106,30 @@ class PengajuanAbsenLuar extends Model
     public function getBadgeClassAttribute(): string
     {
         return match ($this->status) {
-            'menunggu'   => 'bg-amber-100 text-amber-800 border-amber-300',
-            'disetujui'  => 'bg-emerald-100 text-emerald-800 border-emerald-300',
-            'ditolak'    => 'bg-red-100 text-red-800 border-red-300',
-            default      => 'bg-slate-100 text-slate-800 border-slate-300',
+            'menunggu'   => 'bg-amber-50 text-amber-900 border-amber-300',
+            'disetujui'  => 'bg-emerald-50 text-[#064E3B] border-emerald-300',
+            'ditolak'    => 'bg-rose-50 text-rose-700 border-rose-300 font-bold',
+            default      => 'bg-slate-100 text-slate-800 border-slate-200',
+        };
+    }
+
+    public function getLabelSumberKoordinatAttribute(): string
+    {
+        return match ($this->sumber_koordinat) {
+            'gps'             => 'GPS Fisik Presisi' . ($this->akurasi_gps_meter ? ' (±' . $this->akurasi_gps_meter . 'm)' : ''),
+            'ip_geolocation'  => 'Estimasi Jaringan IP',
+            'manual'          => 'Input Manual Terverifikasi',
+            default           => 'GPS',
+        };
+    }
+
+    public function getBadgeSumberKoordinatAttribute(): string
+    {
+        return match ($this->sumber_koordinat) {
+            'gps'             => 'bg-emerald-50 text-emerald-800 border-emerald-300',
+            'ip_geolocation'  => 'bg-blue-50 text-blue-800 border-blue-300',
+            'manual'          => 'bg-purple-50 text-purple-800 border-purple-300',
+            default           => 'bg-slate-100 text-slate-800 border-slate-200',
         };
     }
 
@@ -125,3 +143,4 @@ class PengajuanAbsenLuar extends Model
             : \Illuminate\Support\Facades\Storage::url($this->tanda_tangan);
     }
 }
+

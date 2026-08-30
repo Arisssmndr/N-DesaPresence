@@ -108,12 +108,17 @@
                 <p class="text-[11px] text-slate-400 mt-1">Staf biasa/perangkat dapat login tanpa password menggunakan username via portal mobile WiFi Desa.</p>
             </div>
 
-            <div class="flex items-center gap-3 sm:col-span-2 pt-2">
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" wire:model="form.is_active" class="sr-only peer">
-                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#064E3B]"></div>
+            <div class="sm:col-span-2 pt-2">
+                <label class="inline-flex items-center gap-3.5 cursor-pointer select-none p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition w-full sm:w-auto">
+                    <div class="relative shrink-0 inline-flex items-center">
+                        <input type="checkbox" wire:model="form.is_active" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:bg-[#064E3B] transition-colors duration-200 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:duration-200 after:shadow-sm peer-checked:after:translate-x-5"></div>
+                    </div>
+                    <div>
+                        <span class="text-xs font-extrabold text-slate-900 block">Akun aktif & dapat melakukan presensi</span>
+                        <span class="text-[10.5px] text-slate-500 font-medium block">Nonaktifkan jika staf sedang cuti panjang atau tidak aktif bertugas</span>
+                    </div>
                 </label>
-                <span class="text-sm text-slate-700 font-medium">Akun aktif & dapat melakukan presensi</span>
             </div>
         </div>
 
@@ -133,35 +138,35 @@
     @endif
 
     {{-- Filter Search & Tabel Akun --}}
-    <div class="sadi-card overflow-hidden">
+    <div class="sadi-card overflow-hidden bg-white border border-slate-200/80 rounded-2xl shadow-xs">
         <div class="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="relative w-full sm:w-72">
                 <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cari nama atau @username..."
-                    class="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#064E3B]">
+                    class="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#064E3B] focus:ring-1 focus:ring-[#064E3B]">
                 <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
             </div>
-            <span class="text-xs text-slate-500">Total: {{ $users->count() }} akun terdaftar</span>
+            <span class="text-xs font-semibold text-slate-500">Total: {{ $users->total() }} akun terdaftar</span>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-50 border-b border-slate-100">
+            <table class="w-full text-xs">
+                <thead class="bg-[#064E3B] text-white border-b border-[#064E3B]">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Nama & Jabatan</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Username Login</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Role Akses</th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Aksi</th>
+                        <th class="px-5 py-3 text-left font-extrabold uppercase tracking-wider text-[11px]">Nama & Jabatan</th>
+                        <th class="px-5 py-3 text-left font-extrabold uppercase tracking-wider text-[11px]">Username Login</th>
+                        <th class="px-5 py-3 text-left font-extrabold uppercase tracking-wider text-[11px]">Role Akses</th>
+                        <th class="px-5 py-3 text-center font-extrabold uppercase tracking-wider text-[11px]">Status</th>
+                        <th class="px-5 py-3 text-center font-extrabold uppercase tracking-wider text-[11px]">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
+                <tbody class="divide-y divide-slate-100">
                     @forelse($users as $u)
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-4">
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="px-5 py-3.5">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-[#064E3B]/10 border border-[#C9A84C]/30 flex items-center justify-center text-[#064E3B] font-bold text-sm shrink-0 overflow-hidden">
+                                <div class="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold text-xs shrink-0 overflow-hidden">
                                     @if($u->foto_profil || ($u->pegawai && $u->pegawai->foto_profil))
                                         <img src="{{ Storage::url($u->foto_profil ?? $u->pegawai->foto_profil) }}" class="w-full h-full object-cover">
                                     @else
@@ -169,48 +174,49 @@
                                     @endif
                                 </div>
                                 <div>
-                                    <p class="font-semibold text-slate-800">{{ $u->name }}</p>
-                                    <p class="text-xs text-slate-500">{{ $u->pegawai->jabatan->nama_jabatan ?? 'Perangkat Desa' }}</p>
+                                    <p class="font-bold text-slate-900 leading-tight">{{ $u->name }}</p>
+                                    <p class="text-[10px] text-slate-500 font-medium mt-0.5">{{ $u->pegawai->jabatan->nama_jabatan ?? 'Perangkat Desa' }}</p>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4">
-                            <code class="bg-emerald-50 text-[#064E3B] px-2.5 py-1 rounded-lg text-xs font-mono font-bold">
+                        <td class="px-5 py-3.5">
+                            <span class="font-mono text-xs font-semibold text-slate-700">
                                 @ {{ $u->username }}
-                            </code>
+                            </span>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-5 py-3.5">
                             @php
                                 $roleBadge = match($u->role) {
-                                    'admin' => ['Admin Sekdes', 'bg-purple-100 text-purple-800'],
-                                    'kepala_desa' => ['Kepala Desa', 'bg-amber-100 text-amber-800'],
-                                    'perangkat' => ['Perangkat Desa', 'bg-emerald-100 text-emerald-800'],
-                                    'auditor' => ['Auditor', 'bg-blue-100 text-blue-800'],
-                                    default => [$u->role, 'bg-slate-100 text-slate-800'],
+                                    'admin'       => ['Admin Sekdes', 'bg-emerald-50 text-emerald-800 border-emerald-200/80'],
+                                    'kepala_desa' => ['Kepala Desa', 'bg-amber-50 text-amber-800 border-amber-200/80'],
+                                    'perangkat'   => ['Perangkat Desa', 'bg-slate-100 text-slate-700 border-slate-200'],
+                                    'auditor'     => ['Auditor', 'bg-blue-50 text-blue-800 border-blue-200/80'],
+                                    default       => [$u->role, 'bg-slate-100 text-slate-700 border-slate-200'],
                                 };
                             @endphp
-                            <span class="px-2.5 py-1 rounded-full text-xs font-bold {{ $roleBadge[1] }}">
+                            <span class="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold border {{ $roleBadge[1] }}">
                                 {{ $roleBadge[0] }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-center">
-                            <button wire:click="toggleAktif({{ $u->id }})" class="focus:outline-none">
+                        <td class="px-5 py-3.5 text-center whitespace-nowrap">
+                            <button wire:click="toggleAktif({{ $u->id }})" class="focus:outline-none cursor-pointer group" title="Klik untuk ubah status aktif akun">
                                 @if($u->is_active)
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
-                                        Aktif
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200/80 group-hover:bg-emerald-100 text-[11px] font-bold transition">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                        <span>Aktif</span>
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-medium">
-                                        <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-                                        Nonaktif
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200 group-hover:bg-slate-200 text-[11px] font-semibold transition">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                        <span>Nonaktif</span>
                                     </span>
                                 @endif
                             </button>
                         </td>
-                        <td class="px-6 py-4 text-center">
-                            <div class="flex items-center justify-center gap-2">
+                        <td class="px-5 py-3.5 text-center whitespace-nowrap">
+                            <div class="flex items-center justify-center gap-1.5">
                                 <button wire:click="editData({{ $u->id }})" title="Edit Akun"
-                                    class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition">
+                                    class="p-1.5 rounded-lg text-slate-500 hover:text-[#064E3B] hover:bg-slate-100 transition cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
@@ -219,7 +225,7 @@
                                 <button wire:click="hapus({{ $u->id }})"
                                     wire:confirm="Yakin ingin menghapus akun @{{ $u->username }} ({{ $u->name }})?"
                                     title="Hapus Akun"
-                                    class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition">
+                                    class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
@@ -230,8 +236,8 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-slate-400">
-                            Tidak ada akun yang sesuai dengan pencarian.
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <p class="text-slate-500 font-semibold text-xs">Tidak ada akun yang sesuai dengan pencarian.</p>
                         </td>
                     </tr>
                     @endforelse
@@ -240,7 +246,7 @@
         </div>
 
         @if($users->hasPages())
-        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+        <div class="px-6 py-4 border-t border-slate-100 bg-white">
             {{ $users->links() }}
         </div>
         @endif

@@ -28,12 +28,12 @@ class PengajuanAbsenLuarController extends Controller
 
         // Cek apakah sudah ada catatan kehadiran langsung di kantor hari ini
         $kehadiranHariIni = Kehadiran::where('pegawai_id', $pegawai->id)
-            ->where('tanggal', $today)
+            ->whereDate('tanggal', $today)
             ->first();
 
         // Cek apakah sudah ada pengajuan absen luar hari ini
         $pengajuanHariIni = PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
-            ->where('tanggal', $today)
+            ->whereDate('tanggal', $today)
             ->first();
 
         return view('staf.ajukan-absen', compact('user', 'pegawai', 'kehadiranHariIni', 'pengajuanHariIni', 'today'));
@@ -51,8 +51,10 @@ class PengajuanAbsenLuarController extends Controller
             return back()->with('error', 'Data kepegawaian Anda tidak ditemukan.');
         }
 
+        $minDate = Carbon::today()->subDays(30)->toDateString();
+
         $request->validate([
-            'tanggal'              => 'required|date|before_or_equal:today',
+            'tanggal'              => 'required|date|before_or_equal:today|after_or_equal:' . $minDate,
             'jenis'                => 'required|in:dinas_luar_undangan,dinas_luar_pengajuan,dinas_luar_surat_tugas,kegiatan_sosial,dinas_luar',
             'judul'                => 'required|string|max:150',
             'instansi_pengundang'  => 'required_if:jenis,dinas_luar_undangan|nullable|string|max:150',
@@ -60,28 +62,31 @@ class PengajuanAbsenLuarController extends Controller
             'deskripsi'            => 'required|string|max:2000',
             'foto_lokasi'          => 'required_if:jenis,kegiatan_sosial,dinas_luar_pengajuan|nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'file_dokumen'         => 'required_if:jenis,dinas_luar_undangan,dinas_luar_surat_tugas,dinas_luar|nullable|mimes:pdf,jpeg,png,jpg,webp|max:5120',
-            // Bounding box wilayah Indonesia: lat -11 s/d 6, lng 95 s/d 141
+            // Bounding box wilayah Indonesia: lat -11 s/d 6, lng 95 s/d 141.1
             'latitude'             => 'required|numeric|between:-11,6',
-            'longitude'            => 'required|numeric|between:95,141',
+            'longitude'            => 'required|numeric|between:95,141.1',
             'alamat_gps'           => 'nullable|string|max:255',
+            'sumber_koordinat'     => 'nullable|in:gps,ip_geolocation,manual',
+            'akurasi_gps_meter'    => 'nullable|numeric|min:0',
             'tanda_tangan'         => 'required|string|min:100',
         ], [
+            'tanggal.after_or_equal'           => 'Pengajuan absen luar maksimal untuk 30 hari ke belakang.',
             'instansi_pengundang.required_if'  => 'Instansi / Pihak Pengundang wajib diisi untuk Dinas Luar Undangan.',
             'foto_lokasi.required_if'          => 'Foto bukti situasi / lokasi wajib diunggah.',
             'file_dokumen.required_if'         => 'Dokumen resmi / surat tugas / undangan wajib diunggah.',
             'latitude.required'                => 'Titik lokasi GPS wajib diaktifkan sebelum mengajukan.',
-            'latitude.between'                 => 'Koordinat GPS tidak valid (di luar wilayah Indonesia). Matikan VPN, aktifkan GPS presisi tinggi, lalu coba lagi.',
+            'latitude.between'                 => 'Koordinat lokasi tidak valid (di luar wilayah Indonesia). Matikan VPN, aktifkan GPS presisi tinggi, lalu coba lagi.',
             'longitude.required'               => 'Titik lokasi GPS wajib diaktifkan sebelum mengajukan.',
-            'longitude.between'                => 'Koordinat GPS tidak valid (di luar wilayah Indonesia). Matikan VPN, aktifkan GPS presisi tinggi, lalu coba lagi.',
+            'longitude.between'                => 'Koordinat lokasi tidak valid (di luar wilayah Indonesia). Matikan VPN, aktifkan GPS presisi tinggi, lalu coba lagi.',
             'tanda_tangan.required'            => 'Tanda tangan digital wajib diisi.',
         ]);
 
         // 1. Cek apakah sudah ada catatan kehadiran langsung di kantor pada tanggal yang diajukan
         $kehadiran = Kehadiran::where('pegawai_id', $pegawai->id)
-            ->where('tanggal', $request->tanggal)
+            ->whereDate('tanggal', $request->tanggal)
             ->first();
 
-        if ($kehadiran && ($kehadiran->jam_masuk || in_array(strtolower($kehadiran->status), ['hadir', 'terlambat', 'dinas luar']))) {
+        if ($kehadiran && ($kehadiran->jam_masuk || in_array(strtolower($kehadiran->status), ['hadir', 'tepat waktu', 'terlambat', 'dinas luar']))) {
             $info = $kehadiran->jam_masuk 
                 ? 'Absen Masuk pukul ' . substr($kehadiran->jam_masuk, 0, 5) . ' WIB' 
                 : 'Status: ' . $kehadiran->status;
@@ -90,7 +95,7 @@ class PengajuanAbsenLuarController extends Controller
 
         // 2. Cek duplikasi pengajuan pada tanggal yang sama
         $existing = PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
-            ->where('tanggal', $request->tanggal)
+            ->whereDate('tanggal', $request->tanggal)
             ->first();
 
         if ($existing) {
@@ -109,6 +114,8 @@ class PengajuanAbsenLuarController extends Controller
             'latitude'            => $request->latitude,
             'longitude'           => $request->longitude,
             'alamat_gps'          => $request->alamat_gps,
+            'sumber_koordinat'    => $request->sumber_koordinat ?: 'gps',
+            'akurasi_gps_meter'   => $request->filled('akurasi_gps_meter') ? round((float) $request->akurasi_gps_meter) : null,
             'tanda_tangan'        => $request->tanda_tangan,
             'status'              => 'menunggu',
         ];
@@ -131,7 +138,7 @@ class PengajuanAbsenLuarController extends Controller
 
         PengajuanAbsenLuar::create($data);
 
-        return redirect()->route('staf.riwayat.pengajuan')
+        return redirect()->route('staf.riwayat', ['tab' => 'absen_luar'])
             ->with('success', 'Pengajuan absen luar berhasil dikirim! Silakan tunggu persetujuan Admin Desa.');
     }
 
@@ -140,17 +147,6 @@ class PengajuanAbsenLuarController extends Controller
      */
     public function riwayat()
     {
-        $user    = Auth::user();
-        $pegawai = $user->pegawai;
-
-        if (!$pegawai) {
-            return redirect()->route('staf.beranda');
-        }
-
-        $pengajuans = PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
-            ->orderByDesc('tanggal')
-            ->paginate(10);
-
-        return view('staf.riwayat-pengajuan', compact('user', 'pegawai', 'pengajuans'));
+        return redirect()->route('staf.riwayat', ['tab' => 'absen_luar']);
     }
 }

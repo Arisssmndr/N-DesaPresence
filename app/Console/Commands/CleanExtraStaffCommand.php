@@ -85,6 +85,14 @@ class CleanExtraStaffCommand extends Command
             $eu->delete();
         }
 
+        // Bersihkan data dummy WiFi
+        \App\Models\KonfigurasiWifi::where('nama_jaringan', 'like', 'Test%')->delete();
+        $wifiDesa = \App\Models\KonfigurasiWifi::where('nama_jaringan', 'like', '%WiFi Kantor Desa%')->first();
+        if ($wifiDesa) {
+            $wifiDesa->update(['is_active' => true]);
+            \App\Models\KonfigurasiWifi::where('id', '!=', $wifiDesa->id)->update(['is_active' => false]);
+        }
+
         $this->info('');
         $this->info('=== DATA 14 PEGAWAI RESMI DESA NANGTANG ===');
         $this->line('Total Pegawai Resmi: ' . Pegawai::count());
@@ -102,3 +110,4 @@ class CleanExtraStaffCommand extends Command
         return Command::SUCCESS;
     }
 }
+

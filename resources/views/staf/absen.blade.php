@@ -6,23 +6,34 @@
     <!-- Header Form -->
     <div class="flex items-center justify-between">
         <a href="{{ route('staf.beranda') }}" class="text-xs font-bold text-[#064E3B] flex items-center gap-1.5 hover:underline">
-            ← Kembali ke Beranda
+            <svg class="w-3.5 h-3.5 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            <span>Kembali ke Beranda</span>
         </a>
         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold {{ $jenis === 'masuk' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800' }} uppercase tracking-wider">
             Absen {{ $jenis }}
         </span>
     </div>
 
-    <!-- Pegawai Info Card -->
-    <div class="sadi-card p-4 bg-white flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-[#064E3B]/10 border border-[#C9A84C]/40 flex items-center justify-center text-[#064E3B] font-bold text-sm shrink-0">
-            {{ strtoupper(substr($pegawai->nama_lengkap, 0, 2)) }}
+    <!-- Pegawai & Network Info Card -->
+    <div class="sadi-card p-4 bg-white space-y-3 shadow-md">
+        <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-[#064E3B]/10 border border-[#C9A84C]/40 flex items-center justify-center text-[#064E3B] font-bold text-sm shrink-0">
+                {{ strtoupper(substr($pegawai->nama_lengkap, 0, 2)) }}
+            </div>
+            <div class="min-w-0 flex-1">
+                <p class="font-bold text-slate-800 text-sm truncate">{{ $pegawai->nama_lengkap }}</p>
+                <p class="text-xs text-slate-500 truncate">{{ $pegawai->jabatan->nama_jabatan ?? 'Perangkat Desa' }}</p>
+            </div>
+            <span class="text-xs font-mono font-bold text-[#064E3B] bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200 shrink-0">{{ date('H:i') }} WIB</span>
         </div>
-        <div class="min-w-0 flex-1">
-            <p class="font-bold text-slate-800 text-sm truncate">{{ $pegawai->nama_lengkap }}</p>
-            <p class="text-xs text-slate-500 truncate">{{ $pegawai->jabatan->nama_jabatan ?? 'Perangkat Desa' }}</p>
+
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+            <div class="flex items-center gap-1.5 text-emerald-800 font-bold">
+                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                <span>WiFi Kantor Desa Terverifikasi</span>
+            </div>
+            <span class="font-mono text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">{{ $clientIp }}</span>
         </div>
-        <span class="text-xs font-mono font-bold text-slate-400 shrink-0">{{ date('H:i') }} WIB</span>
     </div>
 
     <!-- Canvas Signature Card -->
@@ -106,7 +117,7 @@
 
     async function kirimTandaTangan() {
         if (!signaturePad || signaturePad.isEmpty()) {
-            alert('⚠️ Harap bubuhkan tanda tangan Anda terlebih dahulu sebelum mengirim.');
+            alert('Harap bubuhkan tanda tangan digital Anda terlebih dahulu sebelum mengirim.');
             return;
         }
 
@@ -141,13 +152,41 @@
                 document.getElementById('preview-img').src = ttdBase64;
                 document.getElementById('sukses-card').classList.remove('hidden');
             } else {
-                alert('Gagal: ' + (data.message || 'Terjadi kesalahan saat memproses absensi.'));
                 document.getElementById('signature-card').classList.remove('hidden');
+                if (window.Swal) {
+                    Swal.fire({
+                        title: 'Presensi Gagal',
+                        text: data.message || 'Terjadi kesalahan saat memproses absensi.',
+                        icon: 'error',
+                        confirmButtonColor: '#064E3B',
+                        confirmButtonText: 'Tutup',
+                        customClass: {
+                            popup: 'rounded-3xl border border-[#C9A84C]/40 shadow-2xl',
+                            confirmButton: 'rounded-xl px-6 py-2.5 font-bold'
+                        }
+                    });
+                } else {
+                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan saat memproses absensi.'));
+                }
             }
         } catch (err) {
             document.getElementById('loading-card').classList.add('hidden');
             document.getElementById('signature-card').classList.remove('hidden');
-            alert('Terjadi kesalahan jaringan. Pastikan Anda tetap terhubung ke WiFi desa.');
+            if (window.Swal) {
+                Swal.fire({
+                    title: 'Gangguan Jaringan',
+                    text: 'Terjadi gangguan jaringan atau Anda terputus dari WiFi Kantor Desa.',
+                    icon: 'warning',
+                    confirmButtonColor: '#064E3B',
+                    confirmButtonText: 'Mengerti',
+                    customClass: {
+                        popup: 'rounded-3xl border border-[#C9A84C]/40 shadow-2xl',
+                        confirmButton: 'rounded-xl px-6 py-2.5 font-bold'
+                    }
+                });
+            } else {
+                alert('Terjadi kesalahan jaringan. Pastikan Anda tetap terhubung ke WiFi desa.');
+            }
         }
     }
 

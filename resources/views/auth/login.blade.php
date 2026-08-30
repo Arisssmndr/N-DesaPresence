@@ -4,23 +4,24 @@
 <div class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 border border-[#C9A84C]/20">
 
     <!-- Left Branding Panel (Dark Emerald Green 30%) -->
-    <div class="md:col-span-5 bg-gradient-to-b from-[#064E3B] to-[#04392B] p-8 md:p-12 text-white flex flex-col justify-between items-center text-center relative overflow-hidden">
+    <div class="md:col-span-5 auth-panel-left p-8 md:p-12 text-white flex flex-col justify-between items-center text-center relative overflow-hidden"
+         style="background: linear-gradient(165deg, #064E3B 0%, #04392B 100%) !important; color: #FFFFFF !important;">
         <div class="absolute -top-24 -left-24 w-48 h-48 bg-[#C9A84C]/10 rounded-full blur-2xl"></div>
         <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-[#059669]/20 rounded-full blur-2xl"></div>
 
         <div class="relative z-10 my-auto">
-            <!-- Monogram N Logo in Gold Circle -->
-            <div class="w-24 h-24 rounded-full border-4 border-[#C9A84C] bg-[#04392B] flex items-center justify-center mx-auto shadow-2xl mb-6">
-                <span class="font-outfit text-5xl font-extrabold text-[#C9A84C]">N</span>
+            <!-- Logo Resmi Pemerintah Kabupaten Tasikmalaya (Pure Logo) -->
+            <div class="mb-5 flex justify-center">
+                <img src="{{ asset('images/logo-tasikmalaya.png') }}" alt="Logo Kabupaten Tasikmalaya" class="h-28 w-auto object-contain filter drop-shadow-md">
             </div>
 
             <h1 class="font-outfit text-2xl font-bold tracking-tight text-white mb-2">PEMERINTAH DESA NANGTANG</h1>
             <div class="h-1 w-16 bg-[#C9A84C] mx-auto rounded-full mb-3"></div>
-            <p class="text-xs text-emerald-200/90 leading-relaxed max-w-xs">Sistem Absensi Desa Integratif (SADI) — Real-Time Presensi Hardware & SPJ Otomatis</p>
+            <p class="text-xs text-emerald-200/90 leading-relaxed max-w-xs">N-DesaPresence — Sistem Presensi Digital & Administrasi Pemerintahan Desa</p>
         </div>
 
-        <div class="relative z-10 text-[11px] text-emerald-300/60 font-medium">
-            Program KKN Universitas &copy; 2025
+        <div class="relative z-10 text-[11px] text-emerald-300/70 font-medium">
+            KKN 0226 LP3I Tasikmalaya &copy; 2026
         </div>
     </div>
 
@@ -70,7 +71,7 @@
                     <svg class="w-4 h-4 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
-                    <span>MASUK SADI</span>
+                    <span>MASUK N-DESAPRESENCE</span>
                 </button>
             </form>
 

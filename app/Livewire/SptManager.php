@@ -17,6 +17,10 @@ class SptManager extends Component
     use WithPagination, WithFileUploads;
 
     public bool $showModal = false;
+    public bool $showRejectModal = false;
+    public ?int $selectedSptId = null;
+    public ?SuratPerintahTugas $selectedSpt = null;
+    public string $catatanPenolakan = '';
     public ?int $sptId = null;
 
     public ?int $pegawai_id = null;
@@ -57,6 +61,23 @@ class SptManager extends Component
     {
         $this->validate();
 
+        // Cek tumpang tindih SPT aktif
+        $adaSptBentrok = SuratPerintahTugas::where('pegawai_id', $this->pegawai_id)
+            ->where('status', '!=', 'ditolak')
+            ->where(function ($q) {
+                $q->whereBetween('tanggal_mulai', [$this->tanggal_mulai, $this->tanggal_selesai])
+                  ->orWhereBetween('tanggal_selesai', [$this->tanggal_mulai, $this->tanggal_selesai])
+                  ->orWhere(function ($sub) {
+                      $sub->where('tanggal_mulai', '<=', $this->tanggal_mulai)
+                          ->where('tanggal_selesai', '>=', $this->tanggal_selesai);
+                  });
+            })->exists();
+
+        if ($adaSptBentrok) {
+            $this->addError('tanggal_mulai', 'Pegawai sudah memiliki SPT aktif pada rentang tanggal tersebut.');
+            return;
+        }
+
         \Illuminate\Support\Facades\DB::transaction(function () {
             $undanganPath = null;
             if ($this->file_undangan) {
@@ -66,10 +87,12 @@ class SptManager extends Component
             // Auto-generate nomor SPT: SPT/BULAN/TAHUN/URUTAN
             $month = Carbon::parse($this->tanggal_mulai)->format('m');
             $year = Carbon::parse($this->tanggal_mulai)->format('Y');
-            $countThisMonth = SuratPerintahTugas::whereYear('created_at', $year)->whereMonth('created_at', $month)->lockForUpdate()->count() + 1;
+            $countThisMonth = SuratPerintahTugas::whereYear('created_at', $year)->whereMonth('created_at', $month)->count() + 1;
             $nomorSpt = sprintf("SPT/%s/%s/%03d", $month, $year, $countThisMonth);
 
             $isKades = auth()->user()->isKades();
+            $isAdmin = auth()->user()->isAdmin();
+            $status = ($isKades || $isAdmin) ? 'disetujui' : 'diajukan';
 
             $spt = SuratPerintahTugas::create([
                 'nomor_spt' => $nomorSpt,
@@ -80,9 +103,9 @@ class SptManager extends Component
                 'keperluan' => $this->keperluan,
                 'file_undangan' => $undanganPath,
                 'anggaran' => $this->anggaran ?? 0,
-                'status' => $isKades ? 'disetujui' : 'diajukan',
-                'disetujui_oleh' => $isKades ? auth()->id() : null,
-                'tanggal_persetujuan' => $isKades ? now() : null,
+                'status' => $status,
+                'disetujui_oleh' => $status === 'disetujui' ? auth()->id() : null,
+                'tanggal_persetujuan' => $status === 'disetujui' ? now() : null,
                 'created_by' => auth()->id(),
             ]);
 
@@ -135,20 +158,46 @@ class SptManager extends Component
         });
     }
 
-    public function reject(int $id)
+    public function konfirmasiTolak(int $id)
     {
+        $this->selectedSptId = $id;
+        $this->selectedSpt = SuratPerintahTugas::with('pegawai')->findOrFail($id);
+        $this->catatanPenolakan = '';
+        $this->showRejectModal = true;
+    }
+
+    public function tutupRejectModal()
+    {
+        $this->showRejectModal = false;
+        $this->selectedSptId = null;
+        $this->selectedSpt = null;
+        $this->catatanPenolakan = '';
+    }
+
+    public function reject()
+    {
+        $this->validate([
+            'catatanPenolakan' => 'required|string|min:5|max:500',
+        ], [
+            'catatanPenolakan.required' => 'Wajib mengisi alasan penolakan SPT.',
+            'catatanPenolakan.min' => 'Alasan penolakan minimal 5 karakter.',
+        ]);
+
+        $id = $this->selectedSptId;
+
         \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
             $spt = SuratPerintahTugas::where('id', $id)->lockForUpdate()->firstOrFail();
             $spt->update([
                 'status' => 'ditolak',
                 'disetujui_oleh' => auth()->id(),
+                'keperluan' => $spt->keperluan . ' [Ditolak: ' . $this->catatanPenolakan . ']',
             ]);
 
             AuditLog::create([
                 'user_id' => auth()->id(),
                 'user_name' => auth()->user()->name ?? 'Admin',
                 'role' => auth()->user()->role ?? 'Kepala Desa',
-                'aktivitas' => "Menolak SPT {$spt->nomor_spt} untuk {$spt->pegawai->nama_lengkap}",
+                'aktivitas' => "Menolak SPT {$spt->nomor_spt} untuk {$spt->pegawai->nama_lengkap} (Alasan: {$this->catatanPenolakan})",
                 'modul' => 'Surat Perintah Tugas',
             ]);
 
@@ -156,6 +205,7 @@ class SptManager extends Component
             session()->flash('success', $msg);
             $this->dispatch('notify', message: $msg, type: 'info');
             $this->dispatch('refresh-notifications');
+            $this->tutupRejectModal();
         });
     }
 
@@ -167,14 +217,14 @@ class SptManager extends Component
         while ($start->lte($end)) {
             $dateStr = $start->toDateString();
             $existing = Kehadiran::where('pegawai_id', $spt->pegawai_id)
-                ->where('tanggal', $dateStr)
+                ->whereDate('tanggal', $dateStr)
                 ->first();
 
             if (!$existing) {
                 Kehadiran::create([
                     'pegawai_id'        => $spt->pegawai_id,
                     'tanggal'           => $dateStr,
-                    'status'            => 'Dinas Luar',
+                    'status'            => 'Hadir',
                     'sumber_data'       => 'manual_admin',
                     'diverifikasi_oleh' => $spt->disetujui_oleh ?? auth()->id(),
                     'keterangan'        => "Surat Perintah Tugas: {$spt->nomor_spt} ({$spt->tujuan})"
@@ -182,7 +232,7 @@ class SptManager extends Component
             } elseif (!$existing->jam_masuk) {
                 // Hanya update jika belum ada catatan presensi langsung di kantor
                 $existing->update([
-                    'status'            => 'Dinas Luar',
+                    'status'            => 'Hadir',
                     'sumber_data'       => 'manual_admin',
                     'diverifikasi_oleh' => $spt->disetujui_oleh ?? auth()->id(),
                     'keterangan'        => "Surat Perintah Tugas: {$spt->nomor_spt} ({$spt->tujuan})"

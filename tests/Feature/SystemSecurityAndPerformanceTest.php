@@ -208,7 +208,7 @@ class SystemSecurityAndPerformanceTest extends TestCase
             ]);
 
         // Harus berhasil redirect ke riwayat pengajuan — bukan 403 dan bukan kembali ke form
-        $response->assertRedirect(route('staf.riwayat.pengajuan'));
+        $response->assertRedirect(route('staf.riwayat', ['tab' => 'absen_luar']));
     }
 
     // ─── Test: Konfigurasi Jadwal Absensi ─────────────────────────────────────

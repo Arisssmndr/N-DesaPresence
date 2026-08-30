@@ -19,10 +19,12 @@
 
         @if($user->foto_profil || ($pegawai && $pegawai->foto_profil))
             <img src="{{ asset('storage/' . ($user->foto_profil ?? $pegawai->foto_profil)) }}" alt="{{ $pegawai->nama_lengkap ?? $user->name }}"
-                class="w-24 h-24 rounded-full object-cover border-4 border-[#C9A84C] mx-auto shadow-xl">
+                class="w-24 h-24 rounded-3xl object-contain mx-auto shadow-md"
+                style="width: 96px; height: 96px; min-width: 96px; min-height: 96px;">
         @else
-            <div class="w-24 h-24 rounded-full bg-slate-200 border-4 border-[#C9A84C] flex items-center justify-center overflow-hidden mx-auto shadow-xl">
-                <svg class="w-16 h-16 text-slate-400 translate-y-1.5" fill="currentColor" viewBox="0 0 24 24">
+            <div class="w-24 h-24 rounded-3xl bg-slate-100 flex items-center justify-center overflow-hidden mx-auto shadow-md"
+                 style="width: 96px; height: 96px; min-width: 96px; min-height: 96px;">
+                <svg class="w-14 h-14 text-slate-400 translate-y-1" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
                 </svg>
             </div>
@@ -88,8 +90,8 @@
     <!-- Logout Action -->
     <form action="{{ route('staf.logout') }}" method="POST">
         @csrf
-        <button type="submit" class="w-full py-4 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 text-sm font-extrabold border border-red-200 transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button type="submit" class="w-full py-3 px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-extrabold border border-rose-200 transition flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+            <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
             </svg>
             <span>Keluar dari Akun Ini</span>

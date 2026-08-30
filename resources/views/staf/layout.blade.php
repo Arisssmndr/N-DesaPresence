@@ -4,16 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Portal Presensi Staf — Desa Nangtang' }}</title>
+    <title>{{ $title ?? 'N-DesaPresence — Portal Presensi Staf Desa Nangtang' }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-tasikmalaya.png') }}">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS & Alpine.js & SweetAlert2 -->
+    <!-- Tailwind CSS & Alpine.js & SignaturePad & SweetAlert2 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         tailwind.config = {
@@ -39,7 +41,7 @@
     </script>
     <style>
         body { background-color: #F5F0E8; color: #1C2826; }
-        .sadi-card { background: #FFFFFF; border-radius: 20px; box-shadow: 0px 4px 20px rgba(27, 77, 62, 0.06); border: 1px solid rgba(201, 168, 76, 0.2); }
+        .sadi-card { background-color: #FFFFFF; border-radius: 20px; box-shadow: 0px 4px 20px rgba(27, 77, 62, 0.06); border: 1px solid rgba(201, 168, 76, 0.2); }
         .btn-gold {
             background: linear-gradient(135deg, #E2C268 0%, #C9A84C 100%);
             color: #064E3B;
@@ -54,12 +56,10 @@
     <header class="bg-[#064E3B] text-white px-5 py-4 sticky top-0 z-30 shadow-lg border-b border-[#C9A84C]/30">
         <div class="max-w-lg mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full border-2 border-[#C9A84C] flex items-center justify-center bg-[#04392B] shadow shrink-0">
-                    <span class="font-outfit text-xl font-extrabold text-[#C9A84C]">N</span>
-                </div>
+                <img src="{{ asset('images/logo-tasikmalaya.png') }}" alt="Logo Kab. Tasikmalaya" class="h-10 w-auto object-contain shrink-0 filter drop-shadow">
                 <div>
-                    <h1 class="font-outfit text-base font-bold tracking-tight text-white leading-tight">DESA NANGTANG</h1>
-                    <p class="text-[10px] text-[#C9A84C] tracking-wider font-semibold uppercase">Portal Presensi Digital Staf</p>
+                    <h1 class="font-outfit text-base font-bold tracking-tight text-white leading-tight">N-DesaPresence</h1>
+                    <p class="text-[10px] text-[#C9A84C] tracking-wider font-semibold uppercase">Portal Presensi Staf & Perangkat</p>
                 </div>
             </div>
 
@@ -112,6 +112,16 @@
                 <span class="text-[11px]">Absen Luar</span>
             </a>
 
+            {{-- Tab Izin & Sakit --}}
+            <a href="{{ route('staf.izin') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('staf.izin*') ? 'text-[#064E3B] font-extrabold' : 'text-slate-500 hover:text-slate-800 font-semibold' }}">
+                <div class="{{ request()->routeIs('staf.izin*') ? 'p-1.5 rounded-xl bg-emerald-100/80 text-[#064E3B]' : 'p-1.5 text-slate-500' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <span class="text-[11px]">Izin / Sakit</span>
+            </a>
+
             <a href="{{ route('staf.riwayat') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('staf.riwayat') ? 'text-[#064E3B] font-extrabold' : 'text-slate-500 hover:text-slate-800 font-semibold' }}">
                 <div class="{{ request()->routeIs('staf.riwayat') ? 'p-1.5 rounded-xl bg-emerald-100/80 text-[#064E3B]' : 'p-1.5 text-slate-500' }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,7 +144,7 @@
     @endauth
 
     <footer class="text-center py-4 text-[11px] text-slate-400 border-t border-[#C9A84C]/10">
-        Pemerintah Desa Nangtang &copy; {{ date('Y') }} — SADI v2.0
+        Pemerintah Desa Nangtang &copy; 2026 — N-DesaPresence (KKN 0226 LP3I Tasikmalaya)
     </footer>
 
     @yield('scripts')

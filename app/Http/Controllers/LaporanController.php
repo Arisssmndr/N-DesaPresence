@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\Pegawai;
 use App\Models\Kehadiran;
 use App\Models\HariLibur;
-use App\Models\RekapSiltap;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
@@ -27,19 +26,17 @@ class LaporanController extends Controller
         $hariLiburs = HariLibur::where('tanggal', $tanggal)->exists();
         $isWeekend   = $dt->isWeekend();
 
-        $rekap = ['hadir' => 0, 'terlambat' => 0, 'alpa' => 0, 'izin' => 0, 'sakit' => 0, 'dinas' => 0, 'libur' => 0];
+        $rekap = ['hadir' => 0, 'alpa' => 0, 'izin' => 0, 'sakit' => 0, 'libur' => 0];
 
         foreach ($pegawais as $p) {
             $k = $p->kehadirans->first();
             if ($k) {
                 // Jika ada data kehadiran aktual, catat statusnya
                 match ($k->status) {
-                    'Hadir', 'Tepat Waktu' => $rekap['hadir']++,
-                    'Terlambat'    => $rekap['terlambat']++,
-                    'Izin'         => $rekap['izin']++,
-                    'Sakit'        => $rekap['sakit']++,
-                    'Dinas Luar'   => $rekap['dinas']++,
-                    default        => $rekap['alpa']++,
+                    'Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar' => $rekap['hadir']++,
+                    'Izin'                                            => $rekap['izin']++,
+                    'Sakit'                                           => $rekap['sakit']++,
+                    default                                           => $rekap['alpa']++,
                 };
             } elseif ($isWeekend || $hariLiburs) {
                 $rekap['libur']++;
@@ -98,7 +95,7 @@ class LaporanController extends Controller
 
         foreach ($pegawais as $p) {
             $kehadiranMap = $semuaKehadiran->get($p->id, collect())->keyBy(fn($k) => Carbon::parse($k->tanggal)->format('Y-m-d'));
-            $pSummary = ['H' => 0, 'T' => 0, 'A' => 0, 'I' => 0, 'D' => 0, 'L' => 0];
+            $pSummary = ['H' => 0, 'I' => 0, 'S' => 0, 'A' => 0, 'L' => 0];
 
             for ($d = 1; $d <= $daysInMonth; $d++) {
                 $dateStr = sprintf("%04d-%02d-%02d", $tahun, $bulan, $d);
@@ -111,11 +108,10 @@ class LaporanController extends Controller
 
                 if (isset($kehadiranMap[$dateStr])) {
                     $code = match ($kehadiranMap[$dateStr]->status) {
-                        'Hadir', 'Tepat Waktu' => 'H',
-                        'Terlambat'            => 'T',
-                        'Izin', 'Sakit'        => 'I',
-                        'Dinas Luar'           => 'D',
-                        default                => 'A',
+                        'Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar' => 'H',
+                        'Izin'                                            => 'I',
+                        'Sakit'                                           => 'S',
+                        default                                           => 'A',
                     };
                 } elseif ($isHoliday) {
                     $code = 'L';
@@ -132,7 +128,7 @@ class LaporanController extends Controller
             }
 
             $totalHariKerja = $daysInMonth - $pSummary['L'];
-            $totalHadir     = $pSummary['H'] + $pSummary['T'];
+            $totalHadir     = $pSummary['H'];
             $pSummary['persen'] = $totalHariKerja > 0
                 ? round(($totalHadir / $totalHariKerja) * 100, 1)
                 : 0;
@@ -204,23 +200,23 @@ class LaporanController extends Controller
             $totalHadir = 0;
             $totalAlpa  = 0;
             $totalIzin  = 0;
-            $totalDinas = 0;
+            $totalSakit = 0;
             $totalHariKerja = 0;
 
             for ($m = 1; $m <= 12; $m++) {
                 $kehadiranBulan = $semuaKehadiran->get($p->id, collect())->get($m, collect());
 
-                $mHadir = $kehadiranBulan->whereIn('status', ['Hadir', 'Tepat Waktu', 'Terlambat'])->count();
+                $mHadir = $kehadiranBulan->whereIn('status', ['Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar'])->count();
                 $mAlpa  = $kehadiranBulan->where('status', 'Alpa')->count();
-                $mIzin  = $kehadiranBulan->whereIn('status', ['Izin', 'Sakit'])->count();
-                $mDinas = $kehadiranBulan->where('status', 'Dinas Luar')->count();
+                $mIzin  = $kehadiranBulan->where('status', 'Izin')->count();
+                $mSakit = $kehadiranBulan->where('status', 'Sakit')->count();
 
                 $mHariKerja = $hariKerjaPerBulan[$m];
                 $rowData[$m] = [
                     'hadir'       => $mHadir,
                     'alpa'        => $mAlpa,
                     'izin'        => $mIzin,
-                    'dinas'       => $mDinas,
+                    'sakit'       => $mSakit,
                     'hari_kerja'  => $mHariKerja,
                     'persen'      => $mHariKerja > 0 ? round(($mHadir / $mHariKerja) * 100, 0) : 0,
                 ];
@@ -228,7 +224,7 @@ class LaporanController extends Controller
                 $totalHadir     += $mHadir;
                 $totalAlpa      += $mAlpa;
                 $totalIzin      += $mIzin;
-                $totalDinas     += $mDinas;
+                $totalSakit     += $mSakit;
                 $totalHariKerja += $mHariKerja;
             }
 
@@ -237,7 +233,7 @@ class LaporanController extends Controller
                 'total_hadir'    => $totalHadir,
                 'total_alpa'     => $totalAlpa,
                 'total_izin'     => $totalIzin,
-                'total_dinas'    => $totalDinas,
+                'total_sakit'    => $totalSakit,
                 'total_hk'       => $totalHariKerja,
                 'persen_tahunan' => $totalHariKerja > 0 ? round(($totalHadir / $totalHariKerja) * 100, 1) : 0,
             ];
@@ -252,39 +248,6 @@ class LaporanController extends Controller
         ))->setPaper('a4', 'landscape');
 
         $filename = "Laporan_Tahunan_Presensi_{$tahun}.pdf";
-        return $pdf->stream($filename);
-    }
-
-    // =========================================================
-    //  LAPORAN 4: DAFTAR PEMBAYARAN SILTAP
-    // =========================================================
-    public function laporanSiltap(Request $request)
-    {
-        $bulan = (int) $request->input('bulan', date('m'));
-        $tahun = (int) $request->input('tahun', date('Y'));
-
-        $carbonBulan = Carbon::createFromDate($tahun, $bulan, 1);
-        $namaBulan   = $carbonBulan->translatedFormat('F');
-
-        $rekaps = RekapSiltap::with(['pegawai.jabatan'])
-            ->where('bulan', $bulan)->where('tahun', $tahun)
-            ->orderBy('created_at')->get();
-
-        $totalBruto     = $rekaps->sum('siltap_bruto');
-        $totalPotongan  = $rekaps->sum(fn($r) => $r->potongan_alpa + $r->potongan_terlambat);
-        $totalNeto      = $rekaps->sum('siltap_neto');
-
-        $kades  = Pegawai::whereHas('jabatan', fn($q) => $q->where('kode_jabatan', 'KADES'))->first();
-        $sekdes = Pegawai::whereHas('jabatan', fn($q) => $q->where('kode_jabatan', 'SEKDES'))->first();
-        $nomorLaporan = sprintf('004/SLTAP/%02d/%d', $bulan, $tahun);
-
-        $pdf = Pdf::loadView('reports.laporan-siltap-pdf', compact(
-            'bulan', 'tahun', 'namaBulan', 'rekaps',
-            'totalBruto', 'totalPotongan', 'totalNeto',
-            'kades', 'sekdes', 'nomorLaporan'
-        ))->setPaper('a4', 'landscape');
-
-        $filename = "Daftar_Siltap_{$namaBulan}_{$tahun}.pdf";
         return $pdf->stream($filename);
     }
 }

@@ -80,94 +80,105 @@ class PengajuanAbsenManager extends Component
     // ─── Eksekusi Setujui ─────────────────────────────────────────────────────
     public function setujui(): void
     {
-        \Illuminate\Support\Facades\DB::transaction(function () {
-            $pengajuan = PengajuanAbsenLuar::where('id', $this->actionTargetId)->lockForUpdate()->firstOrFail();
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () {
+                $pengajuan = PengajuanAbsenLuar::where('id', $this->actionTargetId)->lockForUpdate()->firstOrFail();
 
-            if ($pengajuan->status !== 'menunggu') {
-                $err = 'Pengajuan ini sudah diproses sebelumnya.';
-                session()->flash('error', $err);
-                $this->dispatch('notify', message: $err, type: 'error');
-                $this->tutupModal();
-                return;
-            }
+                if ($pengajuan->status !== 'menunggu') {
+                    $err = 'Pengajuan ini sudah diproses sebelumnya.';
+                    session()->flash('error', $err);
+                    $this->dispatch('notify', message: $err, type: 'error');
+                    return;
+                }
 
-            $pengajuan->update([
-                'status'        => 'disetujui',
-                'catatan_admin' => $this->catatanAdmin ?: null,
-                'diproses_oleh' => Auth::id(),
-                'diproses_pada' => now(),
-            ]);
+                $pengajuan->update([
+                    'status'        => 'disetujui',
+                    'catatan_admin' => $this->catatanAdmin ?: null,
+                    'diproses_oleh' => Auth::id(),
+                    'diproses_pada' => now(),
+                ]);
 
-            // Otomatis buat / update record kehadiran
-            $this->buatAtauUpdateKehadiran($pengajuan);
+                // Otomatis buat / update record kehadiran
+                $this->buatAtauUpdateKehadiran($pengajuan);
 
-            \App\Models\AuditLog::create([
-                'user_id'   => Auth::id(),
-                'user_name' => Auth::user()->name ?? 'Admin',
-                'role'      => Auth::user()->role ?? 'Admin',
-                'aktivitas' => "Menyetujui pengajuan absen luar {$pengajuan->label_jenis} pegawai {$pengajuan->pegawai->nama_lengkap}",
-                'modul'     => 'Persetujuan Absen Luar',
-            ]);
+                \App\Models\AuditLog::create([
+                    'user_id'   => Auth::id(),
+                    'user_name' => Auth::user()->name ?? 'Admin',
+                    'role'      => Auth::user()->role ?? 'Admin',
+                    'aktivitas' => "Menyetujui pengajuan absen luar {$pengajuan->label_jenis} pegawai {$pengajuan->pegawai->nama_lengkap}",
+                    'modul'     => 'Persetujuan Absen Luar',
+                ]);
 
-            $msg = "Pengajuan dari {$pengajuan->pegawai->nama_lengkap} berhasil DISETUJUI.";
-            session()->flash('success', $msg);
-            $this->dispatch('notify', message: $msg, type: 'success');
-            $this->dispatch('refresh-notifications');
+                $msg = "Pengajuan dari {$pengajuan->pegawai->nama_lengkap} berhasil DISETUJUI.";
+                session()->flash('success', $msg);
+                $this->dispatch('notify', message: $msg, type: 'success');
+                $this->dispatch('refresh-notifications');
+            });
+        } finally {
             $this->tutupModal();
-        });
+        }
     }
 
     // ─── Eksekusi Tolak ───────────────────────────────────────────────────────
     public function tolak(): void
     {
         $this->validate([
-            'catatanAdmin' => 'required|string|min:10|max:500',
+            'catatanAdmin' => 'required|string|min:5|max:500',
         ], [
-            'catatanAdmin.required' => 'Wajib isi alasan penolakan (minimal 10 karakter).',
-            'catatanAdmin.min'      => 'Alasan penolakan minimal 10 karakter.',
+            'catatanAdmin.required' => 'Wajib isi alasan penolakan.',
+            'catatanAdmin.min'      => 'Alasan penolakan minimal 5 karakter.',
         ]);
 
-        \Illuminate\Support\Facades\DB::transaction(function () {
-            $pengajuan = PengajuanAbsenLuar::where('id', $this->actionTargetId)->lockForUpdate()->firstOrFail();
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () {
+                $pengajuan = PengajuanAbsenLuar::where('id', $this->actionTargetId)->lockForUpdate()->firstOrFail();
 
-            if ($pengajuan->status !== 'menunggu') {
-                $err = 'Pengajuan ini sudah diproses sebelumnya.';
-                session()->flash('error', $err);
-                $this->dispatch('notify', message: $err, type: 'error');
-                $this->tutupModal();
-                return;
-            }
+                if ($pengajuan->status !== 'menunggu') {
+                    $err = 'Pengajuan ini sudah diproses sebelumnya.';
+                    session()->flash('error', $err);
+                    $this->dispatch('notify', message: $err, type: 'error');
+                    return;
+                }
 
-            $pengajuan->update([
-                'status'        => 'ditolak',
-                'catatan_admin' => $this->catatanAdmin,
-                'diproses_oleh' => Auth::id(),
-                'diproses_pada' => now(),
-            ]);
+                $pengajuan->update([
+                    'status'        => 'ditolak',
+                    'catatan_admin' => $this->catatanAdmin,
+                    'diproses_oleh' => Auth::id(),
+                    'diproses_pada' => now(),
+                ]);
 
-            \App\Models\AuditLog::create([
-                'user_id'   => Auth::id(),
-                'user_name' => Auth::user()->name ?? 'Admin',
-                'role'      => Auth::user()->role ?? 'Admin',
-                'aktivitas' => "Menolak pengajuan absen luar {$pengajuan->label_jenis} pegawai {$pengajuan->pegawai->nama_lengkap}",
-                'modul'     => 'Persetujuan Absen Luar',
-            ]);
+                \App\Models\AuditLog::create([
+                    'user_id'   => Auth::id(),
+                    'user_name' => Auth::user()->name ?? 'Admin',
+                    'role'      => Auth::user()->role ?? 'Admin',
+                    'aktivitas' => "Menolak pengajuan absen luar {$pengajuan->label_jenis} pegawai {$pengajuan->pegawai->nama_lengkap} (Alasan: {$this->catatanAdmin})",
+                    'modul'     => 'Persetujuan Absen Luar',
+                ]);
 
-            $msg = "Pengajuan dari {$pengajuan->pegawai->nama_lengkap} telah DITOLAK.";
-            session()->flash('success', $msg);
-            $this->dispatch('notify', message: $msg, type: 'info');
-            $this->dispatch('refresh-notifications');
+                $msg = "Pengajuan dari {$pengajuan->pegawai->nama_lengkap} telah DITOLAK.";
+                session()->flash('success', $msg);
+                $this->dispatch('notify', message: $msg, type: 'info');
+                $this->dispatch('refresh-notifications');
+            });
+        } finally {
             $this->tutupModal();
-        });
+        }
     }
 
     // ─── Helper: Buat/Update Record Kehadiran ────────────────────────────────
     private function buatAtauUpdateKehadiran(PengajuanAbsenLuar $pengajuan): void
     {
-        $kehadiran = Kehadiran::firstOrNew([
-            'pegawai_id' => $pengajuan->pegawai_id,
-            'tanggal'    => $pengajuan->tanggal->toDateString(),
-        ]);
+        $dateStr = $pengajuan->tanggal->toDateString();
+        $kehadiran = Kehadiran::where('pegawai_id', $pengajuan->pegawai_id)
+            ->whereDate('tanggal', $dateStr)
+            ->first();
+
+        if (!$kehadiran) {
+            $kehadiran = new Kehadiran([
+                'pegawai_id' => $pengajuan->pegawai_id,
+                'tanggal'    => $dateStr,
+            ]);
+        }
 
         $labelJenis = $pengajuan->label_jenis;
         if ($pengajuan->jenis === 'dinas_luar_undangan' && $pengajuan->instansi_pengundang) {
@@ -176,7 +187,7 @@ class PengajuanAbsenManager extends Component
             $labelJenis .= ' (SPT: ' . $pengajuan->nomor_surat_tugas . ')';
         }
 
-        $kehadiran->status            = $pengajuan->jenis === 'kegiatan_sosial' ? 'Hadir' : 'Dinas Luar';
+        $kehadiran->status            = 'Hadir';
         $kehadiran->sumber_data       = 'pengajuan_luar';
         $kehadiran->keterangan        = "[{$labelJenis}] {$pengajuan->judul}";
         $kehadiran->diverifikasi_oleh = Auth::id();
@@ -187,7 +198,7 @@ class PengajuanAbsenManager extends Component
         }
 
         // Tanda tangan dari pengajuan → simpan ke kolom tanda_tangan_masuk
-        if ($pengajuan->tanda_tangan && !$kehadiran->tanda_tangan_masuk) {
+        if ($pengajuan->tanda_tangan) {
             $kehadiran->tanda_tangan_masuk = $pengajuan->tanda_tangan;
         }
 
@@ -200,7 +211,7 @@ class PengajuanAbsenManager extends Component
         $query = PengajuanAbsenLuar::with(['pegawai.jabatan', 'user', 'diprosesoleh'])
             ->when($this->filterStatus, fn($q) => $q->where('status', $this->filterStatus))
             ->when($this->filterJenis, fn($q) => $q->where('jenis', $this->filterJenis))
-            ->when($this->filterTanggal, fn($q) => $q->where('tanggal', $this->filterTanggal))
+            ->when($this->filterTanggal, fn($q) => $q->whereDate('tanggal', $this->filterTanggal))
             ->when($this->filterCari, fn($q) => $q->whereHas('pegawai', function ($sq) {
                 $sq->where('nama_lengkap', 'like', '%' . $this->filterCari . '%');
             }))

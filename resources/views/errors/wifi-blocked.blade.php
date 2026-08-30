@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akses Ditolak — Presence Desa Nangtang</title>
+    <title>Akses Ditolak — N-DesaPresence Desa Nangtang</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-tasikmalaya.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -34,10 +35,10 @@
 
         {{-- Logo Desa --}}
         <div class="text-center mb-6">
-            <div class="w-16 h-16 rounded-full border-2 border-[#C9A84C] flex items-center justify-center bg-[#04392B] shadow-xl mx-auto mb-3">
-                <span style="font-family:'Outfit',sans-serif;" class="text-3xl font-extrabold text-[#C9A84C]">N</span>
+            <div class="mb-3 flex justify-center">
+                <img src="{{ asset('images/logo-tasikmalaya.png') }}" alt="Logo Kab. Tasikmalaya" class="h-20 w-auto object-contain filter drop-shadow-md">
             </div>
-            <p class="text-[#C9A84C] text-xs font-semibold tracking-widest uppercase">Desa Nangtang — Cigalontang</p>
+            <p class="text-[#C9A84C] text-xs font-semibold tracking-widest uppercase">N-DesaPresence — Desa Nangtang</p>
         </div>
 
         {{-- Error Card --}}
@@ -101,8 +102,8 @@
             </a>
         </div>
 
-        <p class="text-center text-emerald-300/30 text-xs mt-6">
-            SADI v2.0 — Desa Nangtang {{ date('Y') }}
+        <p class="text-center text-emerald-300/40 text-xs mt-6">
+            N-DesaPresence — KKN 0226 LP3I Tasikmalaya &copy; 2026
         </p>
     </div>
 </body>

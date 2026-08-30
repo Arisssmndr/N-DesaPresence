@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Presence Desa — Sistem Absensi Desa Nangtang' }}</title>
+    <title>{{ $title ?? 'N-DesaPresence — Sistem Absensi Desa Nangtang' }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-tasikmalaya.png') }}">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -143,108 +144,174 @@
             <!-- Brand Header -->
             <div class="px-5 py-4 border-b border-emerald-800/50 shrink-0">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full border-2 border-[#C9A84C] flex items-center justify-center bg-[#04392B] shadow-md shrink-0">
-                        <span class="font-outfit text-xl font-extrabold text-[#C9A84C]">N</span>
-                    </div>
+                    <img src="{{ asset('images/logo-tasikmalaya.png') }}" alt="Logo Kab. Tasikmalaya" class="h-10 w-auto object-contain shrink-0 filter drop-shadow">
                     <div class="overflow-hidden">
-                        <h1 class="font-outfit text-base font-bold tracking-tight text-white leading-tight truncate">DESA NANGTANG</h1>
-                        <p class="text-[10px] text-[#C9A84C] tracking-wider font-semibold uppercase leading-tight truncate">Presence Desa — Presensi Digital</p>
+                        <h1 class="font-outfit text-base font-bold tracking-tight text-white leading-tight truncate">N-DesaPresence</h1>
+                        <p class="text-[10px] text-[#C9A84C] tracking-wider font-semibold uppercase leading-tight truncate">Desa Nangtang — Kab. Tasikmalaya</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Navigation Menu (Categorized & Flex-1 Scrollable with wire:navigate SPA) -->
+            <!-- Navigation Menu (Categorized & Flex-1 Scrollable by Frequency of Use) -->
             <nav class="px-3 py-3 space-y-4 flex-1 overflow-y-auto custom-sidebar-scroll">
 
-                <!-- KATEGORI 1: UTAMA -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- KATEGORI: DASHBOARD & MATRIKS PRESENSI                      -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
                 <div class="space-y-1">
-                    <div class="px-3 text-[10px] font-bold uppercase tracking-wider text-emerald-300/60">Utama</div>
+                    <div class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-[#C9A84C]">Dashboard</div>
                     <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('dashboard') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                         <span>Dashboard Real-Time</span>
                     </a>
-                    <a href="{{ route('analitik.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('analitik.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                        <span>Analitik Kedisiplinan</span>
-                    </a>
-                </div>
-
-                <!-- KATEGORI 2: PRESENSI & KEDINASAN -->
-                <div class="space-y-1">
-                    <div class="px-3 text-[10px] font-bold uppercase tracking-wider text-emerald-300/60">Presensi & Kedinasan</div>
-                    <a href="{{ route('pegawai.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('pegawai.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                        <span>Master Pegawai</span>
-                    </a>
+                    {{-- BUKU MATRIKS PRESENSI HARIAN --}}
                     <a href="{{ route('matriks.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('matriks.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
                         <span>Buku Matriks Presensi</span>
                     </a>
-                    <a href="{{ route('siltap.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('siltap.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span>Kalkulasi Siltap</span>
-                    </a>
-                    <a href="{{ route('spt.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('spt.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        <span>SPT Kedinasan</span>
-                    </a>
-                    <a href="{{ route('izin.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('izin.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                        <span>Izin & Sakit</span>
-                    </a>
-                    {{-- ═══ PENGAJUAN ABSEN LUAR (dengan badge notifikasi) ═══ --}}
-                    @php $jmlPengajuanMenunggu = \App\Models\PengajuanAbsenLuar::where('status','menunggu')->count(); @endphp
+                </div>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- KATEGORI 1: OPERASIONAL & PERSETUJUAN HARIAN (SERING DIPAKAI) -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <div class="space-y-1">
+                    <div class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-[#C9A84C]">Operasional & Persetujuan Harian</div>
+
+                    {{-- PENGAJUAN ABSEN LUAR (High Priority Daily Approval) --}}
+                    @php 
+                        $jmlPengajuanMenunggu = \Illuminate\Support\Facades\Cache::remember('sidebar_pengajuan_menunggu_count', 30, function() {
+                            return \App\Models\PengajuanAbsenLuar::where('status','menunggu')->count();
+                        });
+                    @endphp
                     <a href="{{ route('pengajuan-absen.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('pengajuan-absen.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 4h.01M9 12h.01M9 16h.01M13 12h4m-4 4h2"/></svg>
-                        <span class="flex-1">Absen Luar</span>
+                        <span class="flex-1">Pengajuan Absen Luar</span>
                         @if($jmlPengajuanMenunggu > 0)
-                        <span class="text-[10px] font-extrabold bg-red-500 text-white px-1.5 py-0.5 rounded-full leading-none animate-pulse">{{ $jmlPengajuanMenunggu }}</span>
+                        <span class="text-[10px] font-extrabold bg-rose-500 text-white px-1.5 py-0.5 rounded-full leading-none animate-pulse">{{ $jmlPengajuanMenunggu }}</span>
                         @endif
                     </a>
-                    <a href="{{ route('laporan.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('laporan.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                        <span>Pusat Laporan</span>
+
+                    {{-- PERMOHONAN IZIN & SAKIT (High Priority Daily Approval) --}}
+                    @php 
+                        $jmlIzinMenunggu = \Illuminate\Support\Facades\Cache::remember('sidebar_izin_menunggu_count', 30, function() {
+                            return \App\Models\IzinSakit::where('status','menunggu')->count();
+                        });
+                    @endphp
+                    <a href="{{ route('izin.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('izin.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        <span class="flex-1">Izin, Cuti & Sakit</span>
+                        @if($jmlIzinMenunggu > 0)
+                        <span class="text-[10px] font-extrabold bg-amber-500 text-white px-1.5 py-0.5 rounded-full leading-none animate-pulse">{{ $jmlIzinMenunggu }}</span>
+                        @endif
+                    </a>
+
+                    {{-- SURAT PERINTAH TUGAS (SPT) --}}
+                    <a href="{{ route('spt.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('spt.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span>Surat Perintah Tugas (SPT)</span>
+                    </a>
+
+                    {{-- JADWAL PIKET KANTOR --}}
+                    <a href="{{ route('jadwal-piket.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('jadwal-piket.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Jadwal Piket Kantor</span>
+                    </a>
+
+                    {{-- PENGUMUMAN & NOTIFIKASI --}}
+                    <a href="{{ route('pengumuman.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('pengumuman.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+                        <span>Pengumuman & Siaran</span>
+                    </a>
+
+                    {{-- OVERRIDE PRESENSI MANUAL --}}
+                    <a href="{{ route('attendance.override') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('attendance.override*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <span>Override Presensi Manual</span>
                     </a>
                 </div>
 
-                <!-- KATEGORI 3: PENGATURAN & OPERASIONAL -->
-                <div class="space-y-1">
-                    <div class="px-3 text-[10px] font-bold uppercase tracking-wider text-emerald-300/60">Pengaturan & Operasional</div>
-                    <a href="{{ route('pengumuman.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('pengumuman.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
-                        <span>Pengumuman</span>
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- KATEGORI 2: LAPORAN & ANALITIK (REKAP BERKALA)              -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <div class="space-y-1 pt-1">
+                    <div class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-[#C9A84C]">Laporan & Analitik</div>
+                    
+                    <a href="{{ route('laporan.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('laporan.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                        <span>Pusat Laporan Kedinasan</span>
                     </a>
-                    <a href="{{ route('shift.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('shift.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span>Shift Kerja</span>
+
+                    <a href="{{ route('analitik.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('analitik.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        <span>Analitik Kedisiplinan</span>
                     </a>
-                    <a href="{{ route('hari-libur.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('hari-libur.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        <span>Hari Libur</span>
+
+                    @if(auth()->user()->isAdmin())
+                    <a href="{{ route('laporan-disesuaikan.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('laporan-disesuaikan.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <span class="flex-1 text-[#E2C268] font-bold">Laporan Disesuaikan</span>
+                        <span class="text-[9px] font-extrabold bg-[#C9A84C] text-[#064E3B] px-1.5 py-0.5 rounded-full leading-none">Sekdes</span>
                     </a>
-                    <a href="{{ route('admin.profil') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('admin.profil*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        <span>Pengaturan Akun & Password</span>
+                    @endif
+                </div>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- KATEGORI 3: DATA MASTER KEPEGAWAIAN (JARANG DIUBAH HARIAN)  -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <div class="space-y-1 pt-1">
+                    <div class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-[#C9A84C]">Data Master Kepegawaian</div>
+                    
+                    <a href="{{ route('pegawai.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('pegawai.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        <span>Data Pegawai & Perangkat</span>
                     </a>
+                    
                     <a href="{{ route('user-staf.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('user-staf.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                        <span>Akun Staf Desa</span>
+                        <span>Akun Pengguna Staf</span>
                     </a>
+                    
+                    <a href="{{ route('shift.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('shift.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Master Shift Kerja</span>
+                    </a>
+                    
+                    <a href="{{ route('hari-libur.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('hari-libur.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span>Kalender & Hari Libur</span>
+                    </a>
+
+                    <a href="{{ route('attendance.import') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('attendance.import*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                        <span>Log Absensi Mesin</span>
+                    </a>
+                </div>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- KATEGORI 4: PENGATURAN & KONFIGURASI SISTEM (PALING JARANG) -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <div class="space-y-1 pt-1">
+                    <div class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-[#C9A84C]">Pengaturan Sistem & Profil</div>
+                    
                     <a href="{{ route('konfigurasi-absensi.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('konfigurasi-absensi.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         <span>Jam & Waktu Absensi</span>
                     </a>
+                    
                     <a href="{{ route('konfigurasi-wifi.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('konfigurasi-wifi.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
-                        <span>Konfigurasi WiFi</span>
+                        <span>Konfigurasi WiFi Desa</span>
                     </a>
-                    <a href="{{ route('attendance.import') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('attendance.import*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-                        <span>Log Absensi Digital</span>
+                    
+                    <a href="{{ route('konfigurasi-wa.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('konfigurasi-wa.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-5.805 1.554z"/></svg>
+                        <span>Konfigurasi WhatsApp</span>
                     </a>
-                    <a href="{{ route('attendance.override') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('attendance.override*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                        <span>Override Manual</span>
+                    
+                    {{-- PROFILE ADMIN AT THE VERY BOTTOM --}}
+                    <a href="{{ route('admin.profil') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('admin.profil*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <span>Pengaturan Akun & Profil</span>
                     </a>
                 </div>
 
@@ -271,7 +338,7 @@
 
             <!-- Footer Sidebar Info -->
             <div class="p-3 border-t border-emerald-800/50 text-center shrink-0">
-                <p class="text-[11px] text-emerald-200/70">KKN Universitas &copy; {{ date('Y') }}</p>
+                <p class="text-[11px] text-emerald-200/80 font-medium">KKN 0226 LP3I Tasikmalaya &copy; 2026</p>
                 <p class="text-[10px] text-[#C9A84C] font-semibold">Pemerintah Desa Nangtang</p>
             </div>
         </aside>
@@ -286,17 +353,17 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
                     <div>
-                        <h2 class="font-outfit text-xl font-bold text-emerald-950 tracking-tight">PRESENCE DESA NANGTANG</h2>
+                        <h2 class="font-outfit text-xl font-bold text-emerald-950 tracking-tight">N-DESAPRESENCE DESA NANGTANG</h2>
                         <p class="text-xs text-slate-500 font-medium">Selamat Datang, {{ auth()->user()->name ?? 'User' }}</p>
                     </div>
                 </div>
 
-                <!-- Right Action Bar: Search, Bell, User Profile -->
+                <!-- Right Action Bar: Clock/Date badge, Bell, User Profile -->
                 <div class="flex items-center gap-4">
-                    <!-- Search Input -->
-                    <div class="relative hidden sm:block">
-                        <input type="text" placeholder="Cari..." class="w-56 pl-9 pr-4 py-2 text-xs rounded-full bg-white/80 border border-[#C9A84C]/30 focus:outline-none focus:ring-2 focus:ring-[#C9A84C] text-slate-700 shadow-sm">
-                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <!-- Tanggal & Jam Realtime Info -->
+                    <div class="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#C9A84C]/30 text-xs font-semibold text-slate-700 shadow-xs">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>{{ now()->translatedFormat('l, d M Y') }}</span>
                     </div>
 
                     <!-- Bell Notifications (Livewire Component with Dynamic Badge & Dropdown) -->

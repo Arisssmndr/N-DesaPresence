@@ -26,6 +26,7 @@ use App\Livewire\KonfigurasiAbsensiManager;
 use App\Livewire\UserStafManager;
 use App\Livewire\PengajuanAbsenManager;
 use App\Livewire\AdminProfilManager;
+use App\Livewire\KonfigurasiWhatsAppManager;
 use App\Livewire\LaporanDisesuaikanManager;
 use App\Http\Controllers\LaporanDisesuaikanController;
 
@@ -104,6 +105,7 @@ Route::middleware(['auth', 'role:admin,kepala_desa'])->group(function () {
     Route::get('/akun-staf', UserStafManager::class)->name('user-staf.index');
     Route::get('/konfigurasi-absensi', KonfigurasiAbsensiManager::class)->name('konfigurasi-absensi.index');
     Route::get('/konfigurasi-wifi', KonfigurasiWifiManager::class)->name('konfigurasi-wifi.index');
+    Route::get('/konfigurasi-wa', KonfigurasiWhatsAppManager::class)->name('konfigurasi-wa.index');
 
     // Phase 4 Routes (Matriks, PDF SPJ, Analitik)
     Route::get('/matriks', MatriksPresensi::class)->name('matriks.index');

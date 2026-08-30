@@ -108,12 +108,17 @@
                 <p class="text-[11px] text-slate-400 mt-1">Staf biasa/perangkat dapat login tanpa password menggunakan username via portal mobile WiFi Desa.</p>
             </div>
 
-            <div class="flex items-center gap-3 sm:col-span-2 pt-2">
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" wire:model="form.is_active" class="sr-only peer">
-                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#064E3B]"></div>
+            <div class="sm:col-span-2 pt-2">
+                <label class="inline-flex items-center gap-3.5 cursor-pointer select-none p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition w-full sm:w-auto">
+                    <div class="relative shrink-0 inline-flex items-center">
+                        <input type="checkbox" wire:model="form.is_active" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:bg-[#064E3B] transition-colors duration-200 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:duration-200 after:shadow-sm peer-checked:after:translate-x-5"></div>
+                    </div>
+                    <div>
+                        <span class="text-xs font-extrabold text-slate-900 block">Akun aktif & dapat melakukan presensi</span>
+                        <span class="text-[10.5px] text-slate-500 font-medium block">Nonaktifkan jika staf sedang cuti panjang atau tidak aktif bertugas</span>
+                    </div>
                 </label>
-                <span class="text-sm text-slate-700 font-medium">Akun aktif & dapat melakukan presensi</span>
             </div>
         </div>
 

@@ -12,7 +12,7 @@
                     default                   => 'Selamat Malam',
                 };
             @endphp
-            <h1 class="font-outfit text-3xl font-bold text-[#064E3B] tracking-tight">PRESENCE DESA NANGTANG</h1>
+            <h1 class="font-outfit text-3xl font-bold text-[#064E3B] tracking-tight">N-DESAPRESENCE DESA NANGTANG</h1>
             <p class="text-sm text-slate-600 mt-1 font-medium">{{ $greeting }}, <span class="text-[#064E3B] font-bold">{{ auth()->user()->name }}</span> ({{ ucfirst(auth()->user()->role) }})</p>
         </div>
 

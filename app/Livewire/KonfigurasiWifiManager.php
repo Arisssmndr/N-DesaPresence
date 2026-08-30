@@ -61,6 +61,11 @@ class KonfigurasiWifiManager extends Component
     {
         $this->validate();
 
+        if ($this->form['is_active']) {
+            // Kebijakan 1 Jaringan Resmi Desa Aktif: Nonaktifkan jaringan lainnya
+            KonfigurasiWifi::where('id', '!=', $this->editingId ?? 0)->update(['is_active' => false]);
+        }
+
         if ($this->editingId) {
             $wifi = KonfigurasiWifi::findOrFail($this->editingId);
             $wifi->update($this->form);
@@ -89,9 +94,16 @@ class KonfigurasiWifiManager extends Component
     public function toggleAktif(int $id): void
     {
         $wifi = KonfigurasiWifi::findOrFail($id);
-        $wifi->update(['is_active' => !$wifi->is_active]);
-        $status = $wifi->fresh()->is_active ? 'diaktifkan' : 'dinonaktifkan';
-        $msg = "Jaringan \"{$wifi->nama_jaringan}\" berhasil {$status}.";
+        if (!$wifi->is_active) {
+            // Kebijakan 1 Jaringan Resmi Desa Aktif: Mengaktifkan jaringan ini akan otomatis menonaktifkan jaringan lainnya
+            KonfigurasiWifi::where('id', '!=', $id)->update(['is_active' => false]);
+            $wifi->update(['is_active' => true]);
+            $msg = "Jaringan \"{$wifi->nama_jaringan}\" berhasil diaktifkan sebagai Jaringan WiFi Utama Kantor Desa.";
+        } else {
+            $wifi->update(['is_active' => false]);
+            $msg = "Jaringan \"{$wifi->nama_jaringan}\" dinonaktifkan.";
+        }
+        
         session()->flash('success', $msg);
         $this->dispatch('notify', message: $msg, type: 'info');
     }

@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Portal Presensi Staf — Desa Nangtang' }}</title>
+    <title>{{ $title ?? 'N-DesaPresence — Portal Presensi Staf Desa Nangtang' }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-tasikmalaya.png') }}">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -55,12 +56,10 @@
     <header class="bg-[#064E3B] text-white px-5 py-4 sticky top-0 z-30 shadow-lg border-b border-[#C9A84C]/30">
         <div class="max-w-lg mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full border-2 border-[#C9A84C] flex items-center justify-center bg-[#04392B] shadow shrink-0">
-                    <span class="font-outfit text-xl font-extrabold text-[#C9A84C]">N</span>
-                </div>
+                <img src="{{ asset('images/logo-tasikmalaya.png') }}" alt="Logo Kab. Tasikmalaya" class="h-10 w-auto object-contain shrink-0 filter drop-shadow">
                 <div>
-                    <h1 class="font-outfit text-base font-bold tracking-tight text-white leading-tight">DESA NANGTANG</h1>
-                    <p class="text-[10px] text-[#C9A84C] tracking-wider font-semibold uppercase">Portal Presensi Digital Staf</p>
+                    <h1 class="font-outfit text-base font-bold tracking-tight text-white leading-tight">N-DesaPresence</h1>
+                    <p class="text-[10px] text-[#C9A84C] tracking-wider font-semibold uppercase">Portal Presensi Staf & Perangkat</p>
                 </div>
             </div>
 
@@ -145,7 +144,7 @@
     @endauth
 
     <footer class="text-center py-4 text-[11px] text-slate-400 border-t border-[#C9A84C]/10">
-        Pemerintah Desa Nangtang &copy; {{ date('Y') }} — SADI v2.0
+        Pemerintah Desa Nangtang &copy; 2026 — N-DesaPresence (KKN 0226 LP3I Tasikmalaya)
     </footer>
 
     @yield('scripts')

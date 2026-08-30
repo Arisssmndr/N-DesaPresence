@@ -15,7 +15,7 @@
                     default                   => 'Selamat Malam',
                 };
             @endphp
-            <h1 class="font-outfit text-3xl font-bold text-[#064E3B] tracking-tight">SISTEM ABSENSI DESA NANGTANG</h1>
+            <h1 class="font-outfit text-3xl font-bold text-[#064E3B] tracking-tight">N-DESAPRESENCE DESA NANGTANG</h1>
             <p class="text-sm text-slate-600 mt-1 font-medium">{{ $greeting }}, <span class="text-[#064E3B] font-bold">{{ auth()->user()->name }}</span> ({{ auth()->user()->role }})</p>
         </div>
         <div class="flex items-center gap-2">
@@ -151,7 +151,7 @@
                 <div class="space-y-3 text-xs">
                     <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
                         <p class="font-bold text-slate-800">Admin Desa (Sekdes)</p>
-                        <p class="text-[11px] text-slate-600">Login ke sistem SADI</p>
+                        <p class="text-[11px] text-slate-600">Login ke sistem N-DesaPresence</p>
                         <p class="text-[10px] text-slate-400 mt-1">{{ now()->format('H:i:s WIB') }}</p>
                     </div>
                 </div>

@@ -62,12 +62,17 @@ class StafPortalController extends Controller
             ->take(5)
             ->get();
 
-        // Pengumuman aktif untuk perangkat / staf desa
+        // Pengumuman aktif untuk perangkat / staf desa (disesuaikan dengan kategori target penerima)
         $pengumumans = Pengumuman::with('pembuat')
             ->where(function ($query) use ($today) {
                 $query->where('is_pinned', true)
                       ->orWhereNull('berlaku_hingga')
                       ->orWhereDate('berlaku_hingga', '>=', $today);
+            })
+            ->where(function ($query) use ($pegawai) {
+                $query->whereNull('target_penerima')
+                      ->orWhere('target_penerima', 'semua')
+                      ->orWhere('target_penerima', $pegawai->kategori_pegawai);
             })
             ->orderByDesc('is_pinned')
             ->latest()

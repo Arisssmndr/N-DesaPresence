@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Portal Absensi — Desa Nangtang</title>
+    <title>N-DesaPresence — Portal Absensi Desa Nangtang</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-tasikmalaya.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
@@ -83,11 +84,11 @@
 
     {{-- ═══════════════════ HEADER ═══════════════════ --}}
     <div class="text-center pt-4 pb-6">
-        <div class="w-14 h-14 rounded-full border-2 border-[#C9A84C] flex items-center justify-center bg-[#04392B] shadow-xl mx-auto mb-3">
-            <span style="font-family:'Outfit',sans-serif;" class="text-2xl font-extrabold text-[#C9A84C]">N</span>
+        <div class="mb-3 flex justify-center">
+            <img src="{{ asset('images/logo-tasikmalaya.png') }}" alt="Logo Kab. Tasikmalaya" class="h-20 w-auto object-contain filter drop-shadow-md">
         </div>
-        <h1 style="font-family:'Outfit',sans-serif;" class="text-2xl font-extrabold text-white leading-tight">Portal Absensi</h1>
-        <p class="text-[#C9A84C] text-xs font-semibold tracking-widest uppercase mt-1">Desa Nangtang — Cigalontang</p>
+        <h1 style="font-family:'Outfit',sans-serif;" class="text-2xl font-extrabold text-white leading-tight">N-DesaPresence</h1>
+        <p class="text-[#C9A84C] text-xs font-semibold tracking-widest uppercase mt-1">Pemerintah Desa Nangtang — Kab. Tasikmalaya</p>
 
         {{-- Jam Real-Time --}}
         <div class="mt-4 inline-flex items-center gap-2 bg-white/10 border border-white/15 rounded-2xl px-5 py-2.5">
@@ -278,9 +279,9 @@
     </div>
 
     {{-- Footer --}}
-    <div class="text-center mt-8">
-        <p class="text-emerald-300/25 text-xs">SADI v2.0 — Desa Nangtang {{ date('Y') }}</p>
-        <p class="text-emerald-300/20 text-[10px] mt-1">IP: {{ $clientIp }}</p>
+    <div class="text-center mt-8 space-y-1">
+        <p class="text-emerald-300/40 text-xs">KKN 0226 LP3I Tasikmalaya &copy; 2026</p>
+        <p class="text-emerald-300/20 text-[10px]">IP: {{ $clientIp }}</p>
     </div>
 
     <script>

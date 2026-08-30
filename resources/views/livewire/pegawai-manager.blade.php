@@ -66,7 +66,18 @@
                                 </div>
                             </td>
                             <td class="py-3 px-4 font-bold text-slate-800">
-                                {{ $p->nama_lengkap }}
+                                <div class="flex items-center gap-1.5">
+                                    <span>{{ $p->nama_lengkap }}</span>
+                                    @if ($p->jenis_kelamin === 'L')
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200" title="Laki-laki">
+                                            ♂ L
+                                        </span>
+                                    @elseif ($p->jenis_kelamin === 'P')
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-pink-50 text-pink-700 border border-pink-200" title="Perempuan">
+                                            ♀ P
+                                        </span>
+                                    @endif
+                                </div>
                                 <p class="text-[10px] text-slate-400 font-normal">{{ $p->no_hp ?? 'Tidak ada HP' }}</p>
                             </td>
                             <td class="py-3 px-4">
@@ -162,6 +173,16 @@
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nama Lengkap & Gelar <span class="text-red-500">*</span></label>
                             <input type="text" wire:model="nama_lengkap" placeholder="Contoh: Ahmad Sopian, S.IP" class="w-full px-3 py-2 text-xs rounded-xl border border-[#C9A84C]/40 focus:ring-2 focus:ring-[#C9A84C]">
                             @error('nama_lengkap') <span class="text-[11px] text-red-600 font-semibold">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Jenis Kelamin -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Jenis Kelamin <span class="text-red-500">*</span></label>
+                            <select wire:model="jenis_kelamin" class="w-full px-3 py-2 text-xs rounded-xl border border-[#C9A84C]/40 focus:ring-2 focus:ring-[#C9A84C] bg-white font-medium text-slate-800">
+                                <option value="L">♂ Laki-laki</option>
+                                <option value="P">♀ Perempuan</option>
+                            </select>
+                            @error('jenis_kelamin') <span class="text-[11px] text-red-600 font-semibold">{{ $message }}</span> @enderror
                         </div>
 
                         <!-- Username Akun Portal Staf -->

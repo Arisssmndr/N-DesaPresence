@@ -12,7 +12,8 @@
         body { 
             font-family: 'Arial', Helvetica, sans-serif; 
             font-size: 6.8pt; 
-            color: #111827; 
+            color: #000000; 
+            background-color: #ffffff;
             line-height: 1.15; 
             margin: 0; 
             padding: 0;
@@ -39,9 +40,9 @@
         }
         .kop-logo-circle { 
             width: 40px; height: 40px; 
-            border: 1.5px solid #000; border-radius: 50%; 
+            border: 1.5px solid #000000; border-radius: 50%; 
             text-align: center; vertical-align: middle; 
-            font-size: 13pt; font-weight: bold; color: #000; 
+            font-size: 13pt; font-weight: bold; color: #000000; 
             line-height: 40px; display: inline-block; 
         }
         .kop-text-cell { 
@@ -53,6 +54,7 @@
             font-size: 10.5pt; 
             font-weight: bold; 
             text-transform: uppercase; 
+            color: #000000;
             margin: 0; 
             line-height: 1.15;
             letter-spacing: 0.5px;
@@ -61,6 +63,7 @@
             font-size: 9.5pt; 
             font-weight: bold; 
             text-transform: uppercase; 
+            color: #000000;
             margin: 0; 
             line-height: 1.15; 
         }
@@ -68,24 +71,26 @@
             font-size: 11.5pt; 
             font-weight: bold; 
             text-transform: uppercase; 
+            color: #000000;
             margin: 1px 0 0; 
             letter-spacing: 0.8px; 
             line-height: 1.15; 
         }
         .kop-alamat { 
             font-size: 7pt; 
-            color: #374151; 
+            color: #000000; 
             font-style: italic; 
             margin: 1.5px 0 0; 
         }
 
         /* ══════════ JUDUL DOKUMEN (TANPA NOMOR SURAT) ══════════ */
-        .doc-title { text-align: center; margin: 3px 0 4px; }
+        .doc-title { text-align: center; margin: 3px 0 2px; }
         .doc-title h2 { 
             font-size: 9.5pt; 
             font-weight: bold; 
             text-transform: uppercase; 
             text-decoration: underline; 
+            color: #000000;
             margin: 0; 
             letter-spacing: 0.4px; 
         }
@@ -93,40 +98,44 @@
             text-align: center; 
             font-size: 7.5pt; 
             font-weight: bold; 
-            color: #1f2937; 
-            margin: 1.5px 0 4px; 
+            color: #000000; 
+            margin: 2px 0 4px; 
             letter-spacing: 0.3px;
         }
 
-        /* ══════════ TABEL REKAPITULASI ══════════ */
+        /* ══════════ TABEL REKAPITULASI HITAM PUTIH RESMI PEMERINTAHAN ══════════ */
         table.data-table { 
             width: 100%; 
             border-collapse: collapse; 
             font-size: 6.2pt; 
             margin-bottom: 4px;
+            color: #000000;
+            background-color: #ffffff;
         }
         table.data-table th,
         table.data-table td { 
-            border: 0.75pt solid #374151; 
-            padding: 2px 1.5px; 
+            border: 0.75pt solid #000000; 
+            padding: 2.5px 1.5px; 
             text-align: center; 
             vertical-align: middle; 
+            color: #000000;
+            background-color: #ffffff;
         }
         table.data-table th { 
-            background-color: #f1f5f9; 
-            color: #0f172a; 
+            background-color: #f2f2f2; 
+            color: #000000; 
             font-weight: bold; 
             font-size: 6pt;
             line-height: 1.1;
         }
         table.data-table th.th-header-group { 
-            background-color: #e2e8f0; 
+            background-color: #e6e6e6; 
             font-size: 6.2pt; 
             padding: 2.5px 1px;
             letter-spacing: 0.2px;
         }
         table.data-table th.th-akumulasi { 
-            background-color: #cbd5e1; 
+            background-color: #e6e6e6; 
             font-size: 6.2pt; 
             padding: 2.5px 1px;
             letter-spacing: 0.2px;
@@ -148,41 +157,23 @@
         }
         table.data-table td.col-total { 
             font-weight: bold; 
-            background-color: #f8fafc; 
         }
         table.data-table td.col-persen { 
             font-weight: bold; 
-            background-color: #ecfdf5; 
-            color: #065f46;
-        }
-        table.data-table tr.even td { 
-            background-color: #fbfcfd; 
         }
         table.data-table tfoot td { 
-            background-color: #f1f5f9; 
+            background-color: #f2f2f2; 
             font-weight: bold; 
             font-size: 6pt;
-            padding: 2px 1.5px;
+            padding: 2.5px 1.5px;
         }
-
-        /* ══════════ PREDIKAT BADGE ══════════ */
-        .badge-predikat {
-            font-weight: bold;
-            font-size: 5.5pt;
-            display: inline-block;
-            padding: 0.5px 1px;
-        }
-        .predikat-sangat-baik { color: #047857; }
-        .predikat-baik        { color: #1d4ed8; }
-        .predikat-cukup       { color: #b45309; }
-        .predikat-kurang      { color: #b91c1c; }
 
         /* ══════════ KETERANGAN & TANDA TANGAN ══════════ */
         .info-bottom {
             width: 100%;
             margin-top: 2px;
             font-size: 5.8pt;
-            color: #4b5563;
+            color: #000000;
         }
         .ttd-table { 
             width: 100%; 
@@ -193,6 +184,7 @@
             width: 50%; 
             text-align: center; 
             font-size: 7.2pt; 
+            color: #000000;
             vertical-align: top; 
             line-height: 1.2; 
         }
@@ -204,16 +196,17 @@
             text-decoration: underline; 
             margin: 0; 
             font-size: 7.8pt; 
+            color: #000000;
         }
         .ttd-nipd  { 
             font-size: 6.8pt; 
             margin: 1px 0 0; 
-            color: #111827;
+            color: #000000;
         }
         .footer-note { 
             margin-top: 2px; 
             font-size: 5.5pt; 
-            color: #6b7280; 
+            color: #000000; 
             font-style: italic; 
         }
         .no-break { page-break-inside: avoid; }
@@ -252,7 +245,7 @@
     </div>
     <div class="doc-periode">TAHUN ANGGARAN {{ $tahun }}</div>
 
-    <!-- ══════════ TABEL REKAPITULASI TAHUNAN ══════════ -->
+    <!-- ══════════ TABEL REKAPITULASI TAHUNAN HITAM PUTIH RESMI ══════════ -->
     <table class="data-table" cellspacing="0" cellpadding="0">
         <thead>
             <tr>
@@ -288,16 +281,14 @@
                     ];
                     $pct = $d['persen_tahunan'];
                     $predikat = $pct >= 95 ? 'Sangat Baik' : ($pct >= 85 ? 'Baik' : ($pct >= 75 ? 'Cukup' : 'Kurang'));
-                    $predikatClass = $pct >= 95 ? 'predikat-sangat-baik' : ($pct >= 85 ? 'predikat-baik' : ($pct >= 75 ? 'predikat-cukup' : 'predikat-kurang'));
-                    $rowClass = $idx % 2 !== 0 ? 'even' : '';
                     $totalIzinSakit = ($d['total_izin'] ?? 0) + ($d['total_sakit'] ?? 0);
                 @endphp
-                <tr class="{{ $rowClass }}">
+                <tr>
                     <td>{{ $idx + 1 }}</td>
                     <td class="col-nama">
                         <strong>{{ $p->nama_lengkap }}</strong>
                         @if($p->nipd)
-                            <br><span style="font-size: 5.2pt; color: #4b5563;">NIPD. {{ $p->nipd }}</span>
+                            <br><span style="font-size: 5.2pt;">NIPD. {{ $p->nipd }}</span>
                         @endif
                     </td>
                     <td class="col-jabatan">{{ $p->jabatan->nama_jabatan ?? '-' }}</td>
@@ -307,22 +298,16 @@
                             $mb = $d['per_bulan'][$m] ?? ['hadir' => 0, 'hari_kerja' => 0, 'persen' => 0];
                         @endphp
                         <td class="col-bulan">
-                            @if(isset($mb['hadir']) && $mb['hadir'] > 0)
-                                <strong>{{ $mb['hadir'] }}</strong>
-                            @else
-                                <span style="color: #9ca3af;">0</span>
-                            @endif
+                            {{ $mb['hadir'] ?? 0 }}
                         </td>
                     @endforeach
 
                     <td class="col-total">{{ $d['total_hk'] }}</td>
-                    <td class="col-total" style="color: #047857;">{{ $d['total_hadir'] }}</td>
-                    <td class="col-total" style="color: #b45309;">{{ $totalIzinSakit }}</td>
-                    <td class="col-total" style="color: #b91c1c;">{{ $d['total_alpa'] }}</td>
-                    <td class="col-persen">{{ $d['persen_tahunan'] }}%</td>
-                    <td>
-                        <span class="badge-predikat {{ $predikatClass }}">{{ $predikat }}</span>
-                    </td>
+                    <td class="col-total">{{ $d['total_hadir'] }}</td>
+                    <td class="col-total">{{ $totalIzinSakit }}</td>
+                    <td class="col-total">{{ $d['total_alpa'] }}</td>
+                    <td class="col-persen"><strong>{{ $d['persen_tahunan'] }}%</strong></td>
+                    <td>{{ $predikat }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -336,22 +321,21 @@
                     <td>{{ $totHadirBulan }}</td>
                 @endforeach
                 <td>{{ collect($dataRekap)->sum('total_hk') }}</td>
-                <td style="color: #047857;">{{ collect($dataRekap)->sum('total_hadir') }}</td>
-                <td style="color: #b45309;">{{ collect($dataRekap)->sum(fn($r) => ($r['total_izin'] ?? 0) + ($r['total_sakit'] ?? 0)) }}</td>
-                <td style="color: #b91c1c;">{{ collect($dataRekap)->sum('total_alpa') }}</td>
-                <td style="background-color: #d1fae5; color: #065f46;">
+                <td>{{ collect($dataRekap)->sum('total_hadir') }}</td>
+                <td>{{ collect($dataRekap)->sum(fn($r) => ($r['total_izin'] ?? 0) + ($r['total_sakit'] ?? 0)) }}</td>
+                <td>{{ collect($dataRekap)->sum('total_alpa') }}</td>
+                <td>
                     @php
                         $pctCol = collect($dataRekap)->map(fn($r) => $r['persen_tahunan'])->filter(fn($v) => $v > 0);
                         $avgPct = $pctCol->count() ? round($pctCol->avg(), 1) : 0;
                     @endphp
-                    {{ $avgPct }}%
+                    <strong>{{ $avgPct }}%</strong>
                 </td>
                 <td>
                     @php
                         $avgPredikat = $avgPct >= 95 ? 'Sangat Baik' : ($avgPct >= 85 ? 'Baik' : ($avgPct >= 75 ? 'Cukup' : 'Kurang'));
-                        $avgPredikatClass = $avgPct >= 95 ? 'predikat-sangat-baik' : ($avgPct >= 85 ? 'predikat-baik' : ($avgPct >= 75 ? 'predikat-cukup' : 'predikat-kurang'));
                     @endphp
-                    <span class="badge-predikat {{ $avgPredikatClass }}">{{ $avgPredikat }}</span>
+                    {{ $avgPredikat }}
                 </td>
             </tr>
         </tfoot>

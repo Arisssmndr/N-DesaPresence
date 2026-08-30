@@ -88,7 +88,7 @@ class GpsMultiStrategyAndWifiLockTest extends TestCase
                 'tanda_tangan'      => 'data:image/png;base64,' . base64_encode(str_repeat('S', 100)),
             ]);
 
-        $response->assertRedirect(route('staf.riwayat.pengajuan'));
+        $response->assertRedirect(route('staf.riwayat', ['tab' => 'absen_luar']));
 
         $pengajuan = PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
             ->whereDate('tanggal', now()->toDateString())

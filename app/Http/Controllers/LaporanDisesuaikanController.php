@@ -38,7 +38,7 @@ class LaporanDisesuaikanController extends Controller
             ->get()
             ->keyBy('pegawai_id');
 
-        $rekap = ['hadir' => 0, 'terlambat' => 0, 'alpa' => 0, 'izin' => 0, 'sakit' => 0, 'dinas' => 0, 'libur' => 0];
+        $rekap = ['hadir' => 0, 'alpa' => 0, 'izin' => 0, 'sakit' => 0, 'libur' => 0];
 
         foreach ($pegawais as $p) {
             $adj = $disesuaikanMap->get($p->id);
@@ -51,12 +51,11 @@ class LaporanDisesuaikanController extends Controller
             if ($resolved) {
                 $status = $resolved->status_disesuaikan ?? $resolved->status;
                 match ($status) {
-                    'Hadir', 'Tepat Waktu' => $rekap['hadir']++,
-                    'Terlambat'            => $rekap['terlambat']++,
-                    'Izin'                 => $rekap['izin']++,
-                    'Sakit'                => $rekap['sakit']++,
-                    'Dinas Luar'           => $rekap['dinas']++,
-                    default                => $rekap['alpa']++,
+                    'Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar' => $rekap['hadir']++,
+                    'Izin'                                            => $rekap['izin']++,
+                    'Sakit'                                           => $rekap['sakit']++,
+                    'Libur'                                           => null,
+                    default                                           => $rekap['alpa']++,
                 };
             } elseif ($isWeekend || $hariLiburs) {
                 $rekap['libur']++;
@@ -124,7 +123,7 @@ class LaporanDisesuaikanController extends Controller
             $adjMap = $semuaDisesuaikan->get($p->id, collect())->keyBy(fn($k) => Carbon::parse($k->tanggal)->format('Y-m-d'));
             $oriMap = $semuaKehadiran->get($p->id, collect())->keyBy(fn($k) => Carbon::parse($k->tanggal)->format('Y-m-d'));
 
-            $pSummary = ['H' => 0, 'T' => 0, 'A' => 0, 'I' => 0, 'D' => 0, 'L' => 0];
+            $pSummary = ['H' => 0, 'I' => 0, 'S' => 0, 'A' => 0, 'L' => 0];
 
             for ($d = 1; $d <= $daysInMonth; $d++) {
                 $dateStr = sprintf("%04d-%02d-%02d", $tahun, $bulan, $d);
@@ -140,11 +139,10 @@ class LaporanDisesuaikanController extends Controller
                 if ($record) {
                     $status = $record->status_disesuaikan ?? $record->status;
                     $code = match ($status) {
-                        'Hadir', 'Tepat Waktu' => 'H',
-                        'Terlambat'            => 'T',
-                        'Izin', 'Sakit'        => 'I',
-                        'Dinas Luar'           => 'D',
-                        default                => 'A',
+                        'Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar' => 'H',
+                        'Izin'                                            => 'I',
+                        'Sakit'                                           => 'S',
+                        default                                           => 'A',
                     };
                 } elseif ($isHoliday) {
                     $code = 'L';
@@ -161,7 +159,7 @@ class LaporanDisesuaikanController extends Controller
             }
 
             $totalHariKerja = $daysInMonth - $pSummary['L'];
-            $totalHadir     = $pSummary['H'] + $pSummary['T'];
+            $totalHadir     = $pSummary['H'];
             $pSummary['persen'] = $totalHariKerja > 0
                 ? round(($totalHadir / $totalHariKerja) * 100, 1)
                 : 0;
@@ -240,6 +238,7 @@ class LaporanDisesuaikanController extends Controller
             $totalHadir = 0;
             $totalAlpa  = 0;
             $totalIzin  = 0;
+            $totalSakit = 0;
             $totalDinas = 0;
             $totalHariKerja = 0;
 
@@ -250,7 +249,7 @@ class LaporanDisesuaikanController extends Controller
                 $mHadir = 0;
                 $mAlpa  = 0;
                 $mIzin  = 0;
-                $mDinas = 0;
+                $mSakit = 0;
 
                 for ($d = 1; $d <= $daysInM; $d++) {
                     $dStr = sprintf("%04d-%02d-%02d", $tahun, $m, $d);
@@ -263,11 +262,11 @@ class LaporanDisesuaikanController extends Controller
                     if ($rec) {
                         $st = $rec->status_disesuaikan ?? $rec->status;
                         match ($st) {
-                            'Hadir', 'Tepat Waktu', 'Terlambat' => $mHadir++,
-                            'Izin', 'Sakit'                     => $mIzin++,
-                            'Dinas Luar'                        => $mDinas++,
-                            'Alpa'                              => $mAlpa++,
-                            default                             => null,
+                            'Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar' => $mHadir++,
+                            'Izin'                                            => $mIzin++,
+                            'Sakit'                                           => $mSakit++,
+                            'Alpa'                                            => $mAlpa++,
+                            default                                           => null,
                         };
                     } elseif (!$isHoli) {
                         $mAlpa++;
@@ -279,7 +278,7 @@ class LaporanDisesuaikanController extends Controller
                     'hadir'       => $mHadir,
                     'alpa'        => $mAlpa,
                     'izin'        => $mIzin,
-                    'dinas'       => $mDinas,
+                    'sakit'       => $mSakit,
                     'hari_kerja'  => $mHariKerja,
                     'persen'      => $mHariKerja > 0 ? round(($mHadir / $mHariKerja) * 100, 0) : 0,
                 ];
@@ -287,7 +286,7 @@ class LaporanDisesuaikanController extends Controller
                 $totalHadir     += $mHadir;
                 $totalAlpa      += $mAlpa;
                 $totalIzin      += $mIzin;
-                $totalDinas     += $mDinas;
+                $totalSakit     += $mSakit;
                 $totalHariKerja += $mHariKerja;
             }
 
@@ -296,7 +295,7 @@ class LaporanDisesuaikanController extends Controller
                 'total_hadir'    => $totalHadir,
                 'total_alpa'     => $totalAlpa,
                 'total_izin'     => $totalIzin,
-                'total_dinas'    => $totalDinas,
+                'total_sakit'    => $totalSakit,
                 'total_hk'       => $totalHariKerja,
                 'persen_tahunan' => $totalHariKerja > 0 ? round(($totalHadir / $totalHariKerja) * 100, 1) : 0,
             ];
@@ -376,7 +375,7 @@ class LaporanDisesuaikanController extends Controller
             $adjMap = $semuaDisesuaikan->get($p->id, collect())->keyBy(fn($k) => Carbon::parse($k->tanggal)->format('Y-m-d'));
             $oriMap = $semuaKehadiran->get($p->id, collect())->keyBy(fn($k) => Carbon::parse($k->tanggal)->format('Y-m-d'));
 
-            $pSummary = ['H' => 0, 'T' => 0, 'A' => 0, 'I' => 0, 'D' => 0, 'L' => 0];
+            $pSummary = ['H' => 0, 'I' => 0, 'S' => 0, 'A' => 0, 'L' => 0];
 
             foreach ($dateRange as $dateStr) {
                 $dt = Carbon::parse($dateStr);
@@ -390,11 +389,10 @@ class LaporanDisesuaikanController extends Controller
                 if ($record) {
                     $status = $record->status_disesuaikan ?? $record->status;
                     $code = match ($status) {
-                        'Hadir', 'Tepat Waktu' => 'H',
-                        'Terlambat'            => 'T',
-                        'Izin', 'Sakit'        => 'I',
-                        'Dinas Luar'           => 'D',
-                        default                => 'A',
+                        'Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar' => 'H',
+                        'Izin'                                            => 'I',
+                        'Sakit'                                           => 'S',
+                        default                                           => 'A',
                     };
                 } elseif ($isHoliday) {
                     $code = 'L';
@@ -410,7 +408,7 @@ class LaporanDisesuaikanController extends Controller
                 }
             }
 
-            $totalHadir = $pSummary['H'] + $pSummary['T'];
+            $totalHadir = $pSummary['H'];
             $pSummary['persen'] = $totalHariKerjaPeriode > 0
                 ? round(($totalHadir / $totalHariKerjaPeriode) * 100, 1)
                 : 0;

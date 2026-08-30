@@ -93,30 +93,22 @@
         </div>
 
         {{-- Mini Summary Bar --}}
-        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
             <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs text-center">
                 <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Hadir</p>
                 <p class="font-outfit text-lg font-extrabold text-[#064E3B]">{{ $rekapHarian['hadir'] }}</p>
             </div>
             <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs text-center">
-                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Terlambat</p>
-                <p class="font-outfit text-lg font-extrabold text-slate-800">{{ $rekapHarian['terlambat'] }}</p>
-            </div>
-            <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs text-center">
                 <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Izin</p>
-                <p class="font-outfit text-lg font-extrabold text-slate-800">{{ $rekapHarian['izin'] }}</p>
+                <p class="font-outfit text-lg font-extrabold text-amber-700">{{ $rekapHarian['izin'] }}</p>
             </div>
             <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs text-center">
                 <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Sakit</p>
-                <p class="font-outfit text-lg font-extrabold text-slate-800">{{ $rekapHarian['sakit'] }}</p>
-            </div>
-            <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs text-center">
-                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Dinas Luar</p>
-                <p class="font-outfit text-lg font-extrabold text-slate-800">{{ $rekapHarian['dinas'] }}</p>
+                <p class="font-outfit text-lg font-extrabold text-purple-700">{{ $rekapHarian['sakit'] }}</p>
             </div>
             <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs text-center">
                 <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Alpa</p>
-                <p class="font-outfit text-lg font-extrabold text-slate-800">{{ $rekapHarian['alpa'] }}</p>
+                <p class="font-outfit text-lg font-extrabold text-red-700">{{ $rekapHarian['alpa'] }}</p>
             </div>
             <div class="p-3 bg-slate-50 rounded-xl border border-[#C9A84C]/50 shadow-xs text-center col-span-2 sm:col-span-1">
                 <p class="text-[10px] text-[#064E3B] font-bold uppercase tracking-wider">Disesuaikan</p>
@@ -312,7 +304,7 @@
                             <th colspan="{{ $daysInMonth }}" class="py-1 text-center font-extrabold text-white border-r border-emerald-800">
                                 Tanggal Presensi (1 – {{ $daysInMonth }} {{ $namaBulan }} {{ $tahunBulanan }})
                             </th>
-                            <th colspan="5" class="py-1 text-center font-extrabold text-[#E2C268] bg-[#04392B] border-r border-emerald-800">Rekap</th>
+                            <th colspan="4" class="py-1 text-center font-extrabold text-[#E2C268] bg-[#04392B] border-r border-emerald-800">Rekap</th>
                             <th rowspan="2" class="py-2.5 px-2 font-extrabold text-[#E2C268] w-12">%</th>
                         </tr>
                         <tr>
@@ -324,16 +316,15 @@
                                 <th class="p-1 text-[11px] font-bold border-r border-emerald-800/40 {{ $isWk ? 'bg-slate-800 text-slate-300' : '' }}">{{ $d }}</th>
                             @endfor
                             <th class="p-1 text-[10px] font-extrabold bg-[#04392B] text-white border-r border-emerald-800">H</th>
-                            <th class="p-1 text-[10px] font-extrabold bg-[#04392B] text-white border-r border-emerald-800">T</th>
                             <th class="p-1 text-[10px] font-extrabold bg-[#04392B] text-white border-r border-emerald-800">I</th>
-                            <th class="p-1 text-[10px] font-extrabold bg-[#04392B] text-white border-r border-emerald-800">D</th>
+                            <th class="p-1 text-[10px] font-extrabold bg-[#04392B] text-white border-r border-emerald-800">S</th>
                             <th class="p-1 text-[10px] font-extrabold bg-[#04392B] text-white border-r border-emerald-800">A</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
                         @foreach ($pegawais as $idx => $p)
                         @php
-                            $sum = $summaryBulanan[$p->id] ?? ['H' => 0, 'T' => 0, 'I' => 0, 'D' => 0, 'A' => 0, 'L' => 0, 'persen' => 0, 'adjusted_count' => 0];
+                            $sum = $summaryBulanan[$p->id] ?? ['H' => 0, 'I' => 0, 'S' => 0, 'A' => 0, 'L' => 0, 'persen' => 0, 'adjusted_count' => 0];
                         @endphp
                         <tr class="hover:bg-slate-50/80 transition">
                             <td class="py-2 px-1 text-slate-500 font-bold text-[11px] border-r border-slate-100">{{ $idx + 1 }}</td>
@@ -358,10 +349,9 @@
                                     class="p-1 text-[11px] font-bold cursor-pointer hover:bg-slate-200 transition border-r border-slate-100
                                         {{ $isAdj ? 'bg-amber-100 text-amber-950 font-black' : '' }}
                                         @if($code === 'H') text-[#064E3B] font-extrabold
-                                        @elseif($code === 'T') text-slate-800
-                                        @elseif($code === 'I') text-slate-700
-                                        @elseif($code === 'D') text-slate-800
-                                        @elseif($code === 'A') text-slate-900 font-bold
+                                        @elseif($code === 'I') text-amber-700 font-bold
+                                        @elseif($code === 'S') text-purple-700 font-bold
+                                        @elseif($code === 'A') text-red-600 font-bold
                                         @elseif($code === 'L') text-slate-400 bg-slate-50
                                         @else text-slate-300 @endif">
                                     {{ $code }}
@@ -369,10 +359,9 @@
                             @endfor
 
                             <td class="py-2 px-1 font-bold text-slate-900 bg-slate-50 border-r border-slate-100">{{ $sum['H'] }}</td>
-                            <td class="py-2 px-1 font-bold text-slate-700 bg-slate-50 border-r border-slate-100">{{ $sum['T'] }}</td>
-                            <td class="py-2 px-1 font-bold text-slate-700 bg-slate-50 border-r border-slate-100">{{ $sum['I'] }}</td>
-                            <td class="py-2 px-1 font-bold text-slate-700 bg-slate-50 border-r border-slate-100">{{ $sum['D'] }}</td>
-                            <td class="py-2 px-1 font-bold text-slate-900 bg-slate-50 border-r border-slate-100">{{ $sum['A'] }}</td>
+                            <td class="py-2 px-1 font-bold text-amber-800 bg-slate-50 border-r border-slate-100">{{ $sum['I'] }}</td>
+                            <td class="py-2 px-1 font-bold text-purple-800 bg-slate-50 border-r border-slate-100">{{ $sum['S'] }}</td>
+                            <td class="py-2 px-1 font-bold text-red-800 bg-slate-50 border-r border-slate-100">{{ $sum['A'] }}</td>
                             <td class="py-2 px-1 font-extrabold text-[#064E3B] bg-slate-100">{{ $sum['persen'] }}%</td>
                         </tr>
                         @endforeach
@@ -533,12 +522,9 @@
                         <label class="text-[10px] text-slate-800 font-extrabold uppercase block mb-1">Status Disesuaikan</label>
                         <select wire:model.live="editStatusDisesuaikan" class="w-full px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-[#064E3B] outline-none cursor-pointer">
                             <option value="Hadir">Hadir</option>
-                            <option value="Tepat Waktu">Tepat Waktu</option>
-                            <option value="Terlambat">Terlambat</option>
-                            <option value="Dinas Luar">Dinas Luar</option>
+                            <option value="Alpa">Alpa</option>
                             <option value="Izin">Izin</option>
                             <option value="Sakit">Sakit</option>
-                            <option value="Alpa">Alpa</option>
                             <option value="Libur">Libur</option>
                         </select>
                     </div>

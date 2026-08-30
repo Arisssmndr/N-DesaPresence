@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Kehadiran;
 use App\Models\KonfigurasiWifi;
+use App\Models\WifiAccessLog;
 use App\Models\Pegawai;
 use App\Models\SuratPerintahTugas;
 use App\Models\AuditLog;
@@ -11,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class AbsensiSignatureService
@@ -22,6 +24,51 @@ class AbsensiSignatureService
     public function resolveClientIp(Request $request): string
     {
         return $request->ip() ?: '127.0.0.1';
+    }
+
+    /**
+     * Mengambil daftar WiFi aktif dari cache (TTL: 5 menit / 300 detik).
+     */
+    public function getDaftarWifiAktif()
+    {
+        return Cache::remember('konfigurasi_wifi_aktif', 300, function () {
+            return KonfigurasiWifi::aktif()->get();
+        });
+    }
+
+    /**
+     * Invalidate cache konfigurasi WiFi ketika ada perubahan di admin.
+     */
+    public function invalidateWifiCache(): void
+    {
+        Cache::forget('konfigurasi_wifi_aktif');
+    }
+
+    /**
+     * Catat log akses & verifikasi WiFi ke tabel audit wifi_access_logs.
+     */
+    public function catatWifiAccessLog(
+        string $clientIp,
+        string $jenisAksi,
+        string $hasil,
+        ?int $pegawaiId = null,
+        ?string $alasanDitolak = null,
+        ?string $matchedWifi = null,
+        ?string $userAgent = null
+    ): void {
+        try {
+            WifiAccessLog::create([
+                'client_ip'      => $clientIp,
+                'pegawai_id'     => $pegawaiId,
+                'jenis_aksi'     => $jenisAksi,
+                'hasil'          => $hasil,
+                'alasan_ditolak' => $alasanDitolak,
+                'matched_wifi'   => $matchedWifi,
+                'user_agent'     => $userAgent ? Str::limit($userAgent, 500) : null,
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /**
@@ -53,7 +100,7 @@ class AbsensiSignatureService
      */
     public function validasiIpWifi(string $clientIp): bool
     {
-        $daftarWifi = KonfigurasiWifi::aktif()->get();
+        $daftarWifi = $this->getDaftarWifiAktif();
 
         foreach ($daftarWifi as $wifi) {
             $ipConfig = trim($wifi->ip_address);
@@ -85,7 +132,7 @@ class AbsensiSignatureService
      */
     public function getWifiDiagnosis(string $clientIp): array
     {
-        $daftarWifi = KonfigurasiWifi::aktif()->get();
+        $daftarWifi = $this->getDaftarWifiAktif();
         $matchedWifi = null;
 
         foreach ($daftarWifi as $wifi) {
@@ -123,7 +170,7 @@ class AbsensiSignatureService
             'active_networks'   => $wifiNames,
             'rejection_reason'  => $isValid ? null : ($daftarWifi->isEmpty()
                 ? 'Belum ada konfigurasi WiFi kantor desa yang aktif di sistem.'
-                : 'Alamat IP (' . $clientIp . ') tidak terdaftar dalam whitelist WiFi Kantor Desa Nangtang.'),
+                : 'Alamat IP (' . $clientIp . ') tidak terhubung ke jaringan WiFi Kantor Desa Nangtang.'),
         ];
     }
 
@@ -205,6 +252,14 @@ class AbsensiSignatureService
                 'ip_address'=> $ipAddress,
             ]);
 
+            $this->catatWifiAccessLog(
+                clientIp: $ipAddress,
+                jenisAksi: 'absen_masuk',
+                hasil: 'diizinkan',
+                pegawaiId: $pegawai->id,
+                matchedWifi: 'WiFi Terverifikasi'
+            );
+
             return [
                 'status'  => 'berhasil',
                 'jenis'   => 'masuk',
@@ -260,6 +315,14 @@ class AbsensiSignatureService
                 'modul'     => 'Absensi Tanda Tangan',
                 'ip_address'=> $ipAddress,
             ]);
+
+            $this->catatWifiAccessLog(
+                clientIp: $ipAddress,
+                jenisAksi: 'absen_pulang',
+                hasil: 'diizinkan',
+                pegawaiId: $pegawai->id,
+                matchedWifi: 'WiFi Terverifikasi'
+            );
 
             return [
                 'status'  => 'berhasil',

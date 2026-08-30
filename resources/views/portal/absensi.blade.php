@@ -98,6 +98,53 @@
             <span id="live-clock" class="clock-digit text-white text-lg font-bold">--:--:--</span>
             <span class="text-white/50 text-xs" id="live-date">--</span>
         </div>
+
+        {{-- ═══════════════════ REAL-TIME WIFI STATUS BANNER ═══════════════════ --}}
+        <div class="max-w-md mx-auto mt-3.5 px-1">
+            {{-- State: Loading --}}
+            <div id="wifi-loading" class="flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-200 text-xs shadow-md">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0"></div>
+                    <span class="font-semibold text-xs text-amber-100">Memeriksa koneksi WiFi Kantor Desa...</span>
+                </div>
+                <span class="font-mono text-[10px] text-amber-300/80 px-2 py-0.5 rounded bg-black/20">Cek IP</span>
+            </div>
+
+            {{-- State: Valid (Connected to Village WiFi) --}}
+            <div id="wifi-valid" class="hidden flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 shadow-md">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] shrink-0"></div>
+                    <div class="min-w-0">
+                        <p class="text-xs font-extrabold text-white truncate" id="wifi-valid-text">WiFi Kantor Desa Terverifikasi</p>
+                        <p class="text-[10px] text-emerald-200 font-medium mt-0.5">Jaringan kantor terdaftar — Siap melakukan absensi</p>
+                    </div>
+                </div>
+                <span class="text-[10.5px] font-bold bg-emerald-400 text-emerald-950 px-2.5 py-1 rounded-lg uppercase tracking-wider shrink-0 shadow-xs">
+                    Aktif
+                </span>
+            </div>
+
+            {{-- State: Invalid (Outside Village WiFi / Cellular Data) --}}
+            <div id="wifi-invalid" class="hidden flex flex-col gap-2.5 p-4 rounded-2xl bg-rose-950/70 border-2 border-rose-500/50 text-rose-100 shadow-xl backdrop-blur-md">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.9)] animate-pulse shrink-0 mt-0.5"></div>
+                        <span class="text-xs font-extrabold text-rose-100 uppercase tracking-wide">Akses Absensi Dinonaktifkan</span>
+                    </div>
+                    <button type="button" onclick="checkWifiStatus()" class="px-2.5 py-1 rounded-lg bg-rose-500/30 hover:bg-rose-500/50 border border-rose-400/40 text-[11px] font-bold text-rose-100 transition active:scale-95 flex items-center gap-1 cursor-pointer">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Cek Ulang</span>
+                    </button>
+                </div>
+                <p class="text-[11.5px] text-rose-200 leading-snug">
+                    Perangkat Anda tidak terhubung ke <strong>WiFi Kantor Desa Nangtang</strong> (IP Anda: <code class="font-mono font-bold bg-rose-900/60 text-white px-1.5 py-0.5 rounded border border-rose-700/50" id="wifi-client-ip">--</code>).
+                </p>
+                <div class="pt-2 border-t border-rose-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[10.5px] text-rose-300">
+                    <span>💡 Harap sambungkan HP ke WiFi Kantor Desa atau ajukan <strong>Absen Luar</strong> jika sedang bertugas luar.</span>
+                    <a href="{{ route('staf.ajukan.form') }}" class="text-[#C9A84C] font-extrabold underline hover:text-amber-200 shrink-0">Buka Form Absen Luar →</a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="max-w-md mx-auto space-y-4">
@@ -304,9 +351,104 @@
         let selectedJenis       = null;
         let signaturePad        = null;
         let statusHariIni       = { sudah_masuk: false, sudah_pulang: false };
+        let isWifiValid         = true;
+
+        // ─── WIFI STATUS REAL-TIME POLLING ──────────────────────────────────
+        function setWifiState(state, data = {}) {
+            const loadingEl = document.getElementById('wifi-loading');
+            const validEl   = document.getElementById('wifi-valid');
+            const invalidEl = document.getElementById('wifi-invalid');
+            const validText = document.getElementById('wifi-valid-text');
+            const clientIpEl= document.getElementById('wifi-client-ip');
+
+            loadingEl.classList.add('hidden');
+            validEl.classList.add('hidden');
+            invalidEl.classList.add('hidden');
+
+            if (state === 'valid') {
+                isWifiValid = true;
+                validEl.classList.remove('hidden');
+                if (validText && data.matched_network) {
+                    validText.textContent = 'Terhubung ke ' + data.matched_network;
+                }
+                enableAbsensiForm();
+            } else if (state === 'invalid') {
+                isWifiValid = false;
+                invalidEl.classList.remove('hidden');
+                if (clientIpEl && data.client_ip) {
+                    clientIpEl.textContent = data.client_ip;
+                }
+                disableAbsensiForm();
+            } else {
+                loadingEl.classList.remove('hidden');
+            }
+        }
+
+        async function checkWifiStatus() {
+            try {
+                const res = await fetch('/absen/wifi-status', {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await res.json();
+                setWifiState(data.valid ? 'valid' : 'invalid', data);
+            } catch (err) {
+                // If offline or network error
+                setWifiState('invalid', { client_ip: 'Koneksi Terputus' });
+            }
+        }
+
+        function enableAbsensiForm() {
+            const selectEl = document.getElementById('pegawai-select');
+            const btnLanjut = document.getElementById('btn-lanjut');
+            const step1Card = document.getElementById('step-1');
+
+            if (selectEl) selectEl.disabled = false;
+            if (btnLanjut) btnLanjut.classList.remove('pointer-events-none', 'opacity-50');
+            if (step1Card) {
+                step1Card.style.opacity = '';
+                step1Card.style.filter = '';
+            }
+        }
+
+        function disableAbsensiForm() {
+            const selectEl = document.getElementById('pegawai-select');
+            const btnLanjut = document.getElementById('btn-lanjut');
+            const step1Card = document.getElementById('step-1');
+            const statusCard = document.getElementById('status-card');
+
+            if (selectEl) {
+                selectEl.disabled = true;
+                selectEl.value = '';
+            }
+            if (btnLanjut) {
+                btnLanjut.classList.add('hidden');
+                btnLanjut.classList.add('pointer-events-none', 'opacity-50');
+            }
+            if (statusCard) statusCard.classList.add('hidden');
+
+            // If user was in step-2 or error, pull back to step-1
+            if (document.getElementById('step-2') && !document.getElementById('step-2').classList.contains('step-inactive')) {
+                backToStep1();
+            }
+
+            if (step1Card) {
+                step1Card.style.opacity = '0.6';
+                step1Card.style.filter = 'grayscale(30%)';
+            }
+        }
+
+        // Jalankan check WiFi saat pertama kali halaman terbuka & setiap 15 detik
+        checkWifiStatus();
+        setInterval(checkWifiStatus, 15000);
 
         // ─── STEP 1: Pilih Pegawai ───────────────────────────────────────────
         async function onPegawaiSelected(id) {
+            if (!isWifiValid) {
+                alert('⚠️ Anda harus terhubung ke WiFi Kantor Desa Nangtang untuk melakukan absensi.');
+                document.getElementById('pegawai-select').value = '';
+                return;
+            }
+
             if (!id) {
                 document.getElementById('status-card').classList.add('hidden');
                 document.getElementById('btn-lanjut').classList.add('hidden');

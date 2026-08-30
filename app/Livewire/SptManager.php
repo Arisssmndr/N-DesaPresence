@@ -224,7 +224,7 @@ class SptManager extends Component
                 Kehadiran::create([
                     'pegawai_id'        => $spt->pegawai_id,
                     'tanggal'           => $dateStr,
-                    'status'            => 'Dinas Luar',
+                    'status'            => 'Hadir',
                     'sumber_data'       => 'manual_admin',
                     'diverifikasi_oleh' => $spt->disetujui_oleh ?? auth()->id(),
                     'keterangan'        => "Surat Perintah Tugas: {$spt->nomor_spt} ({$spt->tujuan})"
@@ -232,7 +232,7 @@ class SptManager extends Component
             } elseif (!$existing->jam_masuk) {
                 // Hanya update jika belum ada catatan presensi langsung di kantor
                 $existing->update([
-                    'status'            => 'Dinas Luar',
+                    'status'            => 'Hadir',
                     'sumber_data'       => 'manual_admin',
                     'diverifikasi_oleh' => $spt->disetujui_oleh ?? auth()->id(),
                     'keterangan'        => "Surat Perintah Tugas: {$spt->nomor_spt} ({$spt->tujuan})"

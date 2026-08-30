@@ -138,7 +138,7 @@ class PengajuanAbsenLuarController extends Controller
 
         PengajuanAbsenLuar::create($data);
 
-        return redirect()->route('staf.riwayat.pengajuan')
+        return redirect()->route('staf.riwayat', ['tab' => 'absen_luar'])
             ->with('success', 'Pengajuan absen luar berhasil dikirim! Silakan tunggu persetujuan Admin Desa.');
     }
 

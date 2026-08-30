@@ -8,6 +8,7 @@ use App\Http\Controllers\SpjReportController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PengajuanAbsenLuarController;
 use App\Http\Controllers\StafIzinController;
+
 use App\Livewire\Dashboard;
 use App\Livewire\PegawaiManager;
 use App\Livewire\ShiftManager;
@@ -42,6 +43,24 @@ Route::get('/', function () {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// STATUS JARINGAN WIFI REAL-TIME (Untuk Polling Status di Beranda Staf)
+// Digunakan oleh JS beranda staf untuk menampilkan indikator WiFi real-time
+// ─────────────────────────────────────────────────────────────────────────────
+Route::get('/staf/wifi-check', function (\Illuminate\Http\Request $request) {
+    $service = app(\App\Services\AbsensiSignatureService::class);
+    $clientIp = $service->resolveClientIp($request);
+    $diagnosis = $service->getWifiDiagnosis($clientIp);
+    return response()->json([
+        'valid'           => $diagnosis['is_valid'],
+        'client_ip'       => $clientIp,
+        'matched_network' => $diagnosis['matched_network'],
+        'message'         => $diagnosis['is_valid']
+            ? 'Terhubung ke ' . ($diagnosis['matched_network'] ?? 'WiFi Kantor Desa')
+            : ($diagnosis['rejection_reason'] ?? 'Tidak terhubung ke WiFi Kantor Desa.'),
+    ]);
+})->middleware('throttle:60,1')->name('staf.wifi.check');
+
+// ─────────────────────────────────────────────────────────────────────────────
 // PORTAL STAF DESA — Login Tanpa Password (Username-Only) & Presensi Mandiri
 // ─────────────────────────────────────────────────────────────────────────────
 Route::prefix('staf')->group(function () {
@@ -53,6 +72,7 @@ Route::prefix('staf')->group(function () {
         Route::get('/beranda', [StafPortalController::class, 'beranda'])->name('staf.beranda');
         Route::get('/absen/{jenis}', [StafPortalController::class, 'halamanAbsen'])->name('staf.absen.form');
         Route::post('/absen/submit', [StafPortalController::class, 'submitAbsen'])->middleware('throttle:30,1')->name('staf.absen.submit');
+        Route::get('/wifi-status', [StafPortalController::class, 'wifiStatus'])->name('staf.wifi-status');
         Route::get('/riwayat', [StafPortalController::class, 'riwayat'])->name('staf.riwayat');
         Route::get('/profil', [StafPortalController::class, 'profil'])->name('staf.profil');
         Route::get('/profil/edit', [\App\Http\Controllers\StafEditProfilController::class, 'edit'])->name('staf.profil.edit');
@@ -72,9 +92,12 @@ Route::prefix('staf')->group(function () {
     });
 });
 
-// Alias route /absen langsung redirect ke portal staf
+// Redirect /absen & /portal-absensi ke halaman login staf (portal kiosk sudah dihapus)
 Route::get('/absen', function () {
-    return redirect()->route('staf.beranda');
+    return redirect()->route('staf.login');
+});
+Route::get('/portal-absensi', function () {
+    return redirect()->route('staf.login');
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

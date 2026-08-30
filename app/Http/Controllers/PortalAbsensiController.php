@@ -54,6 +54,25 @@ class PortalAbsensiController extends Controller
     }
 
     /**
+     * Status koneksi WiFi klien saat ini — digunakan JS polling portal.
+     * Sangat ringan & rate limited (30/menit).
+     */
+    public function wifiStatus(Request $request)
+    {
+        $clientIp  = $this->absensiService->resolveClientIp($request);
+        $diagnosis = $this->absensiService->getWifiDiagnosis($clientIp);
+
+        return response()->json([
+            'valid'           => $diagnosis['is_valid'],
+            'client_ip'       => $clientIp,
+            'matched_network' => $diagnosis['matched_network'],
+            'message'         => $diagnosis['is_valid']
+                ? 'Terhubung ke ' . ($diagnosis['matched_network'] ?? 'WiFi Kantor Desa Nangtang')
+                : ($diagnosis['rejection_reason'] ?? 'Tidak terhubung ke WiFi Kantor Desa Nangtang.'),
+        ]);
+    }
+
+    /**
      * Proses absen masuk dengan tanda tangan.
      * WAJIB terhubung ke WiFi Desa — divalidasi ketat di sisi backend.
      */
@@ -65,12 +84,20 @@ class PortalAbsensiController extends Controller
         ]);
 
         // ─── Validasi Jaringan WiFi Desa (anti-spoofing) ──────────────────────
-        // Menggunakan resolveClientIp() dari service — aman, tidak bisa dipalsukan
-        // via header X-Forwarded-For oleh klien jahat.
         $clientIp = $this->absensiService->resolveClientIp($request);
 
         if (!$this->absensiService->validasiIpWifi($clientIp)) {
-            $msg = 'Akses ditolak. Absensi tanda tangan hanya dapat dilakukan dari jaringan WiFi Desa Nangtang.';
+            $msg = 'Akses ditolak: Presensi langsung hanya dapat dilakukan saat terhubung ke WiFi Kantor Desa Nangtang (IP Anda: ' . $clientIp . ').';
+            
+            $this->absensiService->catatWifiAccessLog(
+                clientIp: $clientIp,
+                jenisAksi: 'absen_masuk',
+                hasil: 'ditolak',
+                pegawaiId: (int) $request->pegawai_id,
+                alasanDitolak: $msg,
+                userAgent: $request->userAgent()
+            );
+
             if ($request->expectsJson()) {
                 return response()->json(['status' => 'error', 'message' => $msg, 'ip' => $clientIp], 403);
             }
@@ -103,7 +130,17 @@ class PortalAbsensiController extends Controller
         $clientIp = $this->absensiService->resolveClientIp($request);
 
         if (!$this->absensiService->validasiIpWifi($clientIp)) {
-            $msg = 'Akses ditolak. Absensi tanda tangan hanya dapat dilakukan dari jaringan WiFi Desa Nangtang.';
+            $msg = 'Akses ditolak: Presensi langsung hanya dapat dilakukan saat terhubung ke WiFi Kantor Desa Nangtang (IP Anda: ' . $clientIp . ').';
+
+            $this->absensiService->catatWifiAccessLog(
+                clientIp: $clientIp,
+                jenisAksi: 'absen_pulang',
+                hasil: 'ditolak',
+                pegawaiId: (int) $request->pegawai_id,
+                alasanDitolak: $msg,
+                userAgent: $request->userAgent()
+            );
+
             if ($request->expectsJson()) {
                 return response()->json(['status' => 'error', 'message' => $msg, 'ip' => $clientIp], 403);
             }

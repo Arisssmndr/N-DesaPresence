@@ -246,6 +246,19 @@ class StafPortalController extends Controller
         return view('staf.absen', compact('user', 'pegawai', 'jenis', 'clientIp', 'wifiDiagnosis'));
     }
 
+    public function wifiStatus(Request $request)
+    {
+        $clientIp = $this->signatureService->resolveClientIp($request);
+        $wifiDiagnosis = $this->signatureService->getWifiDiagnosis($clientIp);
+
+        return response()->json([
+            'valid'           => $wifiDiagnosis['is_valid'],
+            'client_ip'       => $clientIp,
+            'matched_network' => $wifiDiagnosis['matched_network'],
+            'diagnosis'       => $wifiDiagnosis,
+        ]);
+    }
+
     public function submitAbsen(Request $request)
     {
         $request->validate([
@@ -265,9 +278,20 @@ class StafPortalController extends Controller
 
         // Validasi WiFi
         if (!$wifiDiagnosis['is_valid']) {
+            $this->signatureService->catatWifiAccessLog(
+                clientIp: $clientIp,
+                jenisAksi: $request->jenis === 'masuk' ? 'absen_masuk' : 'absen_pulang',
+                hasil: 'ditolak',
+                pegawaiId: $pegawai->id,
+                alasanDitolak: $wifiDiagnosis['rejection_reason'] ?? 'IP tidak terdaftar di WiFi Kantor Desa',
+                matchedWifi: null,
+                userAgent: $request->userAgent()
+            );
+
             return response()->json([
-                'status' => 'error',
-                'message' => 'Akses ditolak: Presensi langsung hanya dapat dilakukan saat terhubung ke WiFi Kantor Desa Nangtang (IP Anda: ' . $clientIp . '). Jika sedang bertugas dinas luar, silakan gunakan fitur Pengajuan Absen Luar.',
+                'status'    => 'error',
+                'ip'        => $clientIp,
+                'message'   => 'Akses ditolak: Presensi langsung hanya dapat dilakukan saat terhubung ke WiFi Kantor Desa Nangtang (IP Anda: ' . $clientIp . '). Jika sedang bertugas dinas luar, silakan gunakan fitur Pengajuan Absen Luar.',
                 'diagnosis' => $wifiDiagnosis,
             ], 403);
         }

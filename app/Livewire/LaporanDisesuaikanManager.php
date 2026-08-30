@@ -164,7 +164,7 @@ class LaporanDisesuaikanManager extends Component
     public function simpanEdit(): void
     {
         $this->validate([
-            'editStatusDisesuaikan' => 'required|in:Hadir,Tepat Waktu,Terlambat,Izin,Sakit,Dinas Luar,Alpa,Libur',
+            'editStatusDisesuaikan' => 'required|in:Hadir,Alpa,Izin,Sakit,Libur',
             'editJamMasuk'          => 'nullable|date_format:H:i',
             'editJamPulang'         => 'nullable|date_format:H:i',
         ]);
@@ -373,7 +373,7 @@ class LaporanDisesuaikanManager extends Component
             ->keyBy('pegawai_id');
 
         $harianList = [];
-        $rekapHarian = ['hadir' => 0, 'terlambat' => 0, 'izin' => 0, 'sakit' => 0, 'dinas' => 0, 'alpa' => 0, 'disesuaikan' => 0];
+        $rekapHarian = ['hadir' => 0, 'izin' => 0, 'sakit' => 0, 'alpa' => 0, 'disesuaikan' => 0];
 
         foreach ($pegawais as $p) {
             $adj = $disesuaikanHarian->get($p->id);
@@ -396,12 +396,11 @@ class LaporanDisesuaikanManager extends Component
             }
 
             match ($activeStatus) {
-                'Hadir', 'Tepat Waktu' => $rekapHarian['hadir']++,
-                'Terlambat'            => $rekapHarian['terlambat']++,
-                'Izin'                 => $rekapHarian['izin']++,
-                'Sakit'                => $rekapHarian['sakit']++,
-                'Dinas Luar'           => $rekapHarian['dinas']++,
-                default                => $rekapHarian['alpa']++,
+                'Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar' => $rekapHarian['hadir']++,
+                'Izin'                                            => $rekapHarian['izin']++,
+                'Sakit'                                           => $rekapHarian['sakit']++,
+                'Libur'                                           => null,
+                default                                           => $rekapHarian['alpa']++,
             };
 
             $harianList[] = [
@@ -452,7 +451,7 @@ class LaporanDisesuaikanManager extends Component
             $adjMap = $adjBulan->get($p->id, collect())->keyBy(fn($k) => Carbon::parse($k->tanggal)->format('Y-m-d'));
             $oriMap = $oriBulan->get($p->id, collect())->keyBy(fn($k) => Carbon::parse($k->tanggal)->format('Y-m-d'));
 
-            $pSum = ['H' => 0, 'T' => 0, 'A' => 0, 'I' => 0, 'D' => 0, 'L' => 0, 'adjusted_count' => 0];
+            $pSum = ['H' => 0, 'I' => 0, 'S' => 0, 'A' => 0, 'L' => 0, 'adjusted_count' => 0];
 
             for ($d = 1; $d <= $daysInMonth; $d++) {
                 $dStr = sprintf("%04d-%02d-%02d", $this->tahunBulanan, $this->bulanBulanan, $d);
@@ -472,11 +471,10 @@ class LaporanDisesuaikanManager extends Component
                 if ($rec) {
                     $st = $rec->status_disesuaikan ?? $rec->status;
                     $code = match ($st) {
-                        'Hadir', 'Tepat Waktu' => 'H',
-                        'Terlambat'            => 'T',
-                        'Izin', 'Sakit'        => 'I',
-                        'Dinas Luar'           => 'D',
-                        default                => 'A',
+                        'Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar' => 'H',
+                        'Izin'                                            => 'I',
+                        'Sakit'                                           => 'S',
+                        default                                           => 'A',
                     };
                 } elseif ($isHoli) {
                     $code = 'L';
@@ -498,7 +496,7 @@ class LaporanDisesuaikanManager extends Component
             }
 
             $totalHk = $daysInMonth - $pSum['L'];
-            $totalHadir = $pSum['H'] + $pSum['T'];
+            $totalHadir = $pSum['H'];
             $pSum['persen'] = $totalHk > 0 ? round(($totalHadir / $totalHk) * 100, 1) : 0;
             $summaryBulanan[$p->id] = $pSum;
         }

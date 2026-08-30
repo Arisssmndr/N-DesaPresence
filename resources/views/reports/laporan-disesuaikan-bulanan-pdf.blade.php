@@ -107,10 +107,9 @@
 
         /* Status Colors in Cell */
         .c-H { font-weight: bold; color: #000; }
-        .c-T { color: #000; }
-        .c-A { font-weight: bold; color: #000; }
         .c-I { color: #000; }
-        .c-D { font-weight: bold; color: #000; }
+        .c-S { font-weight: bold; color: #000; }
+        .c-A { font-weight: bold; color: #000; }
         .c-L { color: #999; background-color: #f3f4f6; }
         .c-dash { color: #ccc; }
 
@@ -177,10 +176,10 @@
         <thead>
             <tr>
                 <th rowspan="2" style="width:16px;">No</th>
-                <th rowspan="2" class="col-pegawai" style="width:120px;">Nama Perangkat Desa / NIPD</th>
-                <th rowspan="2" style="width:75px;">Jabatan</th>
+                <th rowspan="2" class="col-pegawai" style="width:130px;">Nama Perangkat Desa / NIPD</th>
+                <th rowspan="2" style="width:85px;">Jabatan</th>
                 <th colspan="{{ $daysInMonth }}" style="letter-spacing: 0.5px;">Tanggal Presensi (1 – {{ $daysInMonth }} {{ $namaBulan }})</th>
-                <th colspan="5" style="width:80px; background-color:#e2e8f0;">Rekapitulasi</th>
+                <th colspan="4" style="width:70px; background-color:#e2e8f0;">Rekapitulasi</th>
                 <th rowspan="2" class="col-persen" style="width:30px;">%</th>
             </tr>
             <tr>
@@ -191,17 +190,16 @@
                     @endphp
                     <th style="width:14px;" class="{{ $isWk ? 'libur-hdr' : '' }}">{{ $d }}</th>
                 @endfor
-                <th style="width:16px;" title="Hadir (Tepat Waktu)">H</th>
-                <th style="width:16px;" title="Terlambat">T</th>
-                <th style="width:16px;" title="Izin / Sakit">I</th>
-                <th style="width:16px;" title="Dinas Luar">D</th>
-                <th style="width:16px;" title="Alpa / Tanpa Keterangan">A</th>
+                <th style="width:17px;" title="Hadir">H</th>
+                <th style="width:17px;" title="Izin">I</th>
+                <th style="width:17px;" title="Sakit">S</th>
+                <th style="width:17px;" title="Alpa / Tanpa Keterangan">A</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($pegawais as $idx => $p)
                 @php
-                    $pSum = $summary[$p->id] ?? ['H' => 0, 'T' => 0, 'I' => 0, 'D' => 0, 'A' => 0, 'L' => 0, 'persen' => 0];
+                    $pSum = $summary[$p->id] ?? ['H' => 0, 'I' => 0, 'S' => 0, 'A' => 0, 'L' => 0, 'persen' => 0];
                 @endphp
                 <tr>
                     <td>{{ $idx + 1 }}</td>
@@ -218,8 +216,8 @@
                         @php
                             $code = $matrix[$p->id][$d] ?? '-';
                             $classMap = [
-                                'H' => 'c-H', 'T' => 'c-T', 'A' => 'c-A',
-                                'I' => 'c-I', 'D' => 'c-D', 'L' => 'c-L', '-' => 'c-dash'
+                                'H' => 'c-H', 'A' => 'c-A',
+                                'I' => 'c-I', 'S' => 'c-S', 'L' => 'c-L', '-' => 'c-dash'
                             ];
                             $cClass = $classMap[$code] ?? '';
                         @endphp
@@ -228,9 +226,8 @@
 
                     {{-- Rekap --}}
                     <td class="col-rekap">{{ $pSum['H'] }}</td>
-                    <td class="col-rekap">{{ $pSum['T'] }}</td>
                     <td class="col-rekap">{{ $pSum['I'] }}</td>
-                    <td class="col-rekap">{{ $pSum['D'] }}</td>
+                    <td class="col-rekap">{{ $pSum['S'] }}</td>
                     <td class="col-rekap">{{ $pSum['A'] }}</td>
                     <td class="col-persen">{{ $pSum['persen'] }}%</td>
                 </tr>
@@ -243,9 +240,8 @@
         <div class="legend-cell legend-items">
             <strong>Keterangan Kode:</strong>
             <span><strong>H</strong> = Hadir</span>
-            <span><strong>T</strong> = Terlambat</span>
-            <span><strong>I</strong> = Izin/Sakit</span>
-            <span><strong>D</strong> = Dinas Luar</span>
+            <span><strong>I</strong> = Izin</span>
+            <span><strong>S</strong> = Sakit</span>
             <span><strong>A</strong> = Alpa</span>
             <span><strong>L</strong> = Libur Resmi / Akhir Pekan</span>
             <span><strong>-</strong> = Belum Berjalan</span>

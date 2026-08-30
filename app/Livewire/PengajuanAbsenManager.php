@@ -187,7 +187,7 @@ class PengajuanAbsenManager extends Component
             $labelJenis .= ' (SPT: ' . $pengajuan->nomor_surat_tugas . ')';
         }
 
-        $kehadiran->status            = $pengajuan->jenis === 'kegiatan_sosial' ? 'Hadir' : 'Dinas Luar';
+        $kehadiran->status            = 'Hadir';
         $kehadiran->sumber_data       = 'pengajuan_luar';
         $kehadiran->keterangan        = "[{$labelJenis}] {$pengajuan->judul}";
         $kehadiran->diverifikasi_oleh = Auth::id();

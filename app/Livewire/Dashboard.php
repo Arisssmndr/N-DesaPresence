@@ -49,9 +49,9 @@ class Dashboard extends Component
             ->whereDate('tanggal', $today)
             ->get();
 
-        $hadirCount = $kehadiranHariIni->whereIn('status', ['Hadir', 'Tepat Waktu', 'Terlambat'])->count();
-        $izinSakitCount = $kehadiranHariIni->whereIn('status', ['Izin', 'Sakit'])->count();
-        $dinasLuarCount = $kehadiranHariIni->where('status', 'Dinas Luar')->count();
+        $hadirCount = $kehadiranHariIni->whereIn('status', ['Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar'])->count();
+        $izinCount = $kehadiranHariIni->where('status', 'Izin')->count();
+        $sakitCount = $kehadiranHariIni->where('status', 'Sakit')->count();
         $alpaCount = $kehadiranHariIni->where('status', 'Alpa')->count();
         $belumMasukCount = max(0, $totalPegawai - $kehadiranHariIni->count());
         $persenHadir = $totalPegawai > 0 ? round(($hadirCount / $totalPegawai) * 100) : 0;
@@ -123,8 +123,8 @@ class Dashboard extends Component
             'statistik' => [
                 'totalPegawai' => $totalPegawai,
                 'hadir'        => $hadirCount,
-                'izinSakit'    => $izinSakitCount,
-                'dinasLuar'    => $dinasLuarCount,
+                'izin'         => $izinCount,
+                'sakit'        => $sakitCount,
                 'alpa'         => $alpaCount,
                 'belumMasuk'   => $belumMasukCount,
                 'persenHadir'  => $persenHadir,

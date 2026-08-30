@@ -105,10 +105,9 @@
 
         /* KODE WARNA */
         .code-H { background: #dcfce7; color: #166534; font-weight: bold; }
-        .code-T { background: #fef3c7; color: #92400e; font-weight: bold; }
+        .code-I { background: #fef3c7; color: #92400e; font-weight: bold; }
+        .code-S { background: #f3e8ff; color: #6b21a8; font-weight: bold; }
         .code-A { background: #fee2e2; color: #991b1b; font-weight: bold; }
-        .code-I { background: #f3e8ff; color: #6b21a8; font-weight: bold; }
-        .code-D { background: #dbeafe; color: #1e40af; font-weight: bold; }
         .code-L { background: #f1f5f9; color: #64748b; font-size: 5.8pt; }
         .code-- { background: #fafafa; color: #94a3b8; }
 
@@ -166,21 +165,20 @@
         <thead>
             <tr>
                 <th rowspan="2" style="width:20px;">No</th>
-                <th rowspan="2" style="width:125px;">Nama Perangkat Desa</th>
-                <th rowspan="2" style="width:85px;">Jabatan</th>
+                <th rowspan="2" style="width:130px;">Nama Perangkat Desa</th>
+                <th rowspan="2" style="width:90px;">Jabatan</th>
                 <th colspan="{{ $daysInMonth }}" class="sub">TANGGAL</th>
-                <th colspan="5" class="sub">REKAPITULASI</th>
-                <th rowspan="2" class="sub" style="width:26px;">%<br>HDR</th>
+                <th colspan="4" class="sub">REKAPITULASI</th>
+                <th rowspan="2" class="sub" style="width:28px;">%<br>HDR</th>
             </tr>
             <tr>
                 @for ($d = 1; $d <= $daysInMonth; $d++)
                     <th style="width:13px; font-size:5.8pt;">{{ $d }}</th>
                 @endfor
-                <th style="width:15px; font-size:6.5pt;">H</th>
-                <th style="width:15px; font-size:6.5pt;">T</th>
-                <th style="width:15px; font-size:6.5pt;">I</th>
-                <th style="width:15px; font-size:6.5pt;">D</th>
-                <th style="width:15px; font-size:6.5pt;">A</th>
+                <th style="width:17px; font-size:6.5pt;">H</th>
+                <th style="width:17px; font-size:6.5pt;">I</th>
+                <th style="width:17px; font-size:6.5pt;">S</th>
+                <th style="width:17px; font-size:6.5pt;">A</th>
             </tr>
         </thead>
         <tbody>
@@ -194,9 +192,8 @@
                         <td class="code-{{ $code }}" style="font-size:6pt;">{{ $code }}</td>
                     @endfor
                     <td style="background:#dcfce7; color:#166534; font-weight:bold;">{{ $summary[$p->id]['H'] ?? 0 }}</td>
-                    <td style="background:#fef3c7; color:#92400e; font-weight:bold;">{{ $summary[$p->id]['T'] ?? 0 }}</td>
-                    <td style="background:#f3e8ff; color:#6b21a8; font-weight:bold;">{{ $summary[$p->id]['I'] ?? 0 }}</td>
-                    <td style="background:#dbeafe; color:#1e40af; font-weight:bold;">{{ $summary[$p->id]['D'] ?? 0 }}</td>
+                    <td style="background:#fef3c7; color:#92400e; font-weight:bold;">{{ $summary[$p->id]['I'] ?? 0 }}</td>
+                    <td style="background:#f3e8ff; color:#6b21a8; font-weight:bold;">{{ $summary[$p->id]['S'] ?? 0 }}</td>
                     <td style="background:#fee2e2; color:#991b1b; font-weight:bold;">{{ $summary[$p->id]['A'] ?? 0 }}</td>
                     <td style="background:#f0fdf4; color:#166534; font-weight:bold;">{{ $summary[$p->id]['persen'] ?? 0 }}%</td>
                 </tr>
@@ -209,9 +206,8 @@
                     <td style="font-size:5.5pt; color:#555;">—</td>
                 @endfor
                 <td style="background:#dcfce7; color:#166534;">{{ collect($summary)->sum('H') }}</td>
-                <td style="background:#fef3c7; color:#92400e;">{{ collect($summary)->sum('T') }}</td>
-                <td style="background:#f3e8ff; color:#6b21a8;">{{ collect($summary)->sum('I') }}</td>
-                <td style="background:#dbeafe; color:#1e40af;">{{ collect($summary)->sum('D') }}</td>
+                <td style="background:#fef3c7; color:#92400e;">{{ collect($summary)->sum('I') }}</td>
+                <td style="background:#f3e8ff; color:#6b21a8;">{{ collect($summary)->sum('S') }}</td>
                 <td style="background:#fee2e2; color:#991b1b;">{{ collect($summary)->sum('A') }}</td>
                 <td style="background:#f0fdf4;">—</td>
             </tr>
@@ -220,7 +216,7 @@
 
     <!-- KETERANGAN KODE -->
     <p class="footer-note">
-        Keterangan: <strong>H</strong> = Hadir Tepat Waktu &nbsp;|&nbsp; <strong>T</strong> = Terlambat &nbsp;|&nbsp; <strong>I</strong> = Izin/Sakit &nbsp;|&nbsp; <strong>D</strong> = Dinas Luar (SPT) &nbsp;|&nbsp; <strong>A</strong> = Alpa/Tanpa Keterangan &nbsp;|&nbsp; <strong>L</strong> = Libur/Akhir Pekan<br>
+        Keterangan: <strong>H</strong> = Hadir &nbsp;|&nbsp; <strong>I</strong> = Izin &nbsp;|&nbsp; <strong>S</strong> = Sakit &nbsp;|&nbsp; <strong>A</strong> = Alpa/Tanpa Keterangan &nbsp;|&nbsp; <strong>L</strong> = Libur/Akhir Pekan<br>
         * Dicetak otomatis dari Sistem Presensi Digital Desa Nangtang — {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }} WIB
     </p>
 

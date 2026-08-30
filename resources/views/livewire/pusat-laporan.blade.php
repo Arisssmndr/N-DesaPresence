@@ -170,12 +170,11 @@
                     Semua berkas laporan resmi dicetak menggunakan kop surat baku <strong>Pemerintah Desa Nangtang</strong> lengkap dengan penomoran dokumen kedinasan, kolom tanda tangan Kepala Desa, dan paraf Sekretaris Desa.
                 </p>
                 <div class="flex flex-wrap gap-2 mt-3 text-[11px] font-semibold text-slate-700">
-                    <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded">H = Hadir Tepat Waktu</span>
-                    <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded">T = Terlambat</span>
-                    <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded">A = Alpa / Tanpa Keterangan</span>
-                    <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded">I = Izin / Sakit</span>
-                    <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded">D = Dinas Luar (SPT)</span>
-                    <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded">L = Libur / Akhir Pekan</span>
+                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded font-bold">H = Hadir</span>
+                    <span class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded font-bold">I = Izin</span>
+                    <span class="px-2.5 py-1 bg-purple-50 text-purple-800 border border-purple-200 rounded font-bold">S = Sakit</span>
+                    <span class="px-2.5 py-1 bg-red-50 text-red-800 border border-red-200 rounded font-bold">A = Alpa / Tanpa Keterangan</span>
+                    <span class="px-2.5 py-1 bg-slate-100 text-slate-600 border border-slate-200 rounded">L = Libur / Akhir Pekan</span>
                 </div>
             </div>
         </div>

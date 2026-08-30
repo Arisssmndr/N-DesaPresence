@@ -87,7 +87,7 @@ class MatriksPresensi extends Component
             $izinList = $semuaIzin->get($p->id, collect());
             $sptList = $semuaSpt->get($p->id, collect());
 
-            $pSummary = ['H' => 0, 'A' => 0, 'I' => 0, 'D' => 0, 'L' => 0];
+            $pSummary = ['H' => 0, 'I' => 0, 'S' => 0, 'A' => 0, 'L' => 0];
 
             for ($d = 1; $d <= $daysInMonth; $d++) {
                 $dateStr = sprintf("%04d-%02d-%02d", $this->tahun, $this->bulan, $d);
@@ -102,22 +102,19 @@ class MatriksPresensi extends Component
                 if (isset($kehadirans[$dateStr])) {
                     $status = $kehadirans[$dateStr]->status;
                     $code = match ($status) {
-                        'Hadir', 'Tepat Waktu', 'Terlambat' => 'H',
-                        'Izin', 'Sakit'                     => 'I',
-                        'Dinas Luar'                        => 'D',
-                        default                             => 'A',
+                        'Hadir', 'Tepat Waktu', 'Terlambat', 'Dinas Luar' => 'H',
+                        'Izin'                                            => 'I',
+                        'Sakit'                                           => 'S',
+                        default                                           => 'A',
                     };
-                } elseif ($this->checkApprovedIzin($izinList, $dateStr)) {
-                    $code = 'I';
+                } elseif ($izinObj = $this->getApprovedIzin($izinList, $dateStr)) {
+                    $code = str_contains(strtolower($izinObj->jenis ?? ''), 'sakit') ? 'S' : 'I';
                 } elseif ($this->checkApprovedSpt($sptList, $dateStr)) {
-                    $code = 'D';
+                    $code = 'H';
                 } elseif ($isHoliday) {
                     $code = 'L';
-                } elseif ($isFuture) {
-                    // Tanggal belum terjadi (masa depan, misal tgl 23-31): JANGAN ALPA!
-                    $code = '-';
-                } elseif ($isToday) {
-                    // Hari ini jika belum scan presensi, belum dianggap Alpa definitif
+                } elseif ($isFuture || $isToday) {
+                    // Tanggal belum terjadi / hari ini belum scan presensi
                     $code = '-';
                 } else {
                     // Hari kerja lampau yang tidak memiliki scan presensi
@@ -144,16 +141,16 @@ class MatriksPresensi extends Component
         ])->layout('layouts.app', ['title' => 'Buku Matriks Presensi — Presence Desa']);
     }
 
-    private function checkApprovedIzin($izinList, string $dateStr): bool
+    private function getApprovedIzin($izinList, string $dateStr): ?object
     {
         foreach ($izinList as $izin) {
             $mulai = is_string($izin->tanggal_mulai) ? substr($izin->tanggal_mulai, 0, 10) : $izin->tanggal_mulai->format('Y-m-d');
             $selesai = is_string($izin->tanggal_selesai) ? substr($izin->tanggal_selesai, 0, 10) : $izin->tanggal_selesai->format('Y-m-d');
             if ($dateStr >= $mulai && $dateStr <= $selesai) {
-                return true;
+                return $izin;
             }
         }
-        return false;
+        return null;
     }
 
     private function checkApprovedSpt($sptList, string $dateStr): bool

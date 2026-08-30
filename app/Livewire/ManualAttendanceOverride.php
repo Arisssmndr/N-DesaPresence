@@ -30,7 +30,7 @@ class ManualAttendanceOverride extends Component
         return [
             'pegawai_id' => 'required|exists:pegawais,id',
             'tanggal' => 'required|date',
-            'status' => 'required|in:Hadir,Tepat Waktu,Terlambat,Izin,Sakit,Dinas Luar,Alpa,Libur',
+            'status' => 'required|in:Hadir,Alpa,Izin,Sakit',
             'keterangan' => 'required|string|min:5|max:255',
         ];
     }
@@ -50,9 +50,9 @@ class ManualAttendanceOverride extends Component
             }
         }
 
-        // Jika override berstatus Hadir/Terlambat, lampirkan sampel TTD digital pegawai jika tersedia
+        // Jika override berstatus Hadir, lampirkan sampel TTD digital pegawai jika tersedia
         $ttdMasuk = null;
-        if (in_array($this->status, ['Hadir', 'Tepat Waktu', 'Terlambat'])) {
+        if ($this->status === 'Hadir') {
             $ttdMasuk = Kehadiran::where('pegawai_id', $this->pegawai_id)
                 ->whereNotNull('tanda_tangan_masuk')
                 ->latest('tanggal')

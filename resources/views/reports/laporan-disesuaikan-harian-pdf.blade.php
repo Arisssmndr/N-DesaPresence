@@ -308,16 +308,13 @@
                     if ($k) {
                         $statusVal = $k->status_disesuaikan ?? $k->status;
                         $statusLabel = match($statusVal) {
-                            'Tepat Waktu' => 'Hadir',
-                            default       => $statusVal,
+                            'Tepat Waktu', 'Terlambat', 'Dinas Luar' => 'Hadir',
+                            default                                  => $statusVal,
                         };
                         $statusClass = match($statusVal) {
-                            'Tepat Waktu', 'Hadir' => 'status-bold',
-                            'Terlambat'            => 'status-text',
-                            'Izin'                 => 'status-text',
-                            'Sakit'                => 'status-text',
-                            'Dinas Luar'           => 'status-bold',
-                            default                => 'status-bold',
+                            'Tepat Waktu', 'Hadir', 'Dinas Luar' => 'status-bold',
+                            'Izin', 'Sakit'                      => 'status-text',
+                            default                              => 'status-bold',
                         };
                     } elseif ($isWeekend || $hariLiburs) {
                         $statusLabel = 'Libur';
@@ -380,7 +377,7 @@
             <tr>
                 <td colspan="6" style="text-align:right; font-weight:bold;">TOTAL KEHADIRAN HARI INI :</td>
                 <td colspan="2" style="font-weight:bold; text-align:center; color:#000;">
-                    {{ $rekap['hadir'] + $rekap['terlambat'] + $rekap['dinas'] }} / {{ $pegawais->count() }} Pegawai
+                    {{ $rekap['hadir'] }} / {{ $pegawais->count() }} Pegawai
                 </td>
             </tr>
         </tfoot>

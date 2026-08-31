@@ -171,9 +171,29 @@ class StafPortalController extends Controller
         // ─── JADWAL PIKET DESA (H-1, Hari Ini, & Lepas Piket) ─────────────────
         $notifPikets = \App\Models\JadwalPiket::where('pegawai_id', $pegawai->id)
             ->whereDate('tanggal_piket', '>=', Carbon::yesterday())
-            ->whereDate('tanggal_piket', '<=', Carbon::today()->addDays(7))
+            ->whereDate('tanggal_piket', '<=', Carbon::tomorrow())
             ->orderBy('tanggal_piket')
             ->get();
+
+        // ─── SELURUH JADWAL PIKET SAYA (UNTUK MODAL KALENDER) ─────────────────
+        $semuaJadwalPiket = \App\Models\JadwalPiket::where('pegawai_id', $pegawai->id)
+            ->orderBy('tanggal_piket')
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id'              => $p->id,
+                    'tanggal_piket'   => $p->tanggal_piket->toDateString(),
+                    'jam_mulai'       => substr($p->jam_mulai, 0, 5),
+                    'jam_selesai'     => substr($p->jam_selesai, 0, 5),
+                    'keterangan'      => $p->keterangan,
+                    'status'          => $p->status,
+                    'is_sudah_masuk'  => $p->isSudahMasuk(),
+                    'is_sudah_pulang' => $p->isSudahPulang(),
+                    'is_selesai'      => $p->isSelesaiLengkap(),
+                    'waktu_absen'     => $p->waktu_absen ? $p->waktu_absen->format('H:i') : null,
+                    'waktu_pulang'    => $p->waktu_pulang ? $p->waktu_pulang->format('H:i') : null,
+                ];
+            });
 
         // Cek jika kemarin piket dan selesai hadir/pulang -> hari ini Lepas Piket
         $piketKemarin = \App\Models\JadwalPiket::where('pegawai_id', $pegawai->id)
@@ -242,6 +262,7 @@ class StafPortalController extends Controller
             'notifPengajuan',
             'notifSpts',
             'notifPikets',
+            'semuaJadwalPiket',
             'isLepasPiketHariIni',
             'piketKemarin'
         ));

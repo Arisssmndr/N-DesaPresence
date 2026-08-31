@@ -1,7 +1,7 @@
 @extends('staf.layout', ['title' => 'Beranda Presensi — ' . $pegawai->nama_lengkap])
 
 @section('content')
-<div class="space-y-4 pb-6">
+<div class="space-y-4 pb-6" x-data="piketCalendarModal({{ json_encode($semuaJadwalPiket) }})">
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- 1. PROFILE HEADER CARD (SELARAS, ELEGAN & MEWAH)                       -->
@@ -472,210 +472,445 @@
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- 4. NOTIFIKASI JADWAL PIKET DESA (H-1, HARI INI, & LEPAS PIKET)        -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    @if(isset($notifPikets) && $notifPikets->count() > 0)
-    <div class="space-y-3" x-data="{ activePiketModal: null, activePiketType: 'masuk' }">
-        @foreach($notifPikets as $piket)
-            @php
-                $isToday = $piket->tanggal_piket->isToday();
-                $isTomorrow = $piket->tanggal_piket->isTomorrow();
-                $isYesterday = $piket->tanggal_piket->isYesterday();
-                
-                $isSudahMasuk = $piket->isSudahMasuk();
-                $isSudahPulang = $piket->isSudahPulang();
-                $isSelesaiLengkap = $piket->isSelesaiLengkap();
-                
-                $isWaktuMasukTiba = $piket->isWaktuMasukTiba();
-                $isWaktuPulangTiba = $piket->isWaktuPulangTiba();
-                
-                $isBisaMasuk = $piket->isBisaAbsenMasuk();
-                $isBisaPulang = $piket->isBisaAbsenPulang();
-                
-                $jamMulaiFormat = substr($piket->jam_mulai, 0, 5);
-                $jamSelesaiFormat = substr($piket->jam_selesai, 0, 5);
-            @endphp
-            <div class="sadi-card p-4 {{ $isToday || ($isYesterday && !$isSudahPulang) ? 'bg-gradient-to-br from-[#064E3B] to-[#04392B] text-white border border-[#C9A84C]' : 'bg-slate-900 text-white border border-slate-700' }} shadow-md relative overflow-hidden rounded-3xl">
-                <div class="flex items-start gap-3.5 relative z-10">
-                    <div class="w-10 h-10 rounded-2xl {{ $isSelesaiLengkap ? 'bg-emerald-500 text-white' : ($isBisaMasuk || $isBisaPulang ? 'bg-[#C9A84C] text-[#064E3B] animate-bounce' : ($isSudahMasuk ? 'bg-blue-600 text-white' : 'bg-slate-800 text-amber-400')) }} flex items-center justify-center shrink-0 shadow-md">
-                        @if($isSelesaiLengkap)
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        @elseif($isSudahMasuk && !$isSudahPulang)
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        @else
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                        @endif
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center justify-between gap-2 flex-wrap">
-                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider {{ $isToday ? 'bg-[#E2C268] text-[#064E3B]' : ($isYesterday ? 'bg-purple-900 text-purple-200 border border-purple-700' : 'bg-blue-900 text-blue-200 border border-blue-700') }}">
-                                {{ $isToday ? 'JADWAL PIKET HARI INI' : ($isYesterday ? 'PIKET KEMARIN' : ($isTomorrow ? 'JADWAL PIKET BESOK (H-1)' : 'JADWAL PIKET DESA')) }}
-                            </span>
-                            
-                            @if($isSelesaiLengkap)
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white shadow-xs">
-                                    ✓ Hadir Lengkap (Masuk & Pulang)
-                                </span>
-                            @elseif($isSudahMasuk && !$isWaktuPulangTiba)
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500 text-white shadow-xs">
-                                    Sedang Bertugas Piket
-                                </span>
-                            @elseif($isBisaPulang)
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-900 animate-pulse">
-                                    ⚠️ Wajib Absen Pulang
-                                </span>
-                            @elseif($isBisaMasuk)
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-900 animate-pulse">
-                                    ⚠️ Wajib Absen Masuk
-                                </span>
-                            @else
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-700 text-slate-300">
-                                    Terjadwal
-                                </span>
-                            @endif
-                        </div>
+    <div class="space-y-3">
+        <!-- Header Baris Piket dengan Tombol "Jadwal Piket Saya" -->
+        <div class="flex items-center justify-between px-1">
+            <h3 class="font-outfit font-extrabold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                <span>Jadwal Piket Jaga Desa</span>
+            </h3>
+            <button type="button" @click="showModal = true"
+                    class="px-3 py-1.5 rounded-xl bg-[#064E3B] hover:bg-[#04392B] text-white border border-[#C9A84C]/50 text-[11px] font-extrabold shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95">
+                <svg class="w-3.5 h-3.5 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span>Jadwal Piket Saya</span>
+            </button>
+        </div>
 
-                        <h4 class="font-outfit font-extrabold text-sm text-white mt-1 leading-snug">
-                            {{ $piket->keterangan }}
-                        </h4>
+        @if(isset($notifPikets) && $notifPikets->count() > 0)
+            <div class="space-y-3" x-data="{ activePiketModal: null, activePiketType: 'masuk' }">
+                @foreach($notifPikets as $piket)
+                    @php
+                        $isToday = $piket->tanggal_piket->isToday();
+                        $isTomorrow = $piket->tanggal_piket->isTomorrow();
+                        $isYesterday = $piket->tanggal_piket->isYesterday();
                         
-                        <p class="text-xs text-emerald-100 font-semibold mt-0.5">
-                            Waktu Piket: <span class="text-[#E2C268] font-mono font-bold">{{ \Carbon\Carbon::parse($piket->tanggal_piket)->isoFormat('dddd, D MMMM Y') }} ({{ $jamMulaiFormat }} - {{ $jamSelesaiFormat }} WIB)</span>
-                        </p>
-
-                        <!-- Log Absensi Real-Time Info -->
-                        <div class="mt-2 grid grid-cols-2 gap-2 text-[11px] bg-black/20 p-2 rounded-xl border border-white/10">
-                            <div class="space-y-0.5">
-                                <span class="text-emerald-300 block text-[10px] uppercase font-bold">1. Absen Masuk:</span>
-                                @if($isSudahMasuk)
-                                    <span class="text-emerald-200 font-mono font-bold flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                                        {{ $piket->waktu_absen?->format('H:i') }} WIB
-                                    </span>
-                                @else
-                                    <span class="text-slate-400 italic">Belum absen</span>
-                                @endif
-                            </div>
-                            <div class="space-y-0.5">
-                                <span class="text-emerald-300 block text-[10px] uppercase font-bold">2. Absen Pulang:</span>
-                                @if($isSudahPulang)
-                                    <span class="text-emerald-200 font-mono font-bold flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                                        {{ $piket->waktu_pulang?->format('H:i') }} WIB
-                                    </span>
-                                @else
-                                    <span class="text-slate-400 italic">Belum absen</span>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="mt-2.5 pt-2 border-t border-emerald-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
-                            <div class="text-[10px] text-emerald-300">
-                                <span>Kompensasi:</span>
-                                <strong class="text-white block font-sans">Otomatis Hadir (Lepas Piket)</strong>
-                            </div>
-
-                            <!-- Interactive Action Buttons with Precise Time Gates -->
-                            <div class="flex items-center gap-2">
-                                @if(!$isSudahMasuk)
-                                    @if($isBisaMasuk)
-                                        <button type="button" @click="activePiketModal = {{ $piket->id }}; activePiketType = 'masuk'; setTimeout(() => { initPiketPad({{ $piket->id }}) }, 100);"
-                                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#C9A84C] text-[#064E3B] font-outfit text-xs font-extrabold shadow hover:bg-[#E2C268] transition cursor-pointer active:scale-95">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
-                                            <span>Tanda Tangan Absen Masuk</span>
-                                        </button>
-                                    @else
-                                        <button type="button" disabled
-                                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800/80 text-slate-400 border border-slate-700 text-[11px] font-semibold cursor-not-allowed"
-                                                title="Absen masuk hanya dapat diisi saat jam mulai piket telah tiba (pukul {{ $jamMulaiFormat }} WIB)">
-                                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                                            <span>Masuk Buka Pukul {{ $jamMulaiFormat }} WIB</span>
-                                        </button>
-                                    @endif
-                                @elseif(!$isSudahPulang)
-                                    @if($isBisaPulang)
-                                        <button type="button" @click="activePiketModal = {{ $piket->id }}; activePiketType = 'pulang'; setTimeout(() => { initPiketPad({{ $piket->id }}) }, 100);"
-                                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-outfit text-xs font-extrabold shadow hover:scale-105 transition cursor-pointer active:scale-95 animate-pulse">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                                            <span>Tanda Tangan Absen Pulang</span>
-                                        </button>
-                                    @else
-                                        <button type="button" disabled
-                                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-900/60 text-blue-200 border border-blue-700/60 text-[11px] font-semibold cursor-not-allowed"
-                                                title="Absen pulang dapat diisi setelah jam piket selesai (pukul {{ $jamSelesaiFormat }} WIB)">
-                                            <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                            <span>Pulang Buka Pukul {{ $jamSelesaiFormat }} WIB</span>
-                                        </button>
-                                    @endif
-                                @else
-                                    <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-900/60 text-emerald-300 border border-emerald-700/60 text-[11px] font-bold">
-                                        <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                                        <span>Tugas Piket Selesai</span>
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- MODAL TANDA TANGAN PIKET (MASUK / PULANG) -->
-                <div x-show="activePiketModal === {{ $piket->id }}"
-                     x-transition.opacity
-                     class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
-                     style="display: none;"
-                     @keydown.escape.window="activePiketModal = null">
-                    <div @click.away="activePiketModal = null"
-                         class="bg-white text-slate-800 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 my-6 flex flex-col max-h-[92vh]">
+                        $isSudahMasuk = $piket->isSudahMasuk();
+                        $isSudahPulang = $piket->isSudahPulang();
+                        $isSelesaiLengkap = $piket->isSelesaiLengkap();
                         
-                        <div class="px-5 py-3.5 bg-[#064E3B] text-white flex items-center justify-between border-b border-[#C9A84C]/40 shrink-0">
-                            <div>
-                                <h3 class="font-outfit text-sm font-bold text-white flex items-center gap-1.5">
-                                    <span x-text="activePiketType === 'pulang' ? 'Tanda Tangan Presensi PULANG Piket' : 'Tanda Tangan Presensi MASUK Piket'"></span>
-                                </h3>
-                                <p class="text-[10px] text-emerald-200 mt-0.5" x-text="activePiketType === 'pulang' ? 'Konfirmasi penyelesaian tugas piket & kepulangan' : 'Konfirmasi kehadiran awal pelaksanaan piket'"></p>
+                        $isWaktuMasukTiba = $piket->isWaktuMasukTiba();
+                        $isWaktuPulangTiba = $piket->isWaktuPulangTiba();
+                        
+                        $isBisaMasuk = $piket->isBisaAbsenMasuk();
+                        $isBisaPulang = $piket->isBisaAbsenPulang();
+                        
+                        $jamMulaiFormat = substr($piket->jam_mulai, 0, 5);
+                        $jamSelesaiFormat = substr($piket->jam_selesai, 0, 5);
+                    @endphp
+                    <div class="sadi-card p-4 {{ $isToday || ($isYesterday && !$isSudahPulang) ? 'bg-gradient-to-br from-[#064E3B] to-[#04392B] text-white border border-[#C9A84C]' : 'bg-slate-900 text-white border border-slate-700' }} shadow-md relative overflow-hidden rounded-3xl">
+                        <div class="flex items-start gap-3.5 relative z-10">
+                            <div class="w-10 h-10 rounded-2xl {{ $isSelesaiLengkap ? 'bg-emerald-500 text-white' : ($isBisaMasuk || $isBisaPulang ? 'bg-[#C9A84C] text-[#064E3B] animate-bounce' : ($isSudahMasuk ? 'bg-blue-600 text-white' : 'bg-slate-800 text-amber-400')) }} flex items-center justify-center shrink-0 shadow-md">
+                                @if($isSelesaiLengkap)
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                @elseif($isSudahMasuk && !$isSudahPulang)
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                @else
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                @endif
                             </div>
-                            <button type="button" @click="activePiketModal = null" class="p-1 rounded-lg hover:bg-emerald-800 text-emerald-200 hover:text-white transition cursor-pointer">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                            </button>
-                        </div>
-
-                        <form id="form-piket-{{ $piket->id }}" action="{{ route('staf.piket.absen') }}" method="POST" onsubmit="return submitPiketForm(event, {{ $piket->id }})" class="p-4 space-y-3 text-xs">
-                            @csrf
-                            <input type="hidden" name="piket_id" value="{{ $piket->id }}">
-                            <input type="hidden" name="tipe" :value="activePiketType">
-                            <input type="hidden" name="tanda_tangan" id="input-ttd-{{ $piket->id }}">
-
-                            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
-                                <p class="font-bold text-slate-800">{{ $piket->keterangan }}</p>
-                                <p class="text-[11px] text-slate-600">Pelaksanaan: {{ \Carbon\Carbon::parse($piket->tanggal_piket)->isoFormat('dddd, D MMMM Y') }} ({{ $jamMulaiFormat }} - {{ $jamSelesaiFormat }} WIB)</p>
-                            </div>
-
-                            <div>
-                                <div class="flex items-center justify-between mb-1">
-                                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                                        <span x-text="activePiketType === 'pulang' ? 'Bubuhkan TTD Pulang Anda' : 'Bubuhkan TTD Hadir Anda'"></span>
-                                    </label>
-                                    <button type="button" onclick="clearPiketPad({{ $piket->id }})" class="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer">Hapus / Ulangi</button>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-2 flex-wrap">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider {{ $isToday ? 'bg-[#E2C268] text-[#064E3B]' : ($isYesterday ? 'bg-purple-900 text-purple-200 border border-purple-700' : 'bg-blue-900 text-blue-200 border border-blue-700') }}">
+                                        {{ $isToday ? 'JADWAL PIKET HARI INI' : ($isYesterday ? 'PIKET KEMARIN' : ($isTomorrow ? 'JADWAL PIKET BESOK (H-1)' : 'JADWAL PIKET DESA')) }}
+                                    </span>
+                                    
+                                    @if($isSelesaiLengkap)
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white shadow-xs">
+                                            ✓ Hadir Lengkap (Masuk & Pulang)
+                                        </span>
+                                    @elseif($isSudahMasuk && !$isWaktuPulangTiba)
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500 text-white shadow-xs">
+                                            Sedang Bertugas Piket
+                                        </span>
+                                    @elseif($isBisaPulang)
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-900 animate-pulse">
+                                            ⚠️ Wajib Absen Pulang
+                                        </span>
+                                    @elseif($isBisaMasuk)
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-900 animate-pulse">
+                                            ⚠️ Wajib Absen Masuk
+                                        </span>
+                                    @else
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-700 text-slate-300">
+                                            Terjadwal
+                                        </span>
+                                    @endif
                                 </div>
-                                <div id="wrapper-piket-{{ $piket->id }}" class="border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 overflow-hidden relative">
-                                    <canvas id="canvas-piket-{{ $piket->id }}" class="w-full h-36 cursor-crosshair touch-none"></canvas>
+
+                                <h4 class="font-outfit font-extrabold text-sm text-white mt-1 leading-snug">
+                                    {{ $piket->keterangan }}
+                                </h4>
+                                
+                                <p class="text-xs text-emerald-100 font-semibold mt-0.5">
+                                    Waktu Piket: <span class="text-[#E2C268] font-mono font-bold">{{ \Carbon\Carbon::parse($piket->tanggal_piket)->isoFormat('dddd, D MMMM Y') }} ({{ $jamMulaiFormat }} - {{ $jamSelesaiFormat }} WIB)</span>
+                                </p>
+
+                                <!-- Log Absensi Real-Time Info -->
+                                <div class="mt-2 grid grid-cols-2 gap-2 text-[11px] bg-black/20 p-2 rounded-xl border border-white/10">
+                                    <div class="space-y-0.5">
+                                        <span class="text-emerald-300 block text-[10px] uppercase font-bold">1. Absen Masuk:</span>
+                                        @if($isSudahMasuk)
+                                            <span class="text-emerald-200 font-mono font-bold flex items-center gap-1">
+                                                <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                                {{ $piket->waktu_absen?->format('H:i') }} WIB
+                                            </span>
+                                        @else
+                                            <span class="text-slate-400 italic">Belum absen</span>
+                                        @endif
+                                    </div>
+                                    <div class="space-y-0.5">
+                                        <span class="text-emerald-300 block text-[10px] uppercase font-bold">2. Absen Pulang:</span>
+                                        @if($isSudahPulang)
+                                            <span class="text-emerald-200 font-mono font-bold flex items-center gap-1">
+                                                <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                                {{ $piket->waktu_pulang?->format('H:i') }} WIB
+                                            </span>
+                                        @else
+                                            <span class="text-slate-400 italic">Belum absen</span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="mt-2.5 pt-2 border-t border-emerald-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                    <div class="text-[10px] text-emerald-300">
+                                        <span>Kompensasi:</span>
+                                        <strong class="text-white block font-sans">Otomatis Hadir (Lepas Piket)</strong>
+                                    </div>
+
+                                    <!-- Interactive Action Buttons with Precise Time Gates -->
+                                    <div class="flex items-center gap-2">
+                                        @if(!$isSudahMasuk)
+                                            @if($isBisaMasuk)
+                                                <button type="button" @click="activePiketModal = {{ $piket->id }}; activePiketType = 'masuk'; setTimeout(() => { initPiketPad({{ $piket->id }}) }, 100);"
+                                                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#C9A84C] text-[#064E3B] font-outfit text-xs font-extrabold shadow hover:bg-[#E2C268] transition cursor-pointer active:scale-95">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                                                    <span>Tanda Tangan Absen Masuk</span>
+                                                </button>
+                                            @else
+                                                <button type="button" disabled
+                                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800/80 text-slate-400 border border-slate-700 text-[11px] font-semibold cursor-not-allowed"
+                                                        title="Absen masuk hanya dapat diisi saat jam mulai piket telah tiba (pukul {{ $jamMulaiFormat }} WIB)">
+                                                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                                    <span>Masuk Buka Pukul {{ $jamMulaiFormat }} WIB</span>
+                                                </button>
+                                            @endif
+                                        @elseif(!$isSudahPulang)
+                                            @if($isBisaPulang)
+                                                <button type="button" @click="activePiketModal = {{ $piket->id }}; activePiketType = 'pulang'; setTimeout(() => { initPiketPad({{ $piket->id }}) }, 100);"
+                                                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-outfit text-xs font-extrabold shadow hover:scale-105 transition cursor-pointer active:scale-95 animate-pulse">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                                    <span>Tanda Tangan Absen Pulang</span>
+                                                </button>
+                                            @else
+                                                <button type="button" disabled
+                                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-900/60 text-blue-200 border border-blue-700/60 text-[11px] font-semibold cursor-not-allowed"
+                                                        title="Absen pulang dapat diisi setelah jam piket selesai (pukul {{ $jamSelesaiFormat }} WIB)">
+                                                    <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                    <span>Pulang Buka Pukul {{ $jamSelesaiFormat }} WIB</span>
+                                                </button>
+                                            @endif
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-900/60 text-emerald-300 border border-emerald-700/60 text-[11px] font-bold">
+                                                <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                                <span>Tugas Piket Selesai</span>
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="pt-1 flex justify-end gap-2">
-                                <button type="button" @click="activePiketModal = null" class="px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition cursor-pointer">
-                                    Batal
-                                </button>
-                                <button type="submit" class="px-4 py-2 rounded-xl bg-[#064E3B] text-white font-bold hover:bg-[#04392B] transition cursor-pointer flex items-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                    <span x-text="activePiketType === 'pulang' ? 'Simpan Presensi Pulang' : 'Simpan Presensi Masuk'"></span>
-                                </button>
+                        <!-- MODAL TANDA TANGAN PIKET (MASUK / PULANG) -->
+                        <div x-show="activePiketModal === {{ $piket->id }}"
+                             x-transition.opacity
+                             class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+                             style="display: none;"
+                             @keydown.escape.window="activePiketModal = null">
+                            <div @click.away="activePiketModal = null"
+                                 class="bg-white text-slate-800 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 my-6 flex flex-col max-h-[92vh]">
+                                
+                                <div class="px-5 py-3.5 bg-[#064E3B] text-white flex items-center justify-between border-b border-[#C9A84C]/40 shrink-0">
+                                    <div>
+                                        <h3 class="font-outfit text-sm font-bold text-white flex items-center gap-1.5">
+                                            <span x-text="activePiketType === 'pulang' ? 'Tanda Tangan Presensi PULANG Piket' : 'Tanda Tangan Presensi MASUK Piket'"></span>
+                                        </h3>
+                                        <p class="text-[10px] text-emerald-200 mt-0.5" x-text="activePiketType === 'pulang' ? 'Konfirmasi penyelesaian tugas piket & kepulangan' : 'Konfirmasi kehadiran awal pelaksanaan piket'"></p>
+                                    </div>
+                                    <button type="button" @click="activePiketModal = null" class="p-1 rounded-lg hover:bg-emerald-800 text-emerald-200 hover:text-white transition cursor-pointer">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+
+                                <form id="form-piket-{{ $piket->id }}" action="{{ route('staf.piket.absen') }}" method="POST" onsubmit="return submitPiketForm(event, {{ $piket->id }})" class="p-4 space-y-3 text-xs">
+                                    @csrf
+                                    <input type="hidden" name="piket_id" value="{{ $piket->id }}">
+                                    <input type="hidden" name="tipe" :value="activePiketType">
+                                    <input type="hidden" name="tanda_tangan" id="input-ttd-{{ $piket->id }}">
+
+                                    <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+                                        <p class="font-bold text-slate-800">{{ $piket->keterangan }}</p>
+                                        <p class="text-[11px] text-slate-600">Pelaksanaan: {{ \Carbon\Carbon::parse($piket->tanggal_piket)->isoFormat('dddd, D MMMM Y') }} ({{ $jamMulaiFormat }} - {{ $jamSelesaiFormat }} WIB)</p>
+                                    </div>
+
+                                    <div>
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                                <span x-text="activePiketType === 'pulang' ? 'Bubuhkan TTD Pulang Anda' : 'Bubuhkan TTD Hadir Anda'"></span>
+                                            </label>
+                                            <button type="button" onclick="clearPiketPad({{ $piket->id }})" class="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer">Hapus / Ulangi</button>
+                                        </div>
+                                        <div id="wrapper-piket-{{ $piket->id }}" class="border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 overflow-hidden relative">
+                                            <canvas id="canvas-piket-{{ $piket->id }}" class="w-full h-36 cursor-crosshair touch-none"></canvas>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-1 flex justify-end gap-2">
+                                        <button type="button" @click="activePiketModal = null" class="px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition cursor-pointer">
+                                            Batal
+                                        </button>
+                                        <button type="submit" class="px-4 py-2 rounded-xl bg-[#064E3B] text-white font-bold hover:bg-[#04392B] transition cursor-pointer flex items-center gap-1.5">
+                                            <svg class="w-3.5 h-3.5 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                            <span x-text="activePiketType === 'pulang' ? 'Simpan Presensi Pulang' : 'Simpan Presensi Masuk'"></span>
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
-                        </form>
+                        </div>
                     </div>
-                </div>
+                @endforeach
             </div>
-        @endforeach
+        @else
+            <!-- Jika Tidak Ada Piket Hari Ini / Besok (H-1), Tampilkan Kartu Informasi & Akses Kalender -->
+            <div class="sadi-card p-4 bg-gradient-to-r from-slate-900 via-[#064E3B] to-slate-900 text-white border border-[#C9A84C]/40 shadow-sm rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-10 h-10 rounded-2xl bg-[#C9A84C] text-[#064E3B] flex items-center justify-center font-bold shadow-sm shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-outfit font-extrabold text-white text-xs sm:text-sm">Jadwal Piket Saya</h3>
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#E2C268] text-[#064E3B] uppercase tracking-wider">
+                                Posko Desa
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-emerald-200/90 mt-0.5">Tidak ada tugas piket hari ini atau besok. Buka kalender untuk melihat seluruh jadwal piket Anda.</p>
+                    </div>
+                </div>
+                <button type="button" @click="showModal = true"
+                        class="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-[#C9A84C] hover:bg-[#E2C268] text-[#064E3B] font-outfit text-xs font-extrabold transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer active:scale-95 shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Lihat Jadwal Piket Saya</span>
+                </button>
+            </div>
+        @endif
     </div>
-    @endif
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL KALENDER JADWAL PIKET SAYA (MINIMALIS & FORMAL)                  -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <div x-show="showModal"
+         x-transition.opacity
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+         style="display: none;"
+         @keydown.escape.window="showModal = false">
+        
+        <div @click.away="showModal = false"
+             class="bg-white text-slate-800 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 my-4 flex flex-col max-h-[92vh]">
+            
+            <!-- Header Modal -->
+            <div class="px-5 py-4 bg-[#064E3B] text-white flex items-center justify-between border-b border-[#C9A84C]/40 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-2xl bg-[#E2C268] text-[#064E3B] flex items-center justify-center font-bold shadow-sm shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-outfit text-sm sm:text-base font-extrabold text-white leading-tight">Jadwal Piket Saya</h3>
+                        <p class="text-[10.5px] text-emerald-200 font-medium">Kalender Penugasan Piket Jaga Desa</p>
+                    </div>
+                </div>
+                <button type="button" @click="showModal = false" class="p-1.5 rounded-xl hover:bg-emerald-800 text-emerald-200 hover:text-white transition cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Body Modal -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-4">
+                
+                <!-- Controls Navigasi Bulan -->
+                <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
+                    <button type="button" @click="prevMonth()" class="p-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition cursor-pointer shadow-2xs">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <div class="text-center">
+                        <h4 class="font-outfit font-extrabold text-sm sm:text-base text-slate-900" x-text="monthNames[currentMonth] + ' ' + currentYear"></h4>
+                        <span class="text-[10px] text-slate-500 font-medium" x-text="semuaPiket.length + ' Total Tugas Piket Terdaftar'"></span>
+                    </div>
+                    <button type="button" @click="nextMonth()" class="p-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition cursor-pointer shadow-2xs">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+
+                <!-- Grid Kalender (7 Kolom) -->
+                <div class="space-y-1.5">
+                    <!-- Header Nama Hari -->
+                    <div class="grid grid-cols-7 gap-1 text-center font-outfit font-extrabold text-[11px] text-slate-500 uppercase tracking-wider py-1">
+                        <template x-for="name in dayNames" :key="name">
+                            <div x-text="name"></div>
+                        </template>
+                    </div>
+
+                    <!-- Cell Hari -->
+                    <div class="grid grid-cols-7 gap-1 text-xs">
+                        <template x-for="(day, idx) in calendarDays" :key="idx">
+                            <div @click="selectDay(day)"
+                                 :class="{
+                                    'bg-slate-50 text-slate-300 border-transparent cursor-default': !day.isCurrentMonth,
+                                    'bg-white border-slate-200 text-slate-700 hover:border-emerald-500 cursor-pointer': day.isCurrentMonth && !day.piket,
+                                    'border-emerald-600 bg-emerald-50/50 cursor-pointer font-bold': day.isCurrentMonth && day.piket,
+                                    'ring-2 ring-[#C9A84C] ring-offset-1': day.dateStr && day.dateStr === selectedDateStr,
+                                    'bg-slate-100 font-extrabold': day.isToday && !day.piket
+                                 }"
+                                 class="h-12 sm:h-14 rounded-xl border p-1 flex flex-col items-center justify-between transition relative overflow-hidden select-none">
+                                
+                                <!-- Nomor Tanggal -->
+                                <div class="flex items-center justify-between w-full">
+                                    <span class="text-[11px]" :class="day.isToday ? 'px-1.5 py-0.5 bg-[#064E3B] text-white rounded-full text-[9.5px]' : ''" x-text="day.dayNum"></span>
+                                    <template x-if="day.piket">
+                                        <span class="w-1.5 h-1.5 rounded-full"
+                                              :class="{
+                                                'bg-emerald-500': day.piket.is_selesai,
+                                                'bg-amber-500 animate-pulse': day.piket.tanggal_piket === todayStr || day.piket.tanggal_piket === tomorrowStr,
+                                                'bg-rose-500': day.piket.tanggal_piket < todayStr && !day.piket.is_selesai,
+                                                'bg-blue-600': day.piket.tanggal_piket > tomorrowStr
+                                              }"></span>
+                                    </template>
+                                </div>
+
+                                <!-- Badge/Label Piket di Sel -->
+                                <template x-if="day.piket">
+                                    <div class="w-full text-center">
+                                        <span class="w-full block px-1 py-0.5 rounded text-[8.5px] font-extrabold truncate shadow-2xs"
+                                              :class="getPiketBadgeClass(day.piket)">
+                                            Piket
+                                        </span>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Panel Rincian Piket yang Dipilih -->
+                <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                    <template x-if="selectedPiket">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full"
+                                          :class="{
+                                            'bg-emerald-500': selectedPiket.is_selesai,
+                                            'bg-amber-500 animate-pulse': selectedPiket.tanggal_piket === todayStr || selectedPiket.tanggal_piket === tomorrowStr,
+                                            'bg-rose-500': selectedPiket.tanggal_piket < todayStr && !selectedPiket.is_selesai,
+                                            'bg-blue-600': selectedPiket.tanggal_piket > tomorrowStr
+                                          }"></span>
+                                    <h5 class="font-outfit font-extrabold text-xs text-slate-900" x-text="formatTanggalIndo(selectedPiket.tanggal_piket)"></h5>
+                                </div>
+                                
+                                <span class="px-2 py-0.5 rounded-full text-[9.5px] font-extrabold border"
+                                      :class="{
+                                        'bg-emerald-100 text-emerald-900 border-emerald-300': selectedPiket.is_selesai,
+                                        'bg-amber-100 text-amber-900 border-amber-300 animate-pulse': selectedPiket.tanggal_piket === todayStr || selectedPiket.tanggal_piket === tomorrowStr,
+                                        'bg-rose-100 text-rose-900 border-rose-300': selectedPiket.tanggal_piket < todayStr && !selectedPiket.is_selesai,
+                                        'bg-blue-100 text-blue-900 border-blue-300': selectedPiket.tanggal_piket > tomorrowStr
+                                      }"
+                                      x-text="selectedPiket.is_selesai ? 'Selesai (Hadir)' : (selectedPiket.tanggal_piket === todayStr ? 'Hari Ini' : (selectedPiket.tanggal_piket === tomorrowStr ? 'Besok (H-1)' : (selectedPiket.tanggal_piket < todayStr ? 'Terlewat' : 'Terjadwal')))">
+                                </span>
+                            </div>
+
+                            <div class="text-xs space-y-1 text-slate-700">
+                                <p class="font-bold text-slate-900" x-text="selectedPiket.keterangan"></p>
+                                <p class="text-[11px] text-slate-600 flex items-center gap-1 font-medium">
+                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span>Waktu Piket: <strong class="font-mono text-slate-900" x-text="selectedPiket.jam_mulai + ' - ' + selectedPiket.jam_selesai + ' WIB'"></strong></span>
+                                </p>
+
+                                <div class="mt-2 grid grid-cols-2 gap-2 pt-1 border-t border-slate-200 text-[10.5px]">
+                                    <div class="p-1.5 rounded-lg bg-white border border-slate-200">
+                                        <span class="text-slate-400 block text-[9.5px] font-bold uppercase">Absen Masuk:</span>
+                                        <span class="font-mono font-bold"
+                                              :class="selectedPiket.waktu_absen ? 'text-emerald-700' : 'text-slate-400 italic'"
+                                              x-text="selectedPiket.waktu_absen ? selectedPiket.waktu_absen + ' WIB' : 'Belum Absen'">
+                                        </span>
+                                    </div>
+                                    <div class="p-1.5 rounded-lg bg-white border border-slate-200">
+                                        <span class="text-slate-400 block text-[9.5px] font-bold uppercase">Absen Pulang:</span>
+                                        <span class="font-mono font-bold"
+                                              :class="selectedPiket.waktu_pulang ? 'text-emerald-700' : 'text-slate-400 italic'"
+                                              x-text="selectedPiket.waktu_pulang ? selectedPiket.waktu_pulang + ' WIB' : 'Belum Absen'">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="!selectedPiket">
+                        <div class="text-center py-3 text-slate-500 text-xs">
+                            <template x-if="selectedDateStr">
+                                <p class="font-semibold">Tidak ada jadwal piket pada <span class="font-mono font-bold text-slate-700" x-text="formatTanggalIndo(selectedDateStr)"></span>.</p>
+                            </template>
+                            <template x-if="!selectedDateStr">
+                                <p class="font-semibold">Klik salah satu tanggal berpenanda pada kalender untuk melihat rincian piket.</p>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Legend / Keterangan Penanda Warna -->
+                <div class="p-3 bg-white rounded-2xl border border-slate-200 text-[10.5px] space-y-1.5">
+                    <span class="font-bold text-slate-700 uppercase tracking-wider block text-[9.5px]">Keterangan Warna Penanda Status:</span>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 font-medium text-slate-600">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-full bg-blue-600 shrink-0"></span>
+                            <span>Terjadwal</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-full bg-amber-400 shrink-0"></span>
+                            <span>Besok / Hari Ini</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500 shrink-0"></span>
+                            <span>Selesai (Hadir)</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-full bg-rose-500 shrink-0"></span>
+                            <span>Terlewat</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer Modal -->
+            <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
+                <button type="button" @click="showModal = false"
+                        class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-extrabold text-xs transition cursor-pointer">
+                    Tutup
+                </button>
+            </div>
+
+        </div>
+    </div>
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
 
@@ -1021,6 +1256,142 @@
 
 @section('scripts')
 <script>
+    function piketCalendarModal(semuaPiket) {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        
+        const padZero = (n) => String(n).padStart(2, '0');
+        const todayStr = `${year}-${padZero(month + 1)}-${padZero(today.getDate())}`;
+        
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        const tomorrowStr = `${tomorrow.getFullYear()}-${padZero(tomorrow.getMonth() + 1)}-${padZero(tomorrow.getDate())}`;
+
+        return {
+            showModal: false,
+            semuaPiket: semuaPiket || [],
+            currentYear: year,
+            currentMonth: month,
+            selectedPiket: null,
+            selectedDateStr: null,
+            todayStr: todayStr,
+            tomorrowStr: tomorrowStr,
+            monthNames: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+            dayNames: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+
+            init() {
+                this.autoSelectPiket();
+            },
+
+            autoSelectPiket() {
+                const currentMonthPrefix = `${this.currentYear}-${padZero(this.currentMonth + 1)}`;
+                const piketBulanIni = this.semuaPiket.find(p => p.tanggal_piket.startsWith(currentMonthPrefix));
+                if (piketBulanIni) {
+                    this.selectedPiket = piketBulanIni;
+                    this.selectedDateStr = piketBulanIni.tanggal_piket;
+                } else if (this.semuaPiket.length > 0) {
+                    this.selectedPiket = this.semuaPiket[0];
+                    this.selectedDateStr = this.semuaPiket[0].tanggal_piket;
+                }
+            },
+
+            prevMonth() {
+                if (this.currentMonth === 0) {
+                    this.currentMonth = 11;
+                    this.currentYear--;
+                } else {
+                    this.currentMonth--;
+                }
+                this.autoSelectPiket();
+            },
+
+            nextMonth() {
+                if (this.currentMonth === 11) {
+                    this.currentMonth = 0;
+                    this.currentYear++;
+                } else {
+                    this.currentMonth++;
+                }
+                this.autoSelectPiket();
+            },
+
+            get calendarDays() {
+                const days = [];
+                const firstDayOfMonth = new Date(this.currentYear, this.currentMonth, 1);
+                const lastDayOfMonth = new Date(this.currentYear, this.currentMonth + 1, 0);
+
+                let startDay = firstDayOfMonth.getDay() - 1;
+                if (startDay === -1) startDay = 6;
+
+                const prevMonthLastDay = new Date(this.currentYear, this.currentMonth, 0).getDate();
+                for (let i = startDay - 1; i >= 0; i--) {
+                    days.push({
+                        dayNum: prevMonthLastDay - i,
+                        isCurrentMonth: false,
+                        dateStr: null,
+                        piket: null
+                    });
+                }
+
+                for (let d = 1; d <= lastDayOfMonth.getDate(); d++) {
+                    const dateStr = `${this.currentYear}-${padZero(this.currentMonth + 1)}-${padZero(d)}`;
+                    const piket = this.semuaPiket.find(p => p.tanggal_piket === dateStr);
+
+                    days.push({
+                        dayNum: d,
+                        isCurrentMonth: true,
+                        dateStr: dateStr,
+                        isToday: dateStr === this.todayStr,
+                        isTomorrow: dateStr === this.tomorrowStr,
+                        piket: piket || null
+                    });
+                }
+
+                const remaining = (7 - (days.length % 7)) % 7;
+                for (let i = 1; i <= remaining; i++) {
+                    days.push({
+                        dayNum: i,
+                        isCurrentMonth: false,
+                        dateStr: null,
+                        piket: null
+                    });
+                }
+
+                return days;
+            },
+
+            getPiketBadgeClass(piket) {
+                if (!piket) return '';
+                if (piket.is_selesai) {
+                    return 'bg-emerald-500 text-white border-emerald-600';
+                }
+                if (piket.tanggal_piket === this.todayStr || piket.tanggal_piket === this.tomorrowStr) {
+                    return 'bg-amber-400 text-slate-950 font-bold border-amber-500 animate-pulse';
+                }
+                if (piket.tanggal_piket < this.todayStr) {
+                    return 'bg-rose-500 text-white border-rose-600';
+                }
+                return 'bg-blue-600 text-white border-blue-700';
+            },
+
+            selectDay(day) {
+                if (!day.isCurrentMonth) return;
+                this.selectedDateStr = day.dateStr;
+                this.selectedPiket = day.piket || null;
+            },
+
+            formatTanggalIndo(dateStr) {
+                if (!dateStr) return '';
+                const parts = dateStr.split('-');
+                if (parts.length !== 3) return dateStr;
+                const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                const dayNamesFull = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                return `${dayNamesFull[d.getDay()]}, ${d.getDate()} ${this.monthNames[d.getMonth()]} ${d.getFullYear()}`;
+            }
+        };
+    }
+
     const piketPads = {};
 
     function initPiketPad(piketId) {

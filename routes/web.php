@@ -77,6 +77,9 @@ Route::prefix('staf')->group(function () {
         Route::get('/profil', [StafPortalController::class, 'profil'])->name('staf.profil');
         Route::get('/profil/edit', [\App\Http\Controllers\StafEditProfilController::class, 'edit'])->name('staf.profil.edit');
         Route::put('/profil', [\App\Http\Controllers\StafEditProfilController::class, 'update'])->name('staf.profil.update');
+        Route::delete('/profil/foto', [\App\Http\Controllers\StafEditProfilController::class, 'hapusFoto'])->name('staf.profil.hapus-foto');
+        Route::put('/profil/password', [\App\Http\Controllers\StafEditProfilController::class, 'updatePassword'])->name('staf.profil.update-password');
+        Route::put('/profil/ttd', [\App\Http\Controllers\StafEditProfilController::class, 'updateTtd'])->name('staf.profil.update-ttd');
 
         // ─── Pengajuan Izin & Sakit ───────────────────────────────────────────
         Route::get('/izin', [StafIzinController::class, 'index'])->name('staf.izin');
@@ -89,6 +92,11 @@ Route::prefix('staf')->group(function () {
         Route::get('/ajukan-absen', [PengajuanAbsenLuarController::class, 'form'])->name('staf.ajukan.form');
         Route::post('/ajukan-absen', [PengajuanAbsenLuarController::class, 'store'])->middleware('throttle:15,1')->name('staf.ajukan.store');
         Route::get('/riwayat-pengajuan', [PengajuanAbsenLuarController::class, 'riwayat'])->name('staf.riwayat.pengajuan');
+
+        // ─── Surat Perintah Tugas (SPT) Staf ──────────────────────────────────
+        Route::get('/spt', [StafPortalController::class, 'riwayatSpt'])->name('staf.spt.riwayat');
+        Route::post('/spt/{id}/terima', [StafPortalController::class, 'terimaSpt'])->name('staf.spt.terima');
+        Route::post('/spt/{id}/tolak', [StafPortalController::class, 'tolakSpt'])->name('staf.spt.tolak');
     });
 });
 
@@ -114,7 +122,7 @@ Route::middleware(['auth', 'role:admin,kepala_desa'])->group(function () {
     Route::get('/shift', ShiftManager::class)->name('shift.index');
     Route::get('/hari-libur', HariLiburManager::class)->name('hari-libur.index');
     Route::get('/log-absensi', AttendanceImporter::class)->name('attendance.import');
-    Route::get('/override-absensi', ManualAttendanceOverride::class)->name('attendance.override');
+    Route::get('/override-absensi', fn() => redirect()->route('izin.index', ['tab' => 'absen_manual']))->name('attendance.override');
     Route::get('/spt', SptManager::class)->name('spt.index');
     Route::get('/izin', IzinManager::class)->name('izin.index');
     Route::get('/jadwal-piket', JadwalPiketManager::class)->name('jadwal-piket.index');
@@ -126,13 +134,14 @@ Route::middleware(['auth', 'role:admin,kepala_desa'])->group(function () {
     // Pengaturan Sistem
     Route::get('/pengaturan-profil', AdminProfilManager::class)->name('admin.profil');
     Route::get('/akun-staf', UserStafManager::class)->name('user-staf.index');
-    Route::get('/konfigurasi-absensi', KonfigurasiAbsensiManager::class)->name('konfigurasi-absensi.index');
+    Route::get('/konfigurasi-absensi', fn() => redirect()->route('shift.index'))->name('konfigurasi-absensi.index');
     Route::get('/konfigurasi-wifi', KonfigurasiWifiManager::class)->name('konfigurasi-wifi.index');
     Route::get('/konfigurasi-wa', KonfigurasiWhatsAppManager::class)->name('konfigurasi-wa.index');
 
     // Phase 4 Routes (Matriks, PDF SPJ, Analitik)
     Route::get('/matriks', MatriksPresensi::class)->name('matriks.index');
     Route::get('/analitik', AnalitikDashboard::class)->name('analitik.index');
+    Route::get('/analitik/pdf', [LaporanController::class, 'laporanAnalitikPdf'])->name('analitik.pdf');
     Route::get('/spj-pdf', [SpjReportController::class, 'downloadPdf'])->name('spj.pdf');
 
     // Phase 5 Routes (Pusat Laporan — Standar Nasional RI)
@@ -152,4 +161,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/laporan-disesuaikan/tahunan-pdf', [LaporanDisesuaikanController::class, 'laporanTahunan'])->name('laporan-disesuaikan.tahunan');
     Route::get('/laporan-disesuaikan/rentang-pdf', [LaporanDisesuaikanController::class, 'laporanRentang'])->name('laporan-disesuaikan.rentang');
 });
+
+// Fallback Route untuk memastikan seluruh file publik di storage selalu dapat diakses/dilihat
+Route::get('/storage/{path}', function (string $path) {
+    $fullPath = storage_path('app/public/' . $path);
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+    return response()->file($fullPath);
+})->where('path', '.*')->name('storage.local');
 

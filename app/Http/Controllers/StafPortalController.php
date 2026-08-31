@@ -49,12 +49,85 @@ class StafPortalController extends Controller
             ->whereDate('tanggal', $today)
             ->first();
 
-        // Jika pengajuan dinas luar hari ini sudah disetujui atau status kehadiran sudah Dinas Luar / Izin / Sakit
-        $sudahDinasLuarAtauIzin = ($pengajuanHariIni && $pengajuanHariIni->status === 'disetujui') 
-            || ($kehadiranHariIni && in_array(strtolower($kehadiranHariIni->status), ['dinas luar', 'izin', 'sakit']));
+        // Cek apakah pegawai memiliki izin / sakit aktif pada hari ini
+        $izinAktifHariIni = \App\Models\IzinSakit::where('pegawai_id', $pegawai->id)
+            ->where('status', '!=', 'ditolak')
+            ->whereDate('tanggal_mulai', '<=', $today)
+            ->whereDate('tanggal_selesai', '>=', $today)
+            ->first();
 
-        $bisaAbsenMasuk = !$sudahDinasLuarAtauIzin && $isWifiValid && $isWaktuMasuk && (!$kehadiranHariIni || !$kehadiranHariIni->jam_masuk);
-        $bisaAbsenPulang = !$sudahDinasLuarAtauIzin && $isWifiValid && $isWaktuPulang && ($kehadiranHariIni && $kehadiranHariIni->jam_masuk && !$kehadiranHariIni->jam_pulang);
+        // ─── Cek Surat Perintah Tugas (SPT) ─────────────────────────────────
+        // 1. SPT yang menunggu respons staf (Terima / Tolak)
+        $sptMenunggu = \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)
+            ->where('respons_staf', 'menunggu')
+            ->where('status', '!=', 'ditolak')
+            ->latest()
+            ->get();
+
+        // 2. SPT yang aktif hari ini (sudah diterima staf & disetujui)
+        $sptAktifHariIni = \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)
+            ->where('respons_staf', 'diterima')
+            ->where('status', 'disetujui')
+            ->whereDate('tanggal_mulai', '<=', $today)
+            ->whereDate('tanggal_selesai', '>=', $today)
+            ->first();
+
+        // Jika ada SPT aktif hari ini, pastikan data kehadiran tercatat & kunci presensi mandiri
+        if ($sptAktifHariIni) {
+            if (!$kehadiranHariIni) {
+                $kehadiranHariIni = Kehadiran::create([
+                    'pegawai_id'          => $pegawai->id,
+                    'tanggal'             => $today,
+                    'status'              => 'Hadir',
+                    'jam_masuk'           => '07:30:00',
+                    'jam_pulang'          => '15:30:00',
+                    'tanda_tangan_masuk'  => $sptAktifHariIni->tanda_tangan_staf,
+                    'tanda_tangan_pulang' => $sptAktifHariIni->tanda_tangan_staf,
+                    'sumber_data'         => 'manual_admin',
+                    'diverifikasi_oleh'   => $sptAktifHariIni->disetujui_oleh ?? 1,
+                    'keterangan'          => "Dinas Luar SPT: {$sptAktifHariIni->nomor_spt} ({$sptAktifHariIni->tujuan})"
+                ]);
+            }
+        }
+
+        $sudahAbsenMasukHariIni = (bool) ($kehadiranHariIni && $kehadiranHariIni->jam_masuk);
+        $sudahAbsenPulangHariIni = (bool) ($kehadiranHariIni && $kehadiranHariIni->jam_pulang);
+
+        // Jika pengajuan dinas luar hari ini sudah disetujui atau status kehadiran sudah Dinas Luar / Izin / Sakit / SPT Aktif
+        $sudahDinasLuarAtauIzin = ($pengajuanHariIni && $pengajuanHariIni->status === 'disetujui') 
+            || ($izinAktifHariIni !== null)
+            || ($sptAktifHariIni !== null)
+            || ($kehadiranHariIni && in_array(strtolower($kehadiranHariIni->status), ['dinas luar', 'izin', 'sakit']) && !$sudahAbsenMasukHariIni);
+
+        $bisaAbsenMasuk = !$sudahDinasLuarAtauIzin && $isWifiValid && $isWaktuMasuk && !$sudahAbsenMasukHariIni;
+        $bisaAbsenPulang = !$sudahDinasLuarAtauIzin && $isWifiValid && $isWaktuPulang && ($sudahAbsenMasukHariIni && !$sudahAbsenPulangHariIni);
+
+        // Conflict Flags untuk Menu Absen Luar & Izin/Sakit
+        $bisaAjukanAbsenLuar = true;
+        $alasanKunciAbsenLuar = null;
+        if ($sptAktifHariIni) {
+            $bisaAjukanAbsenLuar = false;
+            $alasanKunciAbsenLuar = "Terkunci: Anda sedang bertugas dalam Surat Perintah Tugas (SPT {$sptAktifHariIni->nomor_spt} - {$sptAktifHariIni->tujuan}). Presensi dinas otomatis tercatat Hadir.";
+        } elseif ($sudahAbsenMasukHariIni) {
+            $bisaAjukanAbsenLuar = false;
+            $alasanKunciAbsenLuar = 'Terkunci: Anda sudah melakukan presensi langsung di kantor desa hari ini.';
+        } elseif ($izinAktifHariIni) {
+            $bisaAjukanAbsenLuar = false;
+            $alasanKunciAbsenLuar = 'Terkunci: Anda tercatat memiliki izin/sakit aktif (' . ucfirst(str_replace('_', ' ', $izinAktifHariIni->jenis)) . ') hari ini.';
+        }
+
+        $bisaAjukanIzin = true;
+        $alasanKunciIzin = null;
+        if ($sptAktifHariIni) {
+            $bisaAjukanIzin = false;
+            $alasanKunciIzin = "Terkunci: Anda memiliki Surat Perintah Tugas (SPT {$sptAktifHariIni->nomor_spt}) yang aktif hari ini.";
+        } elseif ($sudahAbsenMasukHariIni) {
+            $bisaAjukanIzin = false;
+            $alasanKunciIzin = 'Terkunci: Anda sudah tercatat hadir langsung di kantor hari ini.';
+        } elseif ($izinAktifHariIni) {
+            $bisaAjukanIzin = false;
+            $alasanKunciIzin = 'Terkunci: Anda sudah memiliki permohonan izin/sakit aktif periode ini.';
+        }
 
         // 5 riwayat kehadiran terakhir
         $riwayatTerakhir = Kehadiran::where('pegawai_id', $pegawai->id)
@@ -138,6 +211,9 @@ class StafPortalController extends Controller
             'pegawai',
             'kehadiranHariIni',
             'pengajuanHariIni',
+            'izinAktifHariIni',
+            'sptMenunggu',
+            'sptAktifHariIni',
             'isWifiValid',
             'clientIp',
             'wifiDiagnosis',
@@ -145,6 +221,10 @@ class StafPortalController extends Controller
             'isWaktuPulang',
             'bisaAbsenMasuk',
             'bisaAbsenPulang',
+            'bisaAjukanAbsenLuar',
+            'alasanKunciAbsenLuar',
+            'bisaAjukanIzin',
+            'alasanKunciIzin',
             'jamMasukMulai',
             'jamMasukSelesai',
             'jamPulangMulai',
@@ -157,6 +237,94 @@ class StafPortalController extends Controller
             'isLepasPiketHariIni',
             'piketKemarin'
         ));
+    }
+
+    public function terimaSpt(Request $request, int $id)
+    {
+        $user = Auth::user();
+        $pegawai = $user->pegawai;
+
+        if (!$pegawai) {
+            return redirect()->route('staf.beranda')->with('error', 'Akun tidak terhubung dengan pegawai.');
+        }
+
+        $validated = $request->validate([
+            'tanda_tangan' => 'required|string|min:50',
+        ], [
+            'tanda_tangan.required' => 'Goreskan tanda tangan digital untuk konfirmasi penerimaan SPT.',
+            'tanda_tangan.min'      => 'Goreskan tanda tangan digital dengan jelas.',
+        ]);
+
+        $spt = \App\Models\SuratPerintahTugas::where('id', $id)
+            ->where('pegawai_id', $pegawai->id)
+            ->firstOrFail();
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($spt, $validated, $user, $pegawai) {
+            $spt->update([
+                'status'              => 'disetujui',
+                'respons_staf'        => 'diterima',
+                'waktu_respons_staf'  => now(),
+                'tanda_tangan_staf'   => $validated['tanda_tangan'],
+                'tanggal_persetujuan' => $spt->tanggal_persetujuan ?? now(),
+                'disetujui_oleh'      => $spt->disetujui_oleh ?? 1,
+            ]);
+
+            // Terapkan kehadiran otomatis untuk seluruh rentang tanggal SPT
+            $spt->terapkanKehadiran($validated['tanda_tangan'], $user->id);
+
+            \App\Models\AuditLog::create([
+                'user_id'   => $user->id,
+                'user_name' => $user->name,
+                'role'      => $user->role ?? 'perangkat',
+                'aktivitas' => "Menerima penugasan SPT {$spt->nomor_spt} (Tujuan: {$spt->tujuan}, Periode: {$spt->tanggal_mulai->format('d/m/Y')} - {$spt->tanggal_selesai->format('d/m/Y')})",
+                'modul'     => 'Surat Perintah Tugas',
+            ]);
+        });
+
+        return redirect()->route('staf.beranda')->with('success', "Penugasan SPT {$spt->nomor_spt} berhasil diterima! Presensi dinas luar telah otomatis tercatat Hadir.");
+    }
+
+    public function tolakSpt(Request $request, int $id)
+    {
+        $user = Auth::user();
+        $pegawai = $user->pegawai;
+
+        if (!$pegawai) {
+            return redirect()->route('staf.beranda')->with('error', 'Akun tidak terhubung dengan pegawai.');
+        }
+
+        $validated = $request->validate([
+            'alasan_tolak' => 'required|string|min:5|max:500',
+        ], [
+            'alasan_tolak.required' => 'Wajib mengisi alasan penolakan SPT.',
+            'alasan_tolak.min'      => 'Alasan penolakan minimal 5 karakter.',
+        ]);
+
+        $spt = \App\Models\SuratPerintahTugas::where('id', $id)
+            ->where('pegawai_id', $pegawai->id)
+            ->firstOrFail();
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($spt, $validated, $user, $pegawai) {
+            $spt->update([
+                'status'             => 'ditolak',
+                'respons_staf'       => 'ditolak',
+                'waktu_respons_staf' => now(),
+                'alasan_tolak_staf'  => $validated['alasan_tolak'],
+            ]);
+
+            // Batalkan catatan kehadiran SPT jika pernah ada
+            $spt->batalkanKehadiran();
+
+            \App\Models\AuditLog::create([
+                'user_id'   => $user->id,
+                'user_name' => $user->name,
+                'role'      => $user->role ?? 'perangkat',
+                'aktivitas' => "Menolak penugasan SPT {$spt->nomor_spt} (Alasan: {$validated['alasan_tolak']})",
+                'modul'     => 'Surat Perintah Tugas',
+            ]);
+        });
+
+        return redirect()->route('staf.beranda')->with('info', "Penolakan SPT {$spt->nomor_spt} telah dikirimkan ke Admin Desa.");
     }
 
     public function absenPiket(Request $request)
@@ -221,6 +389,31 @@ class StafPortalController extends Controller
             return redirect()->route('staf.beranda');
         }
 
+        $today = Carbon::today()->toDateString();
+
+        // Cek jika sedang ada SPT aktif hari ini
+        $sptAktifHariIni = \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)
+            ->where('respons_staf', 'diterima')
+            ->where('status', 'disetujui')
+            ->whereDate('tanggal_mulai', '<=', $today)
+            ->whereDate('tanggal_selesai', '>=', $today)
+            ->first();
+
+        if ($sptAktifHariIni) {
+            return redirect()->route('staf.beranda')->with('error', "Akses Ditolak: Anda tercatat sedang bertugas dalam Surat Perintah Tugas (SPT {$sptAktifHariIni->nomor_spt} - {$sptAktifHariIni->tujuan}). Presensi dinas luar telah otomatis tercatat Hadir.");
+        }
+
+        // Cek jika sedang ada izin aktif hari ini
+        $izinAktifHariIni = \App\Models\IzinSakit::where('pegawai_id', $pegawai->id)
+            ->where('status', '!=', 'ditolak')
+            ->whereDate('tanggal_mulai', '<=', $today)
+            ->whereDate('tanggal_selesai', '>=', $today)
+            ->first();
+
+        if ($izinAktifHariIni) {
+            return redirect()->route('staf.beranda')->with('error', 'Akses Ditolak: Anda tercatat memiliki izin/sakit aktif (' . ucfirst(str_replace('_', ' ', $izinAktifHariIni->jenis)) . ') hari ini.');
+        }
+
         $clientIp = $this->signatureService->resolveClientIp($request);
         $wifiDiagnosis = $this->signatureService->getWifiDiagnosis($clientIp);
 
@@ -273,6 +466,37 @@ class StafPortalController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Data profil pegawai tidak ditemukan.'], 422);
         }
 
+        $today = Carbon::today()->toDateString();
+
+        // Cek jika sedang ada SPT aktif hari ini
+        $sptAktifHariIni = \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)
+            ->where('respons_staf', 'diterima')
+            ->where('status', 'disetujui')
+            ->whereDate('tanggal_mulai', '<=', $today)
+            ->whereDate('tanggal_selesai', '>=', $today)
+            ->first();
+
+        if ($sptAktifHariIni) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => "Akses ditolak: Anda tercatat sedang bertugas dalam Surat Perintah Tugas (SPT {$sptAktifHariIni->nomor_spt} - {$sptAktifHariIni->tujuan}). Presensi dinas luar otomatis tercatat Hadir."
+            ], 403);
+        }
+
+        // Cek jika sedang ada izin aktif hari ini
+        $izinAktifHariIni = \App\Models\IzinSakit::where('pegawai_id', $pegawai->id)
+            ->where('status', '!=', 'ditolak')
+            ->whereDate('tanggal_mulai', '<=', $today)
+            ->whereDate('tanggal_selesai', '>=', $today)
+            ->first();
+
+        if ($izinAktifHariIni) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Akses ditolak: Anda tercatat memiliki izin/sakit aktif (' . ucfirst(str_replace('_', ' ', $izinAktifHariIni->jenis)) . ') pada hari ini.'
+            ], 403);
+        }
+
         $clientIp = $this->signatureService->resolveClientIp($request);
         $wifiDiagnosis = $this->signatureService->getWifiDiagnosis($clientIp);
 
@@ -311,10 +535,10 @@ class StafPortalController extends Controller
         $pegawai = $user->pegawai;
 
         if (!$pegawai) {
-            return redirect()->route('staf.beranda');
+            return redirect()->route('staf.beranda')->with('error', 'Akun tidak terhubung dengan data pegawai.');
         }
 
-        $tab = $request->query('tab', 'presensi'); // presensi | izin | absen_luar
+        $tab = $request->query('tab', 'presensi'); // presensi | izin | absen_luar | spt
 
         $riwayats = Kehadiran::where('pegawai_id', $pegawai->id)
             ->orderByDesc('tanggal')
@@ -328,7 +552,29 @@ class StafPortalController extends Controller
             ->orderByDesc('tanggal')
             ->paginate(15, ['*'], 'absen_luar_page');
 
-        return view('staf.riwayat', compact('user', 'pegawai', 'riwayats', 'riwayatIzin', 'riwayatAbsenLuar', 'tab'));
+        $riwayatSpt = \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)
+            ->with(['pembuat'])
+            ->latest()
+            ->paginate(15, ['*'], 'spt_page');
+
+        $countPresensi = Kehadiran::where('pegawai_id', $pegawai->id)->count();
+        $countIzin = \App\Models\IzinSakit::where('pegawai_id', $pegawai->id)->count();
+        $countAbsenLuar = \App\Models\PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)->count();
+        $countSpt = \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)->count();
+
+        return view('staf.riwayat', compact(
+            'user',
+            'pegawai',
+            'riwayats',
+            'riwayatIzin',
+            'riwayatAbsenLuar',
+            'riwayatSpt',
+            'tab',
+            'countPresensi',
+            'countIzin',
+            'countAbsenLuar',
+            'countSpt'
+        ));
     }
 
     public function profil()
@@ -336,7 +582,58 @@ class StafPortalController extends Controller
         $user = Auth::user();
         $pegawai = $user->pegawai;
 
-        return view('staf.profil', compact('user', 'pegawai'));
+        if (!$pegawai) {
+            return redirect()->route('staf.beranda')->with('error', 'Akun tidak terhubung dengan data pegawai.');
+        }
+
+        // Statistik kedisiplinan dan absensi staf
+        $totalHadir = Kehadiran::where('pegawai_id', $pegawai->id)
+            ->whereIn('status', ['Hadir', 'Tepat Waktu', 'Terlambat'])
+            ->count();
+
+        $totalIzin = \App\Models\IzinSakit::where('pegawai_id', $pegawai->id)
+            ->where('status', 'disetujui')
+            ->where('jenis', 'not like', '%sakit%')
+            ->count();
+
+        $totalSakit = \App\Models\IzinSakit::where('pegawai_id', $pegawai->id)
+            ->where('status', 'disetujui')
+            ->where('jenis', 'like', '%sakit%')
+            ->count();
+
+        $totalAbsenLuar = \App\Models\PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
+            ->where('status', 'disetujui')
+            ->count();
+
+        $totalSpt = \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)
+            ->where('respons_staf', 'diterima')
+            ->count();
+
+        // Cari tanda tangan digital terbaru dari staf
+        $spesimenTtd = $pegawai->tanda_tangan
+            ?? Kehadiran::where('pegawai_id', $pegawai->id)
+            ->whereNotNull('tanda_tangan_masuk')
+            ->latest('tanggal')
+            ->value('tanda_tangan_masuk')
+            ?? \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)
+            ->whereNotNull('tanda_tangan_staf')
+            ->latest()
+            ->value('tanda_tangan_staf')
+            ?? \App\Models\PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
+            ->whereNotNull('tanda_tangan')
+            ->latest()
+            ->value('tanda_tangan');
+
+        return view('staf.profil', compact(
+            'user',
+            'pegawai',
+            'totalHadir',
+            'totalIzin',
+            'totalSakit',
+            'totalAbsenLuar',
+            'totalSpt',
+            'spesimenTtd'
+        ));
     }
 
     public function updateProfil(Request $request)
@@ -383,5 +680,52 @@ class StafPortalController extends Controller
         }
 
         return redirect()->route('staf.profil')->with('success', 'Profil dan foto berhasil diperbarui.');
+    }
+
+    public function riwayatSpt(Request $request)
+    {
+        $user = Auth::user();
+        $pegawai = $user->pegawai;
+
+        if (!$pegawai) {
+            return redirect()->route('staf.beranda')->with('error', 'Akun belum terhubung dengan data pegawai.');
+        }
+
+        $filterStatus = $request->query('status', 'semua');
+
+        $query = \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)
+            ->with(['pembuat'])
+            ->latest();
+
+        if ($filterStatus === 'menunggu') {
+            $query->where('respons_staf', 'menunggu')->where('status', '!=', 'ditolak');
+        } elseif ($filterStatus === 'diterima') {
+            $query->where('respons_staf', 'diterima');
+        } elseif ($filterStatus === 'ditolak') {
+            $query->where(function ($q) {
+                $q->where('respons_staf', 'ditolak')
+                  ->orWhere('status', 'ditolak');
+            });
+        }
+
+        $spts = $query->paginate(10)->withQueryString();
+
+        $countSemua = \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)->count();
+        $countMenunggu = \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)->where('respons_staf', 'menunggu')->where('status', '!=', 'ditolak')->count();
+        $countDiterima = \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)->where('respons_staf', 'diterima')->count();
+        $countDitolak = \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)->where(function ($q) {
+            $q->where('respons_staf', 'ditolak')->orWhere('status', 'ditolak');
+        })->count();
+
+        return view('staf.spt-riwayat', compact(
+            'user',
+            'pegawai',
+            'spts',
+            'filterStatus',
+            'countSemua',
+            'countMenunggu',
+            'countDiterima',
+            'countDitolak'
+        ));
     }
 }

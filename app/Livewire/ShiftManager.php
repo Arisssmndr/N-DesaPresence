@@ -4,7 +4,9 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\ShiftKerja;
+use App\Models\KonfigurasiAbsensi;
 use App\Models\AuditLog;
+use Carbon\Carbon;
 
 class ShiftManager extends Component
 {
@@ -12,11 +14,26 @@ class ShiftManager extends Component
     public bool $isEdit = false;
     public ?int $shiftId = null;
 
+    // Shift Form Fields
     public string $nama_shift = '';
     public string $jam_masuk = '08:00';
     public string $jam_pulang = '15:30';
     public int $toleransi_menit = 15;
     public bool $is_active = true;
+
+    // Jendela Waktu Gate Absensi
+    public string $jam_masuk_mulai = '06:00';
+    public string $jam_masuk_selesai = '11:00';
+    public string $jam_pulang_mulai = '14:00';
+    public string $jam_pulang_selesai = '18:00';
+
+    public function mount(): void
+    {
+        $this->jam_masuk_mulai = KonfigurasiAbsensi::getNilai('jam_masuk_mulai', '06:00');
+        $this->jam_masuk_selesai = KonfigurasiAbsensi::getNilai('jam_masuk_selesai', '11:00');
+        $this->jam_pulang_mulai = KonfigurasiAbsensi::getNilai('jam_pulang_mulai', '14:00');
+        $this->jam_pulang_selesai = KonfigurasiAbsensi::getNilai('jam_pulang_selesai', '18:00');
+    }
 
     protected function rules(): array
     {
@@ -97,6 +114,33 @@ class ShiftManager extends Component
         $this->closeModal();
     }
 
+    public function simpanJendelaAbsensi(): void
+    {
+        $this->validate([
+            'jam_masuk_mulai' => 'required|date_format:H:i',
+            'jam_masuk_selesai' => 'required|date_format:H:i|after:jam_masuk_mulai',
+            'jam_pulang_mulai' => 'required|date_format:H:i',
+            'jam_pulang_selesai' => 'required|date_format:H:i|after:jam_pulang_mulai',
+        ]);
+
+        KonfigurasiAbsensi::setNilai('jam_masuk_mulai', $this->jam_masuk_mulai, 'Batas awal jam absensi masuk');
+        KonfigurasiAbsensi::setNilai('jam_masuk_selesai', $this->jam_masuk_selesai, 'Batas akhir jam absensi masuk');
+        KonfigurasiAbsensi::setNilai('jam_pulang_mulai', $this->jam_pulang_mulai, 'Batas awal jam absensi pulang');
+        KonfigurasiAbsensi::setNilai('jam_pulang_selesai', $this->jam_pulang_selesai, 'Batas akhir jam absensi pulang');
+
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'user_name' => auth()->user()->name ?? 'Admin',
+            'role' => auth()->user()->role ?? 'admin',
+            'aktivitas' => "Update jendela jam absensi: Masuk ({$this->jam_masuk_mulai} - {$this->jam_masuk_selesai}), Pulang ({$this->jam_pulang_mulai} - {$this->jam_pulang_selesai})",
+            'modul' => 'Jam & Waktu Absensi',
+        ]);
+
+        $msg = 'Pengaturan jendela buka/tutup portal presensi berhasil disimpan!';
+        session()->flash('success', $msg);
+        $this->dispatch('notify', message: $msg, type: 'success');
+    }
+
     public function closeModal()
     {
         $this->showModal = false;
@@ -116,8 +160,15 @@ class ShiftManager extends Component
 
     public function render()
     {
+        $nowTime = Carbon::now()->format('H:i');
+        $isMasukNow = ($nowTime >= $this->jam_masuk_mulai && $nowTime <= $this->jam_masuk_selesai);
+        $isPulangNow = ($nowTime >= $this->jam_pulang_mulai && $nowTime <= $this->jam_pulang_selesai);
+
         return view('livewire.shift-manager', [
             'shifts' => ShiftKerja::withCount('pegawais')->get(),
-        ])->layout('layouts.app', ['title' => 'Shift Kerja — Presence Desa']);
+            'nowTime' => $nowTime,
+            'isMasukNow' => $isMasukNow,
+            'isPulangNow' => $isPulangNow,
+        ])->layout('layouts.app', ['title' => 'Jam Kerja & Waktu Absensi — Presence Desa']);
     }
 }

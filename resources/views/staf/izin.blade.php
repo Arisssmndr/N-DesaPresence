@@ -252,5 +252,60 @@
         </form>
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL WARNING / PEMBERITAHUAN SUDAH PRESENSI (GAYA FOTO 2 - CLEAN)     -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if(session('conflict_modal'))
+    @php $c = session('conflict_modal'); @endphp
+    <div x-data="{ open: true }" x-show="open"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden border border-amber-200 p-6 space-y-4"
+             @click.away="open = false">
+            <div class="flex items-start gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0 shadow-xs">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-outfit text-base font-extrabold text-slate-900 leading-snug">{{ $c['title'] ?? 'Presensi Sudah Tercatat' }}</h3>
+                    <p class="text-[11px] text-slate-500 font-medium mt-0.5">Pemberitahuan Sistem Presensi</p>
+                </div>
+            </div>
+
+            <!-- Box Detail Penjelasan Simpel -->
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-500">Nama Staf:</span>
+                    <span class="font-bold text-slate-800">{{ $c['nama'] ?? auth()->user()->name }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-500">Tanggal:</span>
+                    <span class="font-bold text-slate-800">{{ $c['tanggal'] ?? '-' }}</span>
+                </div>
+                <div class="pt-1.5 border-t border-slate-200 text-[11px] text-slate-600 leading-relaxed">
+                    {{ $c['pesan'] ?? '' }}
+                </div>
+            </div>
+
+            <!-- Tombol Action Simple (Orange Button - Text Tutup) -->
+            <div class="pt-1">
+                <button type="button" @click="open = false"
+                        class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-extrabold text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-1.5">
+                    <span>Tutup</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>
 @endsection
+

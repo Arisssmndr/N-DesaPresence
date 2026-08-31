@@ -12,7 +12,7 @@ class Pegawai extends Model
     protected $fillable = [
         'pin_fingerprint', 'nipd', 'nik', 'nama_lengkap', 'tempat_lahir', 'tanggal_lahir',
         'jenis_kelamin', 'jabatan_id', 'kategori_pegawai', 'shift_id', 'no_hp', 'alamat',
-        'foto_profil', 'periode_mulai', 'periode_akhir', 'siltap_bruto', 'status_aktif'
+        'foto_profil', 'tanda_tangan', 'periode_mulai', 'periode_akhir', 'siltap_bruto', 'status_aktif'
     ];
 
     protected $casts = [

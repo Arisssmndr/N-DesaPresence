@@ -114,6 +114,16 @@ class AbsensiDisesuaikan extends Model
      */
     public static function cariTandaTanganPegawai(int $pegawaiId, string $targetTanggal, int $maxHari = 7): ?array
     {
+        // 0. Cek master spesimen tanda tangan resmi di profil pegawai terlebih dahulu
+        $pegawai = Pegawai::find($pegawaiId);
+        if ($pegawai && $pegawai->tanda_tangan) {
+            return [
+                'signature' => $pegawai->tanda_tangan,
+                'source'    => 'master_resmi',
+                'date'      => $targetTanggal,
+            ];
+        }
+
         $targetDt = Carbon::parse($targetTanggal);
 
         // 1. Prioritaskan cari ke belakang (H-1 s/d H-7)

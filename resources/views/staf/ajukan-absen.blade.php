@@ -42,8 +42,40 @@
     </div>
     @endif
 
-    {{-- 1. SUDAH ABSEN LANGSUNG HARI INI --}}
-    @if(isset($kehadiranHariIni) && $kehadiranHariIni && ($kehadiranHariIni->jam_masuk || in_array(strtolower($kehadiranHariIni->status), ['hadir', 'terlambat', 'dinas luar'])))
+    {{-- 1. SEDANG MEMILIKI IZIN / SAKIT AKTIF HARI INI --}}
+    @if(isset($izinHariIni) && $izinHariIni)
+    <div class="sadi-card p-5 bg-white border border-teal-300 text-center space-y-3.5 shadow-sm rounded-3xl">
+        <div class="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center mx-auto text-teal-800 shadow-xs">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </div>
+        
+        <div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-teal-100 border border-teal-300 text-teal-900 text-[11px] font-extrabold mb-1">
+                <span>Status: {{ ucfirst(str_replace('_', ' ', $izinHariIni->jenis)) }}</span>
+            </span>
+            <h4 class="font-outfit font-extrabold text-[#064E3B] text-base">Anda Sedang Dalam Masa Izin / Sakit</h4>
+            <p class="text-xs text-slate-600 mt-1 max-w-sm mx-auto">
+                Anda memiliki permohonan izin/sakit aktif periode <strong class="text-slate-800">{{ $izinHariIni->tanggal_mulai->format('d/m/Y') }}</strong> s/d <strong class="text-slate-800">{{ $izinHariIni->tanggal_selesai->format('d/m/Y') }}</strong>. Pengajuan absen luar tidak dapat diajukan pada masa izin.
+            </p>
+        </div>
+
+        <div class="pt-1 flex items-center justify-center gap-2">
+            <a href="{{ route('staf.beranda') }}"
+               class="px-4 py-2 rounded-xl bg-[#064E3B] hover:bg-[#04392B] text-white text-xs font-bold shadow transition inline-flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                <span>Kembali ke Beranda</span>
+            </a>
+            <a href="{{ route('staf.izin') }}"
+               class="px-4 py-2 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-50 transition inline-flex items-center gap-1.5">
+                <span>Lihat Data Izin</span>
+            </a>
+        </div>
+    </div>
+
+    {{-- 2. SUDAH ABSEN LANGSUNG HARI INI --}}
+    @elseif(isset($kehadiranHariIni) && $kehadiranHariIni && ($kehadiranHariIni->jam_masuk || in_array(strtolower($kehadiranHariIni->status), ['hadir', 'terlambat', 'dinas luar'])))
     <div class="sadi-card p-5 bg-white border border-emerald-300 text-center space-y-3.5 shadow-sm rounded-3xl">
         <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto text-[#064E3B] shadow-xs">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -579,6 +611,60 @@
         </div>{{-- end x-show gps success --}}
 
     </form>
+    @endif
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL WARNING / PEMBERITAHUAN SUDAH PRESENSI (GAYA FOTO 2 - CLEAN)     -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if(session('conflict_modal'))
+    @php $c = session('conflict_modal'); @endphp
+    <div x-data="{ open: true }" x-show="open"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden border border-amber-200 p-6 space-y-4"
+             @click.away="open = false">
+            <div class="flex items-start gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0 shadow-xs">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-outfit text-base font-extrabold text-slate-900 leading-snug">{{ $c['title'] ?? 'Presensi Sudah Tercatat' }}</h3>
+                    <p class="text-[11px] text-slate-500 font-medium mt-0.5">Pemberitahuan Sistem Presensi</p>
+                </div>
+            </div>
+
+            <!-- Box Detail Penjelasan Simpel -->
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-500">Nama Staf:</span>
+                    <span class="font-bold text-slate-800">{{ $c['nama'] ?? auth()->user()->name }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-500">Tanggal:</span>
+                    <span class="font-bold text-slate-800">{{ $c['tanggal'] ?? '-' }}</span>
+                </div>
+                <div class="pt-1.5 border-t border-slate-200 text-[11px] text-slate-600 leading-relaxed">
+                    {{ $c['pesan'] ?? '' }}
+                </div>
+            </div>
+
+            <!-- Tombol Action Simple (Orange Button - Text Tutup) -->
+            <div class="pt-1">
+                <button type="button" @click="open = false"
+                        class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-extrabold text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-1.5">
+                    <span>Tutup</span>
+                </button>
+            </div>
+        </div>
+    </div>
     @endif
 
 </div>

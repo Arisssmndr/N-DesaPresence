@@ -26,8 +26,14 @@
     </div>
 
     <!-- Right Login Form Panel -->
-    <div class="md:col-span-7 bg-[#FAF6F0] p-8 sm:p-12 flex flex-col justify-center">
-        <div class="max-w-md mx-auto w-full">
+    <div class="md:col-span-7 bg-[#FAF6F0] p-8 sm:p-12 flex flex-col justify-center relative overflow-hidden">
+        <!-- Watermark Logo Kabupaten Tasikmalaya (Watermark Miring Kanan Bawah Skripsi Style) -->
+        <div class="absolute -right-8 -bottom-8 sm:-right-12 sm:-bottom-12 md:-right-14 md:-bottom-14 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 pointer-events-none select-none z-0"
+             style="transform: rotate(-15deg); opacity: 0.075;">
+            <img src="{{ asset('images/logo-tasikmalaya.png') }}" alt="" class="w-full h-full object-contain pointer-events-none" draggable="false">
+        </div>
+
+        <div class="max-w-md mx-auto w-full relative z-10">
 
             <div class="mb-8">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#064E3B]/10 border border-[#C9A84C]/30 text-[#064E3B] text-xs font-bold mb-3">

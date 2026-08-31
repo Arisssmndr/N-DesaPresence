@@ -29,8 +29,8 @@
                 <tbody class="divide-y divide-slate-100 font-medium bg-white">
                     @forelse ($spts as $s)
                         <tr class="hover:bg-slate-50/70 transition">
-                            <td class="py-3 px-4 font-mono font-bold text-[#064E3B]">
-                                {{ $s->nomor_spt }}
+                            <td class="py-3 px-4 font-mono text-xs font-bold {{ $s->nomor_spt ? 'text-[#064E3B]' : 'text-slate-400' }}">
+                                {{ $s->nomor_spt ?? '—' }}
                             </td>
                             <td class="py-3 px-4 font-bold text-slate-800">
                                 {{ $s->pegawai->nama_lengkap ?? '-' }}
@@ -44,31 +44,31 @@
                                 <p class="text-[11px] text-slate-500 line-clamp-1">{{ $s->keperluan }}</p>
                             </td>
                             <td class="py-3 px-4 text-center">
-                                @switch($s->status)
-                                    @case('disetujui')
-                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Disetujui Kades</span>
-                                        @break
-                                    @case('diajukan')
-                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">Menunggu Approval</span>
-                                        @break
-                                    @case('ditolak')
-                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-300">Ditolak</span>
-                                        @break
-                                    @default
-                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600 border border-slate-300">Draft</span>
-                                @endswitch
+                                <div class="flex flex-col items-center gap-1">
+                                    @if ($s->respons_staf === 'diterima' || $s->status === 'disetujui')
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                            Diterima Staf
+                                        </span>
+                                        @if($s->waktu_respons_staf)
+                                            <span class="text-[9px] text-slate-400 font-mono">{{ $s->waktu_respons_staf->format('d/m H:i') }}</span>
+                                        @endif
+                                    @elseif ($s->respons_staf === 'ditolak' || $s->status === 'ditolak')
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">
+                                            Ditolak Staf
+                                        </span>
+                                        @if ($s->alasan_tolak_staf || $s->catatan_penolakan)
+                                            <span class="text-[9px] text-rose-600 max-w-[140px] truncate" title="{{ $s->alasan_tolak_staf ?? $s->catatan_penolakan }}">
+                                                "{{ $s->alasan_tolak_staf ?? $s->catatan_penolakan }}"
+                                            </span>
+                                        @endif
+                                    @else
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">
+                                            Menunggu Staf
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
-                                @if ($s->status === 'diajukan' && (auth()->user()->isKades() || auth()->user()->isAdmin()))
-                                    <button wire:click="approve({{ $s->id }})" class="px-3 py-1.5 rounded-lg bg-[#064E3B] text-white font-bold text-[11px] hover:bg-[#04392B] border border-[#064E3B] transition shadow-xs cursor-pointer inline-flex items-center gap-1">
-                                        <svg class="w-3 h-3 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                        <span>Setujui</span>
-                                    </button>
-                                    <button wire:click="konfirmasiTolak({{ $s->id }})" class="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold text-[11px] hover:bg-rose-700 border border-rose-700 transition shadow-xs cursor-pointer inline-flex items-center gap-1">
-                                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        <span>Tolak</span>
-                                    </button>
-                                @endif
                                 @if ($s->file_undangan)
                                     @php
                                         $fileUrl = asset('storage/' . $s->file_undangan);
@@ -76,11 +76,23 @@
                                     @endphp
                                     <button type="button"
                                             @click="activeFile = '{{ $fileUrl }}'; activeExt = '{{ $ext }}'; activeTitle = '{{ addslashes($s->tujuan) }}'; activeNomor = '{{ $s->nomor_spt }}'; viewModal = true;"
-                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-[11px] border border-blue-200 transition cursor-pointer" title="Lihat Softfile">
+                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-[11px] border border-blue-200 transition cursor-pointer" title="Lihat Berkas SPT">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                         <span>Softfile</span>
                                     </button>
                                 @endif
+
+                                <button type="button" wire:click="bukaDetailModal({{ $s->id }})"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-[#064E3B] hover:bg-emerald-100 font-bold text-[11px] border border-emerald-200 transition cursor-pointer" title="Lihat Rincian & Status Respons Staf">
+                                    <svg class="w-3.5 h-3.5 text-[#064E3B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span>Detail</span>
+                                </button>
+
+                                <button type="button" wire:click="deleteSpt({{ $s->id }})"
+                                        wire:confirm="Apakah Anda yakin ingin membatalkan dan menghapus penugasan SPT ini?"
+                                        class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold text-[11px] border border-rose-200 transition cursor-pointer" title="Hapus / Batalkan SPT">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
                             </td>
                         </tr>
                     @empty
@@ -178,6 +190,16 @@
                         @error('pegawai_id') <span class="text-[11px] text-red-600 font-semibold">{{ $message }}</span> @enderror
                     </div>
 
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block font-bold text-slate-700 uppercase tracking-wider">Nomor Surat Tugas</label>
+                            <span class="text-[10px] text-slate-400 font-semibold">(Opsional)</span>
+                        </div>
+                        <input type="text" wire:model="nomor_spt" placeholder="Contoh: 800/012/Desa/2026"
+                               class="w-full px-3 py-2 text-xs rounded-xl border border-[#C9A84C]/40 focus:ring-2 focus:ring-[#C9A84C]">
+                        @error('nomor_spt') <span class="text-[11px] text-red-600 font-semibold">{{ $message }}</span> @enderror
+                    </div>
+
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal Mulai <span class="text-red-500">*</span></label>
@@ -205,47 +227,117 @@
                     </div>
 
                     <div>
-                        <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">Upload File Surat Undangan / Lampiran</label>
-                        <input type="file" wire:model="file_undangan" accept=".pdf,.jpg,.jpeg,.png" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#064E3B] file:text-white">
+                        <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">Upload Berkas SPT / Surat Undangan Resmi <span class="text-red-500">*</span></label>
+                        <input type="file" wire:model="file_undangan" accept=".pdf,.jpg,.jpeg,.png" required class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#064E3B] file:text-white cursor-pointer">
+                        <p class="text-[10px] text-slate-400 mt-0.5">Wajib unggah berkas surat tugas / undangan format PDF, JPG, PNG (Maks. 5 MB)</p>
                         @error('file_undangan') <span class="text-[11px] text-red-600 font-semibold">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
                         <button type="button" wire:click="closeModal" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">Batal</button>
-                        <button type="submit" class="btn-sadi-primary px-6 py-2 rounded-xl text-xs font-bold text-white transition cursor-pointer">Simpan SPT</button>
+                        <button type="submit" class="btn-sadi-primary px-6 py-2 rounded-xl text-xs font-bold text-white transition cursor-pointer">Terbitkan & Kirim ke Staf</button>
                     </div>
                 </form>
             </div>
         </div>
     @endif
 
-    <!-- Modal Konfirmasi Reject SPT -->
-    @if ($showRejectModal && $selectedSpt)
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden border-2 border-rose-300 p-6 space-y-4">
-                <div class="text-center space-y-2">
-                    <div class="w-12 h-12 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center mx-auto text-rose-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+    <!-- MODAL DETAIL & JEJAK RESPONS STAF (ADMIN) -->
+    @if ($showDetailModal && $detailSpt)
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden border border-[#C9A84C]/30 my-6 flex flex-col">
+                <div class="px-6 py-4 bg-[#064E3B] text-white flex items-center justify-between">
+                    <div>
+                        <h3 class="font-outfit text-base font-bold text-white">Rincian Surat Perintah Tugas (SPT)</h3>
+                        <p class="text-[11px] text-emerald-200 font-mono">{{ $detailSpt->nomor_spt ?? 'Tanpa Nomor Surat' }}</p>
                     </div>
-                    <h3 class="font-outfit font-extrabold text-slate-900 text-base">Tolak Pengajuan SPT</h3>
-                    <p class="text-xs text-slate-600">SPT <strong>{{ $selectedSpt->nomor_spt }}</strong> untuk <strong>{{ $selectedSpt->pegawai->nama_lengkap ?? 'Perangkat' }}</strong> akan ditolak.</p>
-                </div>
-
-                <div class="space-y-1">
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Alasan Penolakan <span class="text-rose-500">*</span></label>
-                    <textarea wire:model="catatanPenolakan" rows="3" placeholder="Tuliskan alasan penolakan SPT ini..."
-                        class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs text-slate-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none resize-none"></textarea>
-                    @error('catatanPenolakan')
-                    <p class="text-[11px] text-rose-600 font-bold">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div class="flex gap-2.5">
-                    <button wire:click="tutupRejectModal" class="flex-1 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition text-xs cursor-pointer">Batal</button>
-                    <button wire:click="reject" class="flex-[2] py-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold transition text-xs flex items-center justify-center gap-1.5 cursor-pointer">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                        <span>Tolak Sekarang</span>
+                    <button wire:click="tutupDetailModal" class="p-1 rounded-lg hover:bg-emerald-800 text-emerald-200 hover:text-white transition cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
+                </div>
+
+                <div class="p-6 space-y-4 text-xs">
+                    <!-- Status Respons Badge -->
+                    <div class="p-3.5 rounded-2xl border {{ $detailSpt->respons_staf === 'diterima' ? 'bg-emerald-50 border-emerald-200 text-emerald-950' : ($detailSpt->respons_staf === 'ditolak' ? 'bg-rose-50 border-rose-200 text-rose-950' : 'bg-amber-50 border-amber-200 text-amber-950') }}">
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <span class="font-bold text-xs uppercase tracking-wider">Status Konfirmasi Staf:</span>
+                            @if($detailSpt->respons_staf === 'diterima')
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white shadow-2xs">Diterima Staf</span>
+                            @elseif($detailSpt->respons_staf === 'ditolak')
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-600 text-white shadow-2xs">Ditolak Staf</span>
+                            @else
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500 text-white shadow-2xs animate-pulse">Menunggu Konfirmasi Staf</span>
+                            @endif
+                        </div>
+
+                        @if($detailSpt->respons_staf === 'diterima')
+                            <p class="text-[11px] text-emerald-800">
+                                Dikonfirmasi dan ditandatangani pada: <strong>{{ $detailSpt->waktu_respons_staf ? $detailSpt->waktu_respons_staf->isoFormat('dddd, D MMMM Y - HH:mm') . ' WIB' : '-' }}</strong>. Status presensi pegawai otomatis tercatat <strong>Hadir</strong>.
+                            </p>
+                        @elseif($detailSpt->respons_staf === 'ditolak')
+                            <div class="mt-2 pt-2 border-t border-rose-200">
+                                <span class="text-[10.5px] font-bold text-rose-800 uppercase tracking-wider block">Alasan Penolakan dari Staf:</span>
+                                <p class="text-xs text-rose-900 font-semibold mt-0.5 italic bg-white p-2.5 rounded-xl border border-rose-200">
+                                    "{{ $detailSpt->alasan_tolak_staf ?? $detailSpt->catatan_penolakan ?? 'Tidak ada catatan tambahan.' }}"
+                                </p>
+                            </div>
+                        @else
+                            <p class="text-[11px] text-amber-800">
+                                Penugasan telah dikirim ke portal perangkat desa yang bersangkutan dan sedang menunggu tanda tangan / konfirmasi dari staf.
+                            </p>
+                        @endif
+                    </div>
+
+                    <!-- Informasi Pokok SPT -->
+                    <div class="grid grid-cols-2 gap-3 text-slate-700 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Perangkat Ditugaskan:</span>
+                            <p class="font-bold text-slate-900 text-xs mt-0.5">{{ $detailSpt->pegawai->nama_lengkap ?? '-' }}</p>
+                            <p class="text-[10px] text-slate-500">{{ $detailSpt->pegawai->jabatan->nama_jabatan ?? '' }}</p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Periode Tugas:</span>
+                            <p class="font-mono font-bold text-slate-900 text-xs mt-0.5">
+                                {{ $detailSpt->tanggal_mulai->format('d/m/Y') }} s/d {{ $detailSpt->tanggal_selesai->format('d/m/Y') }}
+                            </p>
+                        </div>
+                        <div class="col-span-2 pt-2 border-t border-slate-200">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Lokasi / Tujuan:</span>
+                            <p class="font-bold text-slate-900 text-xs mt-0.5">{{ $detailSpt->tujuan }}</p>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Keperluan / Agenda:</span>
+                            <p class="text-slate-700 text-xs mt-0.5 leading-relaxed">{{ $detailSpt->keperluan }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Bukti Tanda Tangan Staf (Jika Diterima) -->
+                    @if($detailSpt->tanda_tangan_staf)
+                        <div>
+                            <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Tanda Tangan Digital Staf:</span>
+                            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center">
+                                <img src="{{ $detailSpt->tanda_tangan_staf }}" alt="Tanda Tangan Staf" class="max-h-24 object-contain">
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Softfile Berkas Surat Tugas -->
+                    @if($detailSpt->file_undangan)
+                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-[11px] text-slate-600 font-medium">Berkas Surat Tugas / Lampiran:</span>
+                            <a href="{{ asset('storage/' . $detailSpt->file_undangan) }}" target="_blank"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 transition border border-blue-200">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                <span>Buka / Unduh Softfile</span>
+                            </a>
+                        </div>
+                    @endif
+
+                    <div class="pt-3 border-t border-slate-100 flex justify-end">
+                        <button type="button" wire:click="tutupDetailModal" class="px-5 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition cursor-pointer">
+                            Tutup
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -191,15 +191,15 @@
                         @endif
                     </a>
 
-                    {{-- PERMOHONAN IZIN & SAKIT (High Priority Daily Approval) --}}
+                    {{-- PERMOHONAN IZIN, CUTI & PRESENSI MANUAL (Unified High Priority Daily Operational) --}}
                     @php 
                         $jmlIzinMenunggu = \Illuminate\Support\Facades\Cache::remember('sidebar_izin_menunggu_count', 30, function() {
                             return \App\Models\IzinSakit::where('status','menunggu')->count();
                         });
                     @endphp
-                    <a href="{{ route('izin.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('izin.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                        <span class="flex-1">Izin, Cuti & Sakit</span>
+                    <a href="{{ route('izin.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('izin.*') || request()->routeIs('attendance.override*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                        <span class="flex-1">Izin, Cuti & Presensi Manual</span>
                         @if($jmlIzinMenunggu > 0)
                         <span class="text-[10px] font-extrabold bg-amber-500 text-white px-1.5 py-0.5 rounded-full leading-none animate-pulse">{{ $jmlIzinMenunggu }}</span>
                         @endif
@@ -221,12 +221,6 @@
                     <a href="{{ route('pengumuman.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('pengumuman.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
                         <span>Pengumuman & Siaran</span>
-                    </a>
-
-                    {{-- OVERRIDE PRESENSI MANUAL --}}
-                    <a href="{{ route('attendance.override') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('attendance.override*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                        <span>Override Presensi Manual</span>
                     </a>
                 </div>
 
@@ -271,9 +265,9 @@
                         <span>Akun Pengguna Staf</span>
                     </a>
                     
-                    <a href="{{ route('shift.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('shift.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
+                    <a href="{{ route('shift.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('shift.*') || request()->routeIs('konfigurasi-absensi.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span>Master Shift Kerja</span>
+                        <span>Jam Kerja & Waktu Absensi</span>
                     </a>
                     
                     <a href="{{ route('hari-libur.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('hari-libur.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
@@ -292,11 +286,6 @@
                 <!-- ═══════════════════════════════════════════════════════════ -->
                 <div class="space-y-1 pt-1">
                     <div class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-[#C9A84C]">Pengaturan Sistem & Profil</div>
-                    
-                    <a href="{{ route('konfigurasi-absensi.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('konfigurasi-absensi.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span>Jam & Waktu Absensi</span>
-                    </a>
                     
                     <a href="{{ route('konfigurasi-wifi.index') }}" wire:navigate class="flex items-center gap-3 px-3 py-2 text-xs rounded-lg transition-all {{ request()->routeIs('konfigurasi-wifi.*') ? 'sadi-nav-active' : 'sadi-nav-inactive' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>

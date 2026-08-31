@@ -36,7 +36,14 @@ class PengajuanAbsenLuarController extends Controller
             ->whereDate('tanggal', $today)
             ->first();
 
-        return view('staf.ajukan-absen', compact('user', 'pegawai', 'kehadiranHariIni', 'pengajuanHariIni', 'today'));
+        // Cek apakah ada izin/sakit aktif hari ini
+        $izinHariIni = \App\Models\IzinSakit::where('pegawai_id', $pegawai->id)
+            ->where('status', '!=', 'ditolak')
+            ->whereDate('tanggal_mulai', '<=', $today)
+            ->whereDate('tanggal_selesai', '>=', $today)
+            ->first();
+
+        return view('staf.ajukan-absen', compact('user', 'pegawai', 'kehadiranHariIni', 'pengajuanHariIni', 'izinHariIni', 'today'));
     }
 
     /**
@@ -81,19 +88,88 @@ class PengajuanAbsenLuarController extends Controller
             'tanda_tangan.required'            => 'Tanda tangan digital wajib diisi.',
         ]);
 
-        // 1. Cek apakah sudah ada catatan kehadiran langsung di kantor pada tanggal yang diajukan
+        // 0. Conflict Guard: Cek apakah ada SPT yang aktif dan diterima pada tanggal yang diajukan
+        $sptBentrok = \App\Models\SuratPerintahTugas::where('pegawai_id', $pegawai->id)
+            ->where('respons_staf', 'diterima')
+            ->where('status', 'disetujui')
+            ->whereDate('tanggal_mulai', '<=', $request->tanggal)
+            ->whereDate('tanggal_selesai', '>=', $request->tanggal)
+            ->first();
+
+        if ($sptBentrok) {
+            $mulai = \Carbon\Carbon::parse($sptBentrok->tanggal_mulai)->isoFormat('D MMMM Y');
+            $selesai = \Carbon\Carbon::parse($sptBentrok->tanggal_selesai)->isoFormat('D MMMM Y');
+            return back()->withInput()
+                ->with('error', "Gagal: Anda sedang dalam penugasan resmi SPT {$sptBentrok->nomor_spt} ({$sptBentrok->tujuan}) periode {$mulai} s/d {$selesai}. Presensi kehadiran sudah tercatat otomatis.")
+                ->with('conflict_modal', [
+                    'icon'      => 'warning',
+                    'title'     => 'Surat Perintah Tugas Aktif',
+                    'badge'     => 'SPT Resmi',
+                    'nama'      => $pegawai->nama_lengkap,
+                    'tanggal'   => "{$mulai} s/d {$selesai}",
+                    'status'    => 'Dinas SPT',
+                    'pesan'     => "Anda tercatat sedang melaksanakan tugas kedinasan berdasarkan SPT {$sptBentrok->nomor_spt} ke {$sptBentrok->tujuan}."
+                ]);
+        }
+
+        // 1. Conflict Guard: Cek apakah pegawai memiliki izin / sakit aktif pada tanggal yang diajukan
+        $izinBentrok = \App\Models\IzinSakit::where('pegawai_id', $pegawai->id)
+            ->where('status', '!=', 'ditolak')
+            ->whereDate('tanggal_mulai', '<=', $request->tanggal)
+            ->whereDate('tanggal_selesai', '>=', $request->tanggal)
+            ->first();
+
+        if ($izinBentrok) {
+            $mulai = \Carbon\Carbon::parse($izinBentrok->tanggal_mulai)->isoFormat('D MMMM Y');
+            $selesai = \Carbon\Carbon::parse($izinBentrok->tanggal_selesai)->isoFormat('D MMMM Y');
+            return back()->withInput()
+                ->with('error', "Gagal: Anda tercatat memiliki Izin/Sakit aktif ({$izinBentrok->jenis}) periode {$mulai} s/d {$selesai}.")
+                ->with('conflict_modal', [
+                    'icon'      => 'warning',
+                    'title'     => 'Masa Izin / Sakit Aktif',
+                    'badge'     => 'Pemberitahuan',
+                    'nama'      => $pegawai->nama_lengkap,
+                    'tanggal'   => "{$mulai} s/d {$selesai}",
+                    'status'    => ucfirst(str_replace('_', ' ', $izinBentrok->jenis)),
+                    'pesan'     => "Anda sedang dalam masa izin aktif ({$izinBentrok->label_jenis}) pada tanggal ini."
+                ]);
+        }
+
+        // 2. Conflict Guard: Cek apakah sudah ada catatan kehadiran langsung di kantor pada tanggal yang diajukan
         $kehadiran = Kehadiran::where('pegawai_id', $pegawai->id)
             ->whereDate('tanggal', $request->tanggal)
             ->first();
 
         if ($kehadiran && ($kehadiran->jam_masuk || in_array(strtolower($kehadiran->status), ['hadir', 'tepat waktu', 'terlambat', 'dinas luar']))) {
-            $info = $kehadiran->jam_masuk 
-                ? 'Absen Masuk pukul ' . substr($kehadiran->jam_masuk, 0, 5) . ' WIB' 
-                : 'Status: ' . $kehadiran->status;
-            return back()->with('error', 'Anda sudah tercatat melakukan absensi kehadiran langsung di kantor pada tanggal ' . Carbon::parse($request->tanggal)->isoFormat('D MMMM Y') . ' (' . $info . '). Pengajuan absen luar hanya dapat dilakukan jika belum ada riwayat kehadiran langsung pada tanggal tersebut.');
+            $tglStr = \Carbon\Carbon::parse($request->tanggal)->isoFormat('dddd, D MMMM Y');
+            if ($kehadiran->jam_pulang) {
+                $judul = 'Sudah Absen Pulang';
+                $statusStr = 'Absen Pulang (' . substr($kehadiran->jam_pulang, 0, 5) . ' WIB)';
+                $pesan = "Anda sudah menyelesaikan absensi masuk dan pulang pada {$tglStr}.";
+            } elseif ($kehadiran->jam_masuk) {
+                $judul = 'Sudah Absen Masuk';
+                $statusStr = 'Absen Masuk (' . substr($kehadiran->jam_masuk, 0, 5) . ' WIB)';
+                $pesan = "Anda sudah melakukan absensi masuk kantor pada {$tglStr}.";
+            } else {
+                $judul = 'Sudah Melakukan Presensi';
+                $statusStr = 'Hadir Sah di Kantor';
+                $pesan = "Data kehadiran Anda sudah sah tercatat pada {$tglStr}.";
+            }
+
+            return back()->withInput()
+                ->with('error', 'Anda sudah tercatat melakukan absensi kehadiran langsung di kantor pada ' . $tglStr . '.')
+                ->with('conflict_modal', [
+                    'icon'      => 'warning',
+                    'title'     => $judul,
+                    'badge'     => 'Pemberitahuan',
+                    'nama'      => $pegawai->nama_lengkap,
+                    'tanggal'   => $tglStr,
+                    'status'    => $statusStr,
+                    'pesan'     => $pesan,
+                ]);
         }
 
-        // 2. Cek duplikasi pengajuan pada tanggal yang sama
+        // 3. Cek duplikasi pengajuan pada tanggal yang sama
         $existing = PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
             ->whereDate('tanggal', $request->tanggal)
             ->first();

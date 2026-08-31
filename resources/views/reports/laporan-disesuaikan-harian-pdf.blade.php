@@ -403,7 +403,7 @@
         </table>
 
         <p class="footer-note">
-            * Dokumen ini sah dan dicetak secara otomatis melalui Sistem Informasi Presensi Digital Desa Nangtang pada {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }} WIB.
+            * Dokumen ini sah dan diterbitkan secara resmi melalui Sistem Informasi Kehadiran Aparatur Desa Nangtang berdasarkan UU No. 6/2014 tentang Desa, PP No. 94/2021 tentang Disiplin Aparatur, dan Permendagri tentang Administrasi Desa pada {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }} WIB.
         </p>
     </div>
 

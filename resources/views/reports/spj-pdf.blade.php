@@ -289,5 +289,9 @@
         </tr>
     </table>
 
+    <div style="margin-top: 6px; font-size: 6.5pt; color: #333; font-style: italic;">
+        * Dokumen ini sah dan diterbitkan secara resmi sebagai kelengkapan Surat Pertanggungjawaban (SPJ) Administrasi Pemerintahan Desa Nangtang berdasarkan UU No. 6/2014 tentang Desa, PP No. 94/2021 tentang Disiplin Aparatur, dan Permendagri tentang Pengelolaan Administrasi Desa.
+    </div>
+
 </body>
 </html>

@@ -1,4 +1,4 @@
-@extends('staf.layout', ['title' => 'Buku Riwayat Presensi — ' . $pegawai->nama_lengkap])
+@extends('staf.layout', ['title' => 'Buku Riwayat Presensi & Arsip Dokumen — ' . $pegawai->nama_lengkap])
 
 @section('content')
 <div class="space-y-4 pb-8" x-data="riwayatHub()">
@@ -15,38 +15,46 @@
         <!-- Header Buku Riwayat -->
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="font-outfit font-extrabold text-[#064E3B] text-lg">Buku Riwayat Presensi</h2>
-                <p class="text-xs text-slate-500">Catatan presensi, permohonan izin/sakit, & tugas luar Anda</p>
+                <h2 class="font-outfit font-extrabold text-[#064E3B] text-lg">Buku Riwayat & Rekam Jejak</h2>
+                <p class="text-xs text-slate-500">Seluruh arsip presensi, tanda tangan digital, izin, dan surat tugas Anda</p>
             </div>
-            <span class="text-xs font-bold text-[#064E3B] bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
+            <span class="text-xs font-bold text-[#064E3B] bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs font-mono">
                 @if(($tab ?? 'presensi') === 'izin')
-                    Total: {{ $riwayatIzin->total() }}
+                    Total: {{ $countIzin ?? $riwayatIzin->total() }}
                 @elseif(($tab ?? 'presensi') === 'absen_luar')
-                    Total: {{ $riwayatAbsenLuar->total() }}
+                    Total: {{ $countAbsenLuar ?? $riwayatAbsenLuar->total() }}
+                @elseif(($tab ?? 'presensi') === 'spt')
+                    Total: {{ $countSpt ?? $riwayatSpt->total() }}
                 @else
-                    Total: {{ $riwayats->total() }}
+                    Total: {{ $countPresensi ?? $riwayats->total() }}
                 @endif
             </span>
         </div>
 
-        <!-- Navigation Tabs -->
-        <div class="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-bold gap-1 shadow-inner">
+        <!-- Navigation Tabs (4 Tabs: Presensi, Izin, Absen Luar, SPT) -->
+        <div class="grid grid-cols-4 bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-bold gap-1 shadow-inner">
             <a href="{{ route('staf.riwayat', ['tab' => 'presensi']) }}"
-               class="flex-1 text-center py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 {{ ($tab ?? 'presensi') === 'presensi' ? 'bg-[#064E3B] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-200/60' }}">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>Presensi Harian</span>
+               class="text-center py-2.5 rounded-xl transition flex flex-col sm:flex-row items-center justify-center gap-1 {{ ($tab ?? 'presensi') === 'presensi' ? 'bg-[#064E3B] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-200/60' }}">
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="text-[10.5px] sm:text-xs">Presensi</span>
             </a>
 
             <a href="{{ route('staf.riwayat', ['tab' => 'izin']) }}"
-               class="flex-1 text-center py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 {{ ($tab ?? 'presensi') === 'izin' ? 'bg-[#064E3B] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-200/60' }}">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <span>Izin & Sakit</span>
+               class="text-center py-2.5 rounded-xl transition flex flex-col sm:flex-row items-center justify-center gap-1 {{ ($tab ?? 'presensi') === 'izin' ? 'bg-[#064E3B] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-200/60' }}">
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span class="text-[10.5px] sm:text-xs">Izin/Sakit</span>
             </a>
 
             <a href="{{ route('staf.riwayat', ['tab' => 'absen_luar']) }}"
-               class="flex-1 text-center py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 {{ ($tab ?? 'presensi') === 'absen_luar' ? 'bg-[#064E3B] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-200/60' }}">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                <span>Absen Luar</span>
+               class="text-center py-2.5 rounded-xl transition flex flex-col sm:flex-row items-center justify-center gap-1 {{ ($tab ?? 'presensi') === 'absen_luar' ? 'bg-[#064E3B] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-200/60' }}">
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span class="text-[10.5px] sm:text-xs">Dinas Luar</span>
+            </a>
+
+            <a href="{{ route('staf.riwayat', ['tab' => 'spt']) }}"
+               class="text-center py-2.5 rounded-xl transition flex flex-col sm:flex-row items-center justify-center gap-1 {{ ($tab ?? 'presensi') === 'spt' ? 'bg-[#064E3B] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-200/60' }}">
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span class="text-[10.5px] sm:text-xs">Surat SPT</span>
             </a>
         </div>
 
@@ -72,7 +80,7 @@
                 ];
             @endphp
             <div @click="showDetail('presensi', {{ json_encode($dataJson) }})"
-                 class="sadi-card p-4 bg-white rounded-2xl border border-slate-200 hover:border-[#064E3B]/60 hover:shadow-md transition duration-150 cursor-pointer space-y-2.5">
+                 class="sadi-card p-4 bg-white rounded-3xl border border-slate-200 hover:border-[#064E3B]/60 hover:shadow-md transition duration-150 cursor-pointer space-y-2.5">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                     <div class="flex items-center gap-2">
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-[#064E3B] border border-emerald-200 uppercase tracking-wider">
@@ -107,14 +115,24 @@
                             Masuk: <strong class="text-[#064E3B] font-mono">{{ $r->jam_masuk ? substr($r->jam_masuk, 0, 5) : '—' }}</strong> &bull; Pulang: <strong class="text-blue-700 font-mono">{{ $r->jam_pulang ? substr($r->jam_pulang, 0, 5) : '—' }}</strong>
                         </p>
                     </div>
-                    <span class="text-[11px] font-bold text-[#064E3B] flex items-center gap-0.5">
-                        <span>Detail</span>
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </span>
+                    
+                    <!-- Preview Chips Tanda Tangan -->
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        @if($r->tanda_tangan_masuk)
+                            <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9.5px] font-extrabold flex items-center gap-1" title="TTD Masuk Tercatat">
+                                <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                <span>TTD</span>
+                            </span>
+                        @endif
+                        <span class="text-[11px] font-bold text-[#064E3B] flex items-center gap-0.5">
+                            <span>Detail</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </span>
+                    </div>
                 </div>
             </div>
             @empty
-            <div class="sadi-card p-8 bg-white text-center text-slate-400 space-y-2 rounded-2xl border border-slate-200">
+            <div class="sadi-card p-8 bg-white text-center text-slate-400 space-y-2 rounded-3xl border border-slate-200">
                 <svg class="w-10 h-10 text-slate-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                 <p class="text-xs font-semibold text-slate-500">Belum ada riwayat presensi harian yang tercatat.</p>
             </div>
@@ -148,7 +166,7 @@
                 ];
             @endphp
             <div @click="showDetail('izin', {{ json_encode($dataJson) }})"
-                 class="sadi-card p-4 bg-white rounded-2xl border border-slate-200 hover:border-[#064E3B]/60 hover:shadow-md transition duration-150 cursor-pointer space-y-2.5">
+                 class="sadi-card p-4 bg-white rounded-3xl border border-slate-200 hover:border-[#064E3B]/60 hover:shadow-md transition duration-150 cursor-pointer space-y-2.5">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                     <div class="flex items-center gap-2">
                         <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider {{ $isSakit ? 'bg-rose-50 text-rose-800 border border-rose-200' : 'bg-emerald-50 text-[#064E3B] border border-emerald-200' }}">
@@ -199,7 +217,7 @@
                 </div>
             </div>
             @empty
-            <div class="sadi-card p-8 bg-white text-center text-slate-400 space-y-2 rounded-2xl border border-slate-200">
+            <div class="sadi-card p-8 bg-white text-center text-slate-400 space-y-2 rounded-3xl border border-slate-200">
                 <svg class="w-10 h-10 text-slate-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 <p class="text-xs font-semibold text-slate-500">Belum ada riwayat permohonan izin atau sakit.</p>
             </div>
@@ -213,7 +231,7 @@
         </div>
         @endif
 
-        <!-- 3. TAB ABSEN LUAR -->
+        <!-- 3. TAB ABSEN LUAR (DINAS LUAR) -->
         @if(($tab ?? 'presensi') === 'absen_luar')
         <div class="space-y-3">
             @forelse($riwayatAbsenLuar as $r)
@@ -239,7 +257,7 @@
                 ];
             @endphp
             <div @click="showDetail('absen_luar', {{ json_encode($dataJson) }})"
-                 class="sadi-card p-4 bg-white rounded-2xl border border-slate-200 hover:border-[#064E3B]/60 hover:shadow-md transition duration-150 cursor-pointer space-y-2.5">
+                 class="sadi-card p-4 bg-white rounded-3xl border border-slate-200 hover:border-[#064E3B]/60 hover:shadow-md transition duration-150 cursor-pointer space-y-2.5">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                     <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-50 text-blue-800 border border-blue-200 uppercase tracking-wider">
                         {{ $r->label_jenis ?? str_replace('_', ' ', $r->jenis) }}
@@ -277,14 +295,23 @@
                         </p>
                         <p class="text-[11px] text-slate-600 truncate italic">"{{ $r->deskripsi }}"</p>
                     </div>
-                    <span class="text-[11px] font-bold text-[#064E3B] shrink-0 flex items-center gap-0.5">
-                        <span>Detail</span>
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </span>
+                    
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        @if($r->tanda_tangan)
+                            <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200 text-[9.5px] font-extrabold flex items-center gap-1">
+                                <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                <span>TTD</span>
+                            </span>
+                        @endif
+                        <span class="text-[11px] font-bold text-[#064E3B] flex items-center gap-0.5">
+                            <span>Detail</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </span>
+                    </div>
                 </div>
             </div>
             @empty
-            <div class="sadi-card p-8 bg-white text-center text-slate-400 space-y-2 rounded-2xl border border-slate-200">
+            <div class="sadi-card p-8 bg-white text-center text-slate-400 space-y-2 rounded-3xl border border-slate-200">
                 <svg class="w-10 h-10 text-slate-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 <p class="text-xs font-semibold text-slate-500">Belum ada riwayat pengajuan absen luar.</p>
             </div>
@@ -298,10 +325,98 @@
         </div>
         @endif
 
+        <!-- 4. TAB SURAT PERINTAH TUGAS (SPT) -->
+        @if(($tab ?? 'presensi') === 'spt')
+        <div class="space-y-3">
+            @forelse($riwayatSpt as $s)
+            @php
+                $dataJson = [
+                    'id' => $s->id,
+                    'nomor_spt' => $s->nomor_spt ?? 'Tanpa Nomor Surat',
+                    'tujuan' => $s->tujuan,
+                    'keperluan' => $s->keperluan,
+                    'tanggal_mulai' => $s->tanggal_mulai->format('d/m/Y'),
+                    'tanggal_selesai' => $s->tanggal_selesai->format('d/m/Y'),
+                    'diterbitkan_oleh' => $s->pembuat->name ?? 'Pemerintah Desa Nangtang',
+                    'respons_staf' => $s->respons_staf,
+                    'waktu_respons' => $s->waktu_respons_staf ? $s->waktu_respons_staf->format('d/m/Y H:i') . ' WIB' : '—',
+                    'alasan_tolak' => $s->alasan_tolak_staf ?? $s->catatan_penolakan,
+                    'file_undangan' => $s->file_undangan ? asset('storage/' . $s->file_undangan) : null,
+                    'ttd_staf' => $s->tanda_tangan_staf,
+                ];
+            @endphp
+            <div @click="showDetail('spt', {{ json_encode($dataJson) }})"
+                 class="sadi-card p-4 bg-white rounded-3xl border {{ $s->respons_staf === 'diterima' ? 'border-emerald-200' : ($s->respons_staf === 'ditolak' ? 'border-rose-200' : 'border-amber-300 ring-2 ring-amber-200/50') }} hover:shadow-md transition duration-150 cursor-pointer space-y-2.5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-teal-50 text-teal-800 border border-teal-200">
+                            SPT Resmi
+                        </span>
+                        @if($s->nomor_spt)
+                            <span class="text-[10px] font-mono text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">{{ $s->nomor_spt }}</span>
+                        @endif
+                    </div>
+
+                    <div class="flex items-center gap-1.5">
+                        @if($s->respons_staf === 'diterima')
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                ✓ Diterima
+                            </span>
+                        @elseif($s->respons_staf === 'ditolak' || $s->status === 'ditolak')
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">
+                                ✕ Ditolak
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-900 animate-pulse">
+                                ⏳ Menunggu
+                            </span>
+                        @endif
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between text-xs">
+                    <div class="space-y-0.5 flex-1 min-w-0 pr-2">
+                        <h3 class="font-outfit font-extrabold text-slate-900 text-sm truncate">{{ $s->tujuan }}</h3>
+                        <p class="text-[11px] text-slate-500 font-mono">
+                            {{ $s->tanggal_mulai->format('d/m/Y') }} s/d {{ $s->tanggal_selesai->format('d/m/Y') }}
+                        </p>
+                        <p class="text-[11px] text-slate-600 truncate italic">"{{ $s->keperluan }}"</p>
+                    </div>
+                    
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        @if($s->tanda_tangan_staf)
+                            <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9.5px] font-extrabold flex items-center gap-1">
+                                <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                <span>TTD</span>
+                            </span>
+                        @endif
+                        <span class="text-[11px] font-bold text-[#064E3B] flex items-center gap-0.5">
+                            <span>Detail</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            @empty
+            <div class="sadi-card p-8 bg-white text-center text-slate-400 space-y-2 rounded-3xl border border-slate-200">
+                <svg class="w-10 h-10 text-slate-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <p class="text-xs font-semibold text-slate-500">Belum ada riwayat Surat Perintah Tugas yang tercatat.</p>
+            </div>
+            @endforelse
+
+            @if($riwayatSpt->hasPages())
+            <div class="pt-2">
+                {{ $riwayatSpt->appends(['tab' => 'spt'])->links('vendor.pagination.sadi-mobile') }}
+            </div>
+            @endif
+        </div>
+        @endif
+
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- VIEW 2: HALAMAN DETAIL RINCIAN PENUH (BUKAN POPUP / BUKAN MENGAMBANG)  -->
+    <!-- VIEW 2: HALAMAN DETAIL RINCIAN PENUH (DENGAN VIEWER TTD & BERKAS)      -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <div x-show="activeView === 'detail'"
          x-transition:enter="transition ease-out duration-200"
@@ -313,7 +428,7 @@
         <!-- Top Navigation Header -->
         <div class="flex items-center justify-between">
             <button type="button" @click="backToList()"
-                    class="inline-flex items-center gap-2 text-xs font-bold text-[#064E3B] hover:text-emerald-800 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs transition cursor-pointer active:scale-98">
+                    class="inline-flex items-center gap-2 text-xs font-bold text-[#064E3B] hover:text-emerald-800 bg-white px-3.5 py-2 rounded-2xl border border-slate-200 shadow-2xs transition cursor-pointer active:scale-98">
                 <svg class="w-4 h-4 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 <span>Kembali ke Riwayat</span>
             </button>
@@ -329,11 +444,11 @@
             <!-- Title & Status Header -->
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-[#064E3B] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                    <div class="w-9 h-9 rounded-2xl bg-[#064E3B] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
                         <svg class="w-4 h-4 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     </div>
                     <div>
-                        <h3 class="font-outfit font-extrabold text-sm text-slate-900">Rincian Arsip Presensi</h3>
+                        <h3 class="font-outfit font-extrabold text-sm text-slate-900">Rincian Arsip Lengkap</h3>
                         <p class="text-[10.5px] text-slate-400 font-mono">Tercatat di Server Presensi Desa</p>
                     </div>
                 </div>
@@ -341,11 +456,11 @@
                 <div>
                     <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold border shadow-2xs capitalize"
                           :class="{
-                              'bg-emerald-50 text-emerald-800 border-emerald-300': detailData && (detailData.status === 'Hadir' || detailData.status === 'disetujui'),
-                              'bg-amber-50 text-amber-900 border-amber-300': detailData && (detailData.status === 'menunggu' || detailData.status === 'Izin' || detailData.status === 'Sakit'),
-                              'bg-rose-50 text-rose-800 border-rose-300': detailData && (detailData.status === 'ditolak' || detailData.status === 'Alpha' || detailData.status === 'Terlambat')
+                              'bg-emerald-50 text-emerald-800 border-emerald-300': detailData && (detailData.status === 'Hadir' || detailData.status === 'disetujui' || detailData.respons_staf === 'diterima'),
+                              'bg-amber-50 text-amber-900 border-amber-300': detailData && (detailData.status === 'menunggu' || detailData.status === 'Izin' || detailData.status === 'Sakit' || detailData.respons_staf === 'menunggu'),
+                              'bg-rose-50 text-rose-800 border-rose-300': detailData && (detailData.status === 'ditolak' || detailData.status === 'Alpha' || detailData.status === 'Terlambat' || detailData.respons_staf === 'ditolak')
                           }">
-                        <span x-text="detailData ? detailData.status : ''"></span>
+                        <span x-text="detailData ? (detailData.status || detailData.respons_staf) : ''"></span>
                     </span>
                 </div>
             </div>
@@ -368,7 +483,7 @@
                 </div>
             </div>
 
-            <!-- Rincian Sesuai Tipe: 1. Presensi Harian -->
+            <!-- 1. RINCIAN PRESENSI HARIAN -->
             <template x-if="detailType === 'presensi' && detailData">
                 <div class="space-y-3.5">
                     <div class="p-4 bg-white rounded-2xl border border-slate-200 space-y-2.5 text-xs">
@@ -395,7 +510,7 @@
                         </div>
                     </div>
 
-                    <!-- Tanda Tangan Basah -->
+                    <!-- Bukti Tanda Tangan Digital Masuk & Pulang -->
                     <div class="p-4 bg-white rounded-2xl border border-slate-200 space-y-2 text-xs">
                         <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block border-b border-slate-100 pb-1">
                             Bukti Tanda Tangan Digital Basah
@@ -404,7 +519,10 @@
                             <div class="text-center p-2.5 rounded-xl bg-slate-50 border border-slate-100">
                                 <span class="text-[10px] text-slate-500 block mb-1 font-bold">TTD Masuk</span>
                                 <template x-if="detailData.ttd_masuk">
-                                    <img :src="detailData.ttd_masuk" class="max-h-20 mx-auto bg-white p-1 rounded-lg border object-contain">
+                                    <div class="cursor-pointer" @click="zoomImage(detailData.ttd_masuk, 'Tanda Tangan Masuk - ' + detailData.tanggal_formatted)">
+                                        <img :src="detailData.ttd_masuk" class="max-h-20 mx-auto bg-white p-1 rounded-lg border object-contain hover:scale-105 transition">
+                                        <span class="text-[9px] text-blue-600 block mt-1">Klik perbesar</span>
+                                    </div>
                                 </template>
                                 <template x-if="!detailData.ttd_masuk">
                                     <span class="text-[10px] text-slate-400 italic block py-4">Tidak ada TTD</span>
@@ -413,7 +531,10 @@
                             <div class="text-center p-2.5 rounded-xl bg-slate-50 border border-slate-100">
                                 <span class="text-[10px] text-slate-500 block mb-1 font-bold">TTD Pulang</span>
                                 <template x-if="detailData.ttd_pulang">
-                                    <img :src="detailData.ttd_pulang" class="max-h-20 mx-auto bg-white p-1 rounded-lg border object-contain">
+                                    <div class="cursor-pointer" @click="zoomImage(detailData.ttd_pulang, 'Tanda Tangan Pulang - ' + detailData.tanggal_formatted)">
+                                        <img :src="detailData.ttd_pulang" class="max-h-20 mx-auto bg-white p-1 rounded-lg border object-contain hover:scale-105 transition">
+                                        <span class="text-[9px] text-blue-600 block mt-1">Klik perbesar</span>
+                                    </div>
                                 </template>
                                 <template x-if="!detailData.ttd_pulang">
                                     <span class="text-[10px] text-slate-400 italic block py-4">Tidak ada TTD</span>
@@ -424,7 +545,7 @@
                 </div>
             </template>
 
-            <!-- Rincian Sesuai Tipe: 2. Izin & Sakit -->
+            <!-- 2. RINCIAN IZIN & SAKIT -->
             <template x-if="detailType === 'izin' && detailData">
                 <div class="space-y-3.5 text-xs">
                     <div class="p-4 bg-white rounded-2xl border border-slate-200 space-y-2.5">
@@ -465,7 +586,7 @@
                 </div>
             </template>
 
-            <!-- Rincian Sesuai Tipe: 3. Absen Luar Kantor -->
+            <!-- 3. RINCIAN ABSEN LUAR KANTOR -->
             <template x-if="detailType === 'absen_luar' && detailData">
                 <div class="space-y-3.5 text-xs">
                     <div class="p-4 bg-white rounded-2xl border border-slate-200 space-y-2.5">
@@ -534,25 +655,93 @@
 
                         <div class="grid grid-cols-2 gap-2.5">
                             <template x-if="detailData.foto_kegiatan">
-                                <div class="text-center p-2 rounded-xl bg-slate-50 border">
+                                <div class="text-center p-2 rounded-xl bg-slate-50 border cursor-pointer" @click="zoomImage(detailData.foto_kegiatan, 'Foto Kegiatan Lapangan')">
                                     <span class="text-[9.5px] text-slate-500 block mb-1 font-bold">Foto Lapangan</span>
                                     <img :src="detailData.foto_kegiatan" class="max-h-28 w-full object-cover rounded-lg border">
+                                    <span class="text-[9px] text-blue-600 block mt-1">Klik perbesar</span>
                                 </div>
                             </template>
                             <template x-if="detailData.ttd_src">
-                                <div class="text-center p-2 rounded-xl bg-slate-50 border">
+                                <div class="text-center p-2 rounded-xl bg-slate-50 border cursor-pointer" @click="zoomImage(detailData.ttd_src, 'Tanda Tangan Pemohon')">
                                     <span class="text-[9.5px] text-slate-500 block mb-1 font-bold">TTD Pemohon</span>
                                     <img :src="detailData.ttd_src" class="max-h-28 mx-auto bg-white p-1 rounded-lg border object-contain">
+                                    <span class="text-[9px] text-blue-600 block mt-1">Klik perbesar</span>
                                 </div>
                             </template>
                         </div>
 
                         <template x-if="detailData.file_dokumen">
                             <div class="pt-2 flex items-center justify-between border-t border-slate-100">
-                                <span class="text-[10px] text-slate-500 font-bold">Berkas Surat Undangan/SPT:</span>
+                                <span class="text-[10px] text-slate-500 font-bold">Berkas Undangan/SPT:</span>
                                 <a :href="detailData.file_dokumen" target="_blank"
                                    class="px-3.5 py-1.5 rounded-xl bg-[#064E3B] hover:bg-[#04392B] text-white text-xs font-bold shadow-xs">
                                     Buka Berkas
+                                </a>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <!-- 4. RINCIAN SURAT PERINTAH TUGAS (SPT) -->
+            <template x-if="detailType === 'spt' && detailData">
+                <div class="space-y-3.5 text-xs">
+                    <div class="p-4 bg-white rounded-2xl border border-slate-200 space-y-2.5">
+                        <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block border-b border-slate-100 pb-1">
+                            Rincian Surat Perintah Tugas (SPT)
+                        </span>
+
+                        <div>
+                            <span class="text-[10px] text-slate-400 uppercase font-bold block">Lokasi & Tujuan</span>
+                            <h4 class="font-outfit font-extrabold text-base text-slate-900 mt-0.5" x-text="detailData.tujuan"></h4>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                            <div>
+                                <span class="text-[10px] text-slate-400 block">Nomor Surat Tugas</span>
+                                <strong class="text-[#064E3B] font-mono" x-text="detailData.nomor_spt"></strong>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block">Periode Dinas</span>
+                                <strong class="text-slate-800 font-mono" x-text="detailData.tanggal_mulai + ' — ' + detailData.tanggal_selesai"></strong>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-slate-100">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase block mb-0.5">Keperluan / Agenda Tugas</span>
+                            <p class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-slate-700 leading-relaxed" x-text="detailData.keperluan"></p>
+                        </div>
+                    </div>
+
+                    <!-- Bukti TTD Staf & Berkas SPT -->
+                    <div class="p-4 bg-white rounded-2xl border border-slate-200 space-y-2.5">
+                        <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block border-b border-slate-100 pb-1">
+                            Bukti Penerimaan & Dokumen
+                        </span>
+
+                        <template x-if="detailData.ttd_staf">
+                            <div class="text-center p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                <span class="text-[10px] text-slate-500 block mb-1 font-bold">Tanda Tangan Digital Penerimaan Anda</span>
+                                <img :src="detailData.ttd_staf" @click="zoomImage(detailData.ttd_staf, 'Tanda Tangan Penerimaan SPT')"
+                                     class="max-h-24 mx-auto bg-white p-1 rounded-xl border object-contain cursor-pointer hover:scale-105 transition">
+                                <span class="text-[9px] text-slate-400 block mt-1" x-text="'Dikonfirmasi: ' + detailData.waktu_respons"></span>
+                            </div>
+                        </template>
+
+                        <template x-if="detailData.alasan_tolak">
+                            <div class="p-3 bg-rose-50 rounded-2xl border border-rose-200 text-rose-950">
+                                <span class="text-[10px] font-bold text-rose-800 uppercase block mb-0.5">Alasan Penolakan Anda:</span>
+                                <p class="italic font-semibold" x-text="'&ldquo;' + detailData.alasan_tolak + '&rdquo;'"></p>
+                            </div>
+                        </template>
+
+                        <template x-if="detailData.file_undangan">
+                            <div class="pt-2 flex items-center justify-between border-t border-slate-100">
+                                <span class="text-[10px] text-slate-500 font-bold">Berkas Surat Tugas / Undangan:</span>
+                                <a :href="detailData.file_undangan" target="_blank"
+                                   class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    <span>Lihat Berkas</span>
                                 </a>
                             </div>
                         </template>
@@ -573,6 +762,33 @@
 
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL LIGHTBOX IMAGE ZOOM (UNTUK PREVIEW TTD & FOTO)                    -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <div x-show="zoomModal"
+         x-transition.opacity
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4"
+         style="display: none;"
+         @keydown.escape.window="zoomModal = false">
+        <div @click.away="zoomModal = false"
+             class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 my-6 flex flex-col">
+            <div class="px-5 py-3.5 bg-[#064E3B] text-white flex items-center justify-between border-b border-[#C9A84C]/40">
+                <h3 class="font-outfit text-sm font-bold text-white truncate" x-text="zoomTitle"></h3>
+                <button type="button" @click="zoomModal = false" class="p-1 rounded-lg hover:bg-emerald-800 text-emerald-200 hover:text-white transition cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-4 bg-slate-50 flex items-center justify-center">
+                <img :src="zoomSrc" class="max-h-[65vh] w-auto object-contain rounded-2xl shadow-sm border bg-white p-2">
+            </div>
+            <div class="p-3 bg-white border-t border-slate-100 flex justify-end">
+                <button type="button" @click="zoomModal = false" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
 
@@ -583,6 +799,9 @@ function riwayatHub() {
         activeView: 'list', // 'list' | 'detail'
         detailType: null,
         detailData: null,
+        zoomModal: false,
+        zoomSrc: '',
+        zoomTitle: '',
 
         showDetail(type, data) {
             this.detailType = type;
@@ -595,6 +814,12 @@ function riwayatHub() {
             this.activeView = 'list';
             this.detailData = null;
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        zoomImage(src, title) {
+            this.zoomSrc = src;
+            this.zoomTitle = title || 'Pratinjau Gambar';
+            this.zoomModal = true;
         }
     };
 }

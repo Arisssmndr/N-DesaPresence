@@ -309,4 +309,147 @@ class IzinDanPiketTest extends TestCase
 
         $this->assertFalse(JadwalPiket::whereDate('tanggal_piket', '2026-09-10')->exists());
     }
+
+    public function test_staff_who_checked_in_cannot_submit_absen_luar_or_izin_on_same_day()
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $today = Carbon::today()->toDateString();
+
+        // 1. Simulasikan pegawai sudah absen masuk langsung
+        Kehadiran::updateOrCreate(
+            ['pegawai_id' => $this->pegawai->id, 'tanggal' => $today],
+            [
+                'jam_masuk' => '07:45:00',
+                'status'    => 'Hadir',
+                'sumber_data' => 'web_signature'
+            ]
+        );
+
+        $this->actingAs($this->stafUser);
+
+        // 2. Coba ajukan Absen Luar pada hari yang sama -> DITOLAK
+        $foto = \Illuminate\Http\UploadedFile::fake()->image('lokasi.jpg');
+        $responseAbsenLuar = $this->post(route('staf.ajukan.store'), [
+            'tanggal'      => $today,
+            'jenis'        => 'dinas_luar_pengajuan',
+            'judul'        => 'Rapat Koordinasi Kecamatan',
+            'deskripsi'    => 'Menghadiri rapat di kantor camat',
+            'foto_lokasi'  => $foto,
+            'latitude'     => -7.350000,
+            'longitude'    => 108.200000,
+            'tanda_tangan' => str_repeat('A', 120),
+        ]);
+
+        $responseAbsenLuar->assertSessionHas('error');
+
+        // 3. Coba ajukan Izin pada hari yang sama -> DITOLAK
+        $responseIzin = $this->post(route('staf.izin.store'), [
+            'kategori'        => 'izin',
+            'jenis_detail'    => 'izin_pribadi',
+            'tanggal_mulai'   => $today,
+            'tanggal_selesai' => $today,
+            'keterangan'      => 'Izin keperluan pribadi mendadak',
+        ]);
+
+        $responseIzin->assertSessionHas('error');
+    }
+
+    public function test_staff_with_active_izin_period_cannot_check_in_or_submit_absen_luar()
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $startDate = Carbon::today()->subDays(2)->toDateString();
+        $endDate = Carbon::today()->addDays(2)->toDateString();
+
+        // Bersihkan kehadiran eksisting
+        Kehadiran::where('pegawai_id', $this->pegawai->id)
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->delete();
+
+        // 1. Buat izin aktif (mencakup hari ini)
+        $izin = IzinSakit::create([
+            'pegawai_id'      => $this->pegawai->id,
+            'jenis'           => 'sakit_dengan_surat',
+            'tanggal_mulai'   => $startDate,
+            'tanggal_selesai' => $endDate,
+            'jumlah_hari'     => 5,
+            'keterangan'      => 'Sakit tifus rawat jalan',
+            'status'          => 'disetujui',
+            'diproses_oleh'   => $this->adminUser->id,
+        ]);
+
+        $this->actingAs($this->stafUser);
+
+        // 2. Akses lembar absen masuk -> DITOLAK
+        $responseHalaman = $this->get(route('staf.absen.form', 'masuk'));
+        $responseHalaman->assertRedirect(route('staf.beranda'));
+        $responseHalaman->assertSessionHas('error');
+
+        // 3. Submit absen langsung via API -> DITOLAK (403)
+        $responseSubmit = $this->postJson(route('staf.absen.submit'), [
+            'jenis'        => 'masuk',
+            'tanda_tangan' => str_repeat('B', 120),
+        ]);
+        $responseSubmit->assertStatus(403);
+
+        // 4. Submit pengajuan absen luar di tengah periode izin -> DITOLAK
+        $foto = \Illuminate\Http\UploadedFile::fake()->image('lokasi.jpg');
+        $responseAbsenLuar = $this->post(route('staf.ajukan.store'), [
+            'tanggal'      => Carbon::today()->toDateString(),
+            'jenis'        => 'dinas_luar_pengajuan',
+            'judul'        => 'Tugas luar saat izin',
+            'deskripsi'    => 'Deskripsi tugas',
+            'foto_lokasi'  => $foto,
+            'latitude'     => -7.350000,
+            'longitude'    => 108.200000,
+            'tanda_tangan' => str_repeat('C', 120),
+        ]);
+        $responseAbsenLuar->assertSessionHas('error');
+
+        // 5. Admin mencoba override manual pada tanggal izin -> DITOLAK dengan error validasi
+        $this->actingAs($this->adminUser);
+
+        Livewire::test(IzinManager::class)
+            ->set('manual_pegawai_id', $this->pegawai->id)
+            ->set('manual_tanggal', Carbon::today()->toDateString())
+            ->set('manual_status', 'Hadir')
+            ->set('manual_keterangan', 'Mencoba override di tanggal sakit')
+            ->call('saveManualAttendance')
+            ->assertHasErrors(['manual_tanggal']);
+    }
+
+    public function test_admin_can_record_direct_manual_attendance_in_izin_manager()
+    {
+        $targetDateMulai = Carbon::today()->subDays(5)->toDateString();
+        $targetDateSelesai = Carbon::today()->subDays(3)->toDateString();
+
+        // Bersihkan data tanggal tersebut
+        IzinSakit::where('pegawai_id', $this->pegawai->id)->whereDate('tanggal_mulai', '<=', $targetDateSelesai)->whereDate('tanggal_selesai', '>=', $targetDateMulai)->delete();
+        Kehadiran::where('pegawai_id', $this->pegawai->id)->whereBetween('tanggal', [$targetDateMulai, $targetDateSelesai])->delete();
+
+        $this->actingAs($this->adminUser);
+
+        // Test Input Sakit Multi-Hari (3 hari: H-5 s/d H-3)
+        Livewire::test(IzinManager::class)
+            ->set('manual_pegawai_id', $this->pegawai->id)
+            ->set('manual_tanggal_mulai', $targetDateMulai)
+            ->set('manual_tanggal_selesai', $targetDateSelesai)
+            ->set('manual_status', 'Sakit')
+            ->set('manual_keterangan', 'Sakit demam rawat jalan 3 hari')
+            ->call('saveManualAttendance')
+            ->assertHasNoErrors();
+
+        // Verifikasi seluruh 3 hari langsung tercatat di Kehadiran berstatus Sakit
+        $kehadirans = Kehadiran::where('pegawai_id', $this->pegawai->id)
+            ->whereDate('tanggal', '>=', $targetDateMulai)
+            ->whereDate('tanggal', '<=', $targetDateSelesai)
+            ->get();
+
+        $this->assertCount(3, $kehadirans);
+        foreach ($kehadirans as $k) {
+            $this->assertEquals('Sakit', $k->status);
+            $this->assertEquals('manual_admin', $k->sumber_data);
+            $this->assertEquals($this->adminUser->id, $k->diverifikasi_oleh);
+        }
+    }
 }
+

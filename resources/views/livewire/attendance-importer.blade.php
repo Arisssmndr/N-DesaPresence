@@ -6,13 +6,6 @@
             <h1 class="font-outfit text-2xl font-extrabold text-[#064E3B]">Log Absensi Digital</h1>
             <p class="text-xs text-slate-500 mt-1">Riwayat seluruh presensi dan bukti tanda tangan digital staf Desa Nangtang</p>
         </div>
-        <a href="{{ route('staf.login') }}" target="_blank"
-           class="btn-sadi-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-bold shadow-md transition">
-            <svg class="w-4 h-4 text-[#C9A84C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-            </svg>
-            <span>Buka Portal Absensi</span>
-        </a>
     </div>
 
     {{-- Stat Cards --}}

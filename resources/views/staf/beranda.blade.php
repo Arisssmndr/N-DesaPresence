@@ -120,8 +120,21 @@
 
         <!-- Master Button Action (Hijau Aktif / Merah Terkunci) -->
         <div>
-            {{-- KONDISI 1: Dinas Luar / Izin / Sakit Resmi --}}
-            @if($kehadiranHariIni && in_array(strtolower($kehadiranHariIni->status), ['dinas luar', 'izin', 'sakit']) && !$kehadiranHariIni->jam_masuk)
+            {{-- KONDISI 1: Sedang Izin / Sakit Aktif Hari Ini --}}
+            @if(isset($izinAktifHariIni) && $izinAktifHariIni)
+                <div class="p-4 rounded-2xl bg-teal-50 border-2 border-teal-300 text-center space-y-1.5 shadow-2xs">
+                    <div class="flex items-center justify-center gap-1.5 text-xs font-extrabold text-teal-900">
+                        <svg class="w-4 h-4 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>STATUS HARI INI: {{ strtoupper(str_replace('_', ' ', $izinAktifHariIni->jenis)) }} ({{ strtoupper($izinAktifHariIni->status) }})</span>
+                    </div>
+                    <p class="text-[11px] text-teal-800 font-medium">
+                        Periode: <strong class="font-mono">{{ $izinAktifHariIni->tanggal_mulai->format('d/m/Y') }}</strong> s/d <strong class="font-mono">{{ $izinAktifHariIni->tanggal_selesai->format('d/m/Y') }}</strong> ({{ $izinAktifHariIni->jumlah_hari }} Hari)
+                    </p>
+                    <p class="text-[10.5px] text-teal-700 italic">"{{ $izinAktifHariIni->keterangan }}"</p>
+                </div>
+
+            {{-- KONDISI 1B: Dinas Luar / Izin Resmi Tercatat di Kehadiran --}}
+            @elseif($kehadiranHariIni && in_array(strtolower($kehadiranHariIni->status), ['dinas luar', 'izin', 'sakit']) && !$kehadiranHariIni->jam_masuk)
                 <div class="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-center space-y-1 shadow-2xs">
                     <div class="flex items-center justify-center gap-1.5 text-xs font-extrabold text-indigo-900">
                         <svg class="w-4 h-4 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -212,6 +225,225 @@
         </div>
 
     </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- 2.5. NOTIFIKASI SURAT PERINTAH TUGAS (SPT) MENUNGGU KONFIRMASI STAF    -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if(isset($sptMenunggu) && $sptMenunggu->count() > 0)
+    <div class="space-y-3" x-data="{ activeSptTerimaModal: null, activeSptTolakModal: null }">
+        @foreach($sptMenunggu as $spt)
+            <div class="sadi-card p-4 sm:p-5 bg-gradient-to-br from-amber-50 via-white to-amber-50/50 border-2 border-amber-300 shadow-md rounded-3xl space-y-3.5 relative overflow-hidden">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-extrabold shadow-sm shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded-full text-[9.5px] font-extrabold bg-amber-500 text-white uppercase tracking-wider animate-pulse">
+                                    PENUGASAN KEDINASAN BARU
+                                </span>
+                                @if($spt->nomor_spt)
+                                    <span class="text-[10.5px] font-mono font-bold text-slate-500">{{ $spt->nomor_spt }}</span>
+                                @endif
+                            </div>
+                            <h4 class="font-outfit font-extrabold text-sm sm:text-base text-slate-900 mt-1">
+                                {{ $spt->tujuan }}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail Box -->
+                <div class="p-3.5 bg-white/90 rounded-2xl border border-amber-200/80 text-xs space-y-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700">
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Periode Tugas:</span>
+                            <p class="font-mono font-bold text-emerald-800 mt-0.5">
+                                {{ $spt->tanggal_mulai->format('d/m/Y') }} s/d {{ $spt->tanggal_selesai->format('d/m/Y') }}
+                            </p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Diterbitkan Oleh:</span>
+                            <p class="font-bold text-slate-800 mt-0.5">
+                                {{ $spt->pembuat->name ?? 'Pemerintah Desa Nangtang' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Keperluan / Agenda:</span>
+                        <p class="text-[11.5px] text-slate-700 font-medium mt-0.5 leading-relaxed">
+                            {{ $spt->keperluan }}
+                        </p>
+                    </div>
+
+                    @if($spt->file_undangan)
+                        <div class="pt-1.5 flex items-center justify-between">
+                            <span class="text-[10.5px] text-slate-500">Lampiran / Surat Undangan:</span>
+                            <a href="{{ asset('storage/' . $spt->file_undangan) }}" target="_blank"
+                               class="inline-flex items-center gap-1 text-[11px] font-extrabold text-blue-600 hover:underline">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                <span>Lihat Berkas Lampiran</span>
+                            </a>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Action Buttons: TERIMA / TOLAK -->
+                <div class="flex items-center justify-end gap-2 pt-1">
+                    <button type="button" @click="activeSptTolakModal = {{ $spt->id }}"
+                            class="px-3.5 py-2 rounded-xl bg-white border border-rose-300 text-rose-700 font-extrabold text-xs hover:bg-rose-50 transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
+                        <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <span>Tolak Tugas</span>
+                    </button>
+
+                    <button type="button" @click="activeSptTerimaModal = {{ $spt->id }}; setTimeout(() => { initSptPad({{ $spt->id }}) }, 100);"
+                            class="px-4 py-2 rounded-xl bg-[#064E3B] text-white font-extrabold text-xs hover:bg-[#04392B] transition cursor-pointer flex items-center gap-1.5 shadow-md">
+                        <svg class="w-3.5 h-3.5 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Terima & Tanda Tangani</span>
+                    </button>
+                </div>
+
+                <!-- MODAL TANDA TANGAN PENERIMAAN SPT -->
+                <div x-show="activeSptTerimaModal === {{ $spt->id }}"
+                     x-transition.opacity
+                     class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+                     style="display: none;"
+                     @keydown.escape.window="activeSptTerimaModal = null">
+                    <div @click.away="activeSptTerimaModal = null"
+                         class="bg-white text-slate-800 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 my-6 flex flex-col max-h-[92vh]">
+                        
+                        <div class="px-5 py-3.5 bg-[#064E3B] text-white flex items-center justify-between border-b border-[#C9A84C]/40 shrink-0">
+                            <div>
+                                <h3 class="font-outfit text-sm font-bold text-white">Konfirmasi Penerimaan SPT</h3>
+                                <p class="text-[10px] text-emerald-200 font-mono">{{ $spt->nomor_spt }}</p>
+                            </div>
+                            <button type="button" @click="activeSptTerimaModal = null" class="p-1 rounded-lg hover:bg-emerald-800 text-emerald-200 hover:text-white transition cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+
+                        <form id="form-spt-terima-{{ $spt->id }}" action="{{ route('staf.spt.terima', $spt->id) }}" method="POST" onsubmit="return submitSptForm(event, {{ $spt->id }})" class="p-4 space-y-3 text-xs">
+                            @csrf
+                            <input type="hidden" name="tanda_tangan" id="input-ttd-spt-{{ $spt->id }}">
+
+                            <div class="p-3 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-1">
+                                <p class="font-bold text-emerald-950">{{ $spt->tujuan }}</p>
+                                <p class="text-[11px] text-emerald-800">
+                                    Periode: <strong class="font-mono">{{ $spt->tanggal_mulai->format('d/m/Y') }} — {{ $spt->tanggal_selesai->format('d/m/Y') }}</strong>
+                                </p>
+                                <p class="text-[10.5px] text-emerald-700 italic">
+                                    * Dengan menandatangani SPT ini, status kehadiran Anda pada rentang tanggal tersebut akan otomatis tercatat sebagai Hadir (Dinas Luar SPT).
+                                </p>
+                            </div>
+
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Tanda Tangan Digital Anda <span class="text-rose-500">*</span></label>
+                                    <button type="button" onclick="clearSptPad({{ $spt->id }})" class="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer">Hapus / Ulangi</button>
+                                </div>
+                                <div id="wrapper-spt-{{ $spt->id }}" class="border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 overflow-hidden relative">
+                                    <canvas id="canvas-spt-{{ $spt->id }}" class="w-full h-36 cursor-crosshair touch-none"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="pt-1 flex justify-end gap-2">
+                                <button type="button" @click="activeSptTerimaModal = null" class="px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition cursor-pointer">
+                                    Batal
+                                </button>
+                                <button type="submit" class="px-4 py-2 rounded-xl bg-[#064E3B] text-white font-bold hover:bg-[#04392B] transition cursor-pointer flex items-center gap-1.5 shadow-md">
+                                    <svg class="w-3.5 h-3.5 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    <span>Konfirmasi & Terima</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- MODAL ALASAN PENOLAKAN SPT -->
+                <div x-show="activeSptTolakModal === {{ $spt->id }}"
+                     x-transition.opacity
+                     class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+                     style="display: none;"
+                     @keydown.escape.window="activeSptTolakModal = null">
+                    <div @click.away="activeSptTolakModal = null"
+                         class="bg-white text-slate-800 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 my-6 flex flex-col max-h-[92vh]">
+                        
+                        <div class="px-5 py-3.5 bg-rose-700 text-white flex items-center justify-between border-b border-rose-800 shrink-0">
+                            <div>
+                                <h3 class="font-outfit text-sm font-bold text-white">Tolak Penugasan SPT</h3>
+                                <p class="text-[10px] text-rose-200 font-mono">{{ $spt->nomor_spt }}</p>
+                            </div>
+                            <button type="button" @click="activeSptTolakModal = null" class="p-1 rounded-lg hover:bg-rose-800 text-rose-200 hover:text-white transition cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+
+                        <form action="{{ route('staf.spt.tolak', $spt->id) }}" method="POST" class="p-4 space-y-3 text-xs">
+                            @csrf
+
+                            <div class="p-3 bg-rose-50 rounded-2xl border border-rose-200 text-rose-900 space-y-1">
+                                <p class="font-bold">{{ $spt->tujuan }}</p>
+                                <p class="text-[11px] text-rose-700 leading-relaxed">
+                                    Mohon berikan alasan penolakan yang jelas (contoh: berbeda tupoksi jabatan, bentrok agenda desa lain, dsb.) untuk diketahui oleh Kepala Desa / Admin.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Alasan Penolakan <span class="text-rose-500">*</span>
+                                </label>
+                                <textarea name="alasan_tolak" rows="3" required minlength="5" placeholder="Tuliskan alasan penolakan penugasan ini..."
+                                          class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-rose-500 focus:border-rose-500"></textarea>
+                            </div>
+
+                            <div class="pt-1 flex justify-end gap-2">
+                                <button type="button" @click="activeSptTolakModal = null" class="px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition cursor-pointer">
+                                    Batal
+                                </button>
+                                <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition cursor-pointer flex items-center gap-1.5 shadow-md">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    <span>Kirim Penolakan</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        @endforeach
+    </div>
+    @endif
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- 2.6. BANNER STATUS HARI INI: DINAS LUAR SPT RESMI                      -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if(isset($sptAktifHariIni) && $sptAktifHariIni)
+    <div class="sadi-card p-4 bg-gradient-to-r from-teal-900 via-[#064E3B] to-emerald-900 text-white border border-[#E2C268] shadow-sm rounded-3xl flex items-start gap-3.5 relative overflow-hidden">
+        <div class="w-10 h-10 rounded-2xl bg-[#E2C268] text-[#064E3B] flex items-center justify-center font-bold shadow-md shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#E2C268] text-[#064E3B] uppercase tracking-wider">
+                Status Hari Ini: Dinas Luar SPT Resmi
+            </span>
+            <h4 class="font-outfit font-extrabold text-sm text-white mt-1">
+                {{ $sptAktifHariIni->tujuan }}
+            </h4>
+            <p class="text-[11px] text-emerald-200 mt-0.5 leading-relaxed">
+                Nomor: <strong class="font-mono text-white">{{ $sptAktifHariIni->nomor_spt }}</strong> | Periode: <strong class="font-mono text-white">{{ $sptAktifHariIni->tanggal_mulai->format('d/m/Y') }} s/d {{ $sptAktifHariIni->tanggal_selesai->format('d/m/Y') }}</strong>
+            </p>
+            <p class="text-[10.5px] text-emerald-300 mt-1 italic">
+                Kehadiran Anda hari ini telah <strong>otomatis tercatat Hadir</strong> berdasarkan surat perintah tugas yang telah Anda terima.
+            </p>
+        </div>
+    </div>
+    @endif
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- 3. BANNER STATUS HARI INI: LEPAS PIKET                                 -->
@@ -351,66 +583,118 @@
     @endif
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- 5. MENU LAYANAN LAINNYA (ABSEN LUAR & IZIN SAKIT)                     -->
+    <!-- 5. MENU LAYANAN LAINNYA (ABSEN LUAR, IZIN SAKIT, SPT)                 -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <!-- Tombol Pengajuan Absen Luar -->
-        @php
-            $pengajuanAktif = \App\Models\PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
-                ->where('tanggal', \Carbon\Carbon::today()->toDateString())
-                ->first();
-        @endphp
-        <div class="sadi-card p-4 bg-white space-y-3 border border-slate-200 shadow-sm rounded-3xl flex flex-col justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <h3 class="font-outfit font-extrabold text-slate-800 text-xs">Sedang Dinas Luar?</h3>
-                    <p class="text-[11px] text-slate-500 mt-0.5">Ajukan presensi tugas luar kantor</p>
-                </div>
-            </div>
-
-            @if($pengajuanAktif)
-                <div class="p-2.5 rounded-xl {{ $pengajuanAktif->status === 'menunggu' ? 'bg-amber-50 border border-amber-200' : ($pengajuanAktif->status === 'disetujui' ? 'bg-emerald-50 border border-emerald-200' : 'bg-rose-50 border border-rose-200') }} text-xs">
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold truncate text-[11px] {{ $pengajuanAktif->status === 'menunggu' ? 'text-amber-900' : ($pengajuanAktif->status === 'disetujui' ? 'text-emerald-900' : 'text-rose-900') }}">
-                            {{ $pengajuanAktif->judul }}
-                        </span>
-                        <span class="font-extrabold px-2 py-0.5 rounded-full border text-[9px] {{ $pengajuanAktif->badge_class }}">
-                            {{ $pengajuanAktif->label_status }}
-                        </span>
+    <div class="space-y-3">
+        <!-- Baris Atas: 2 Kartu Sejajar (Dinas Luar & Izin Sakit) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Kartu 1: Pengajuan Absen Luar -->
+            @php
+                $pengajuanAktif = \App\Models\PengajuanAbsenLuar::where('pegawai_id', $pegawai->id)
+                    ->where('tanggal', \Carbon\Carbon::today()->toDateString())
+                    ->first();
+            @endphp
+            <div class="sadi-card p-4 bg-white space-y-3 border border-slate-200 shadow-sm rounded-3xl flex flex-col justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-outfit font-extrabold text-slate-800 text-xs">Sedang Dinas Luar?</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Ajukan presensi tugas luar kantor</p>
                     </div>
                 </div>
-                <a href="{{ route('staf.riwayat', ['tab' => 'absen_luar']) }}"
-                   class="w-full py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs text-center hover:bg-slate-50 transition">
-                    Lihat Rincian &rarr;
-                </a>
-            @else
-                <a href="{{ route('staf.ajukan.form') }}"
-                   class="w-full py-2.5 rounded-xl border border-amber-400 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs">
-                    <svg class="w-3.5 h-3.5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                    <span>Ajukan Absen Luar</span>
-                </a>
-            @endif
-        </div>
 
-        <!-- Tombol Pengajuan Izin / Sakit Quick Card -->
-        <div class="sadi-card p-4 bg-white space-y-3 border border-slate-200 shadow-sm rounded-3xl flex flex-col justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-2xl bg-emerald-50 border border-emerald-200 text-[#064E3B] flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <h3 class="font-outfit font-extrabold text-slate-800 text-xs">Izin / Sakit?</h3>
-                    <p class="text-[11px] text-slate-500 mt-0.5">Ajukan permohonan izin digital</p>
-                </div>
+                @if($pengajuanAktif)
+                    <div class="p-2.5 rounded-xl {{ $pengajuanAktif->status === 'menunggu' ? 'bg-amber-50 border border-amber-200' : ($pengajuanAktif->status === 'disetujui' ? 'bg-emerald-50 border border-emerald-200' : 'bg-rose-50 border border-rose-200') }} text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold truncate text-[11px] {{ $pengajuanAktif->status === 'menunggu' ? 'text-amber-900' : ($pengajuanAktif->status === 'disetujui' ? 'text-emerald-900' : 'text-rose-900') }}">
+                                {{ $pengajuanAktif->judul }}
+                            </span>
+                            <span class="font-extrabold px-2 py-0.5 rounded-full border text-[9px] {{ $pengajuanAktif->badge_class }}">
+                                {{ $pengajuanAktif->label_status }}
+                            </span>
+                        </div>
+                    </div>
+                    <a href="{{ route('staf.riwayat', ['tab' => 'absen_luar']) }}"
+                       class="w-full py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs text-center hover:bg-slate-50 transition">
+                        Lihat Rincian &rarr;
+                    </a>
+                @elseif(!$bisaAjukanAbsenLuar)
+                    <div class="space-y-1.5">
+                        <button type="button" disabled
+                           class="w-full py-2.5 px-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 font-bold text-xs flex items-center justify-center gap-1.5 cursor-not-allowed select-none">
+                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            <span>Absen Luar Terkunci</span>
+                        </button>
+                        <p class="text-[10px] text-slate-500 font-medium text-center px-1 leading-tight">
+                            {{ $alasanKunciAbsenLuar ?? 'Tidak dapat mengajukan absen luar hari ini.' }}
+                        </p>
+                    </div>
+                @else
+                    <a href="{{ route('staf.ajukan.form') }}"
+                       class="w-full py-2.5 rounded-xl border border-amber-400 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs">
+                        <svg class="w-3.5 h-3.5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                        <span>Ajukan Absen Luar</span>
+                    </a>
+                @endif
             </div>
 
-            <a href="{{ route('staf.izin') }}"
-               class="w-full py-2.5 rounded-xl border border-emerald-400 bg-emerald-50 hover:bg-emerald-100 text-[#064E3B] font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs">
-                <svg class="w-3.5 h-3.5 text-[#064E3B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                <span>Ajukan Izin / Sakit</span>
+            <!-- Kartu 2: Pengajuan Izin / Sakit -->
+            <div class="sadi-card p-4 bg-white space-y-3 border border-slate-200 shadow-sm rounded-3xl flex flex-col justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-2xl bg-emerald-50 border border-emerald-200 text-[#064E3B] flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-outfit font-extrabold text-slate-800 text-xs">Izin / Sakit?</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Ajukan permohonan izin digital</p>
+                    </div>
+                </div>
+
+                @if(!$bisaAjukanIzin)
+                    <div class="space-y-1.5">
+                        <button type="button" disabled
+                           class="w-full py-2.5 px-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 font-bold text-xs flex items-center justify-center gap-1.5 cursor-not-allowed select-none">
+                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            <span>Pengajuan Izin Terkunci</span>
+                        </button>
+                        <p class="text-[10px] text-slate-500 font-medium text-center px-1 leading-tight">
+                            {{ $alasanKunciIzin ?? 'Tidak dapat mengajukan izin hari ini.' }}
+                        </p>
+                    </div>
+                @else
+                    <a href="{{ route('staf.izin') }}"
+                       class="w-full py-2.5 rounded-xl border border-emerald-400 bg-emerald-50 hover:bg-emerald-100 text-[#064E3B] font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs">
+                        <svg class="w-3.5 h-3.5 text-[#064E3B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                        <span>Ajukan Izin / Sakit</span>
+                    </a>
+                @endif
+            </div>
+        </div>
+
+        <!-- Baris Bawah: Kartu Khusus Arsip Surat Perintah Tugas (SPT) Full-Width -->
+        <div class="sadi-card p-4 bg-gradient-to-r from-emerald-50/80 via-white to-teal-50/80 border border-teal-200/90 shadow-sm rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-2xl bg-[#064E3B] text-[#E2C268] flex items-center justify-center shadow-sm shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-outfit font-extrabold text-slate-900 text-xs sm:text-sm">Surat Perintah Tugas (SPT)</h3>
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#E2C268] text-[#064E3B] uppercase tracking-wider">
+                            Resmi Desa
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Arsip & riwayat seluruh surat tugas kedinasan yang Anda terima/tolak</p>
+                </div>
+            </div>
+            <a href="{{ route('staf.spt.riwayat') }}"
+               class="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-[#064E3B] hover:bg-[#04392B] text-white font-extrabold text-xs transition flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-95 shrink-0">
+                <span>Buka Riwayat SPT</span>
+                <svg class="w-3.5 h-3.5 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
             </a>
         </div>
     </div>
@@ -581,6 +865,60 @@
         </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL WARNING / PEMBERITAHUAN SUDAH PRESENSI (GAYA FOTO 2 - CLEAN)     -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if(session('conflict_modal'))
+    @php $c = session('conflict_modal'); @endphp
+    <div x-data="{ open: true }" x-show="open"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden border border-amber-200 p-6 space-y-4"
+             @click.away="open = false">
+            <div class="flex items-start gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0 shadow-xs">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-outfit text-base font-extrabold text-slate-900 leading-snug">{{ $c['title'] ?? 'Presensi Sudah Tercatat' }}</h3>
+                    <p class="text-[11px] text-slate-500 font-medium mt-0.5">Pemberitahuan Sistem Presensi</p>
+                </div>
+            </div>
+
+            <!-- Box Detail Penjelasan Simpel -->
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-500">Nama Staf:</span>
+                    <span class="font-bold text-slate-800">{{ $c['nama'] ?? auth()->user()->name }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-500">Tanggal:</span>
+                    <span class="font-bold text-slate-800">{{ $c['tanggal'] ?? '-' }}</span>
+                </div>
+                <div class="pt-1.5 border-t border-slate-200 text-[11px] text-slate-600 leading-relaxed">
+                    {{ $c['pesan'] ?? '' }}
+                </div>
+            </div>
+
+            <!-- Tombol Action Simple (Orange Button - Text Tutup) -->
+            <div class="pt-1">
+                <button type="button" @click="open = false"
+                        class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-extrabold text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-1.5">
+                    <span>Tutup</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>
 @endsection
 
@@ -621,6 +959,48 @@
         }
 
         const inputTtd = document.getElementById('input-ttd-' + piketId);
+        if (inputTtd) {
+            inputTtd.value = pad.toDataURL('image/png');
+        }
+        return true;
+    }
+
+    // ─── SPT Signature Pad Handlers ──────────────────────────────────────────
+    const sptPads = {};
+
+    function initSptPad(sptId) {
+        const canvas = document.getElementById('canvas-spt-' + sptId);
+        const wrapper = document.getElementById('wrapper-spt-' + sptId);
+        if (!canvas || !wrapper) return;
+
+        canvas.width = wrapper.offsetWidth || 350;
+        canvas.height = 140;
+
+        if (!sptPads[sptId]) {
+            sptPads[sptId] = new SignaturePad(canvas, {
+                minWidth: 1.5,
+                maxWidth: 3.5,
+                penColor: '#064E3B',
+                backgroundColor: 'rgba(0,0,0,0)'
+            });
+        }
+    }
+
+    function clearSptPad(sptId) {
+        if (sptPads[sptId]) {
+            sptPads[sptId].clear();
+        }
+    }
+
+    function submitSptForm(e, sptId) {
+        const pad = sptPads[sptId];
+        if (!pad || pad.isEmpty()) {
+            e.preventDefault();
+            alert('Harap bubuhkan tanda tangan digital Anda terlebih dahulu sebelum mengonfirmasi penerimaan SPT.');
+            return false;
+        }
+
+        const inputTtd = document.getElementById('input-ttd-spt-' + sptId);
         if (inputTtd) {
             inputTtd.value = pad.toDataURL('image/png');
         }

@@ -18,12 +18,15 @@ class SptManager extends Component
 
     public bool $showModal = false;
     public bool $showRejectModal = false;
+    public bool $showDetailModal = false;
     public ?int $selectedSptId = null;
     public ?SuratPerintahTugas $selectedSpt = null;
+    public ?SuratPerintahTugas $detailSpt = null;
     public string $catatanPenolakan = '';
     public ?int $sptId = null;
 
     public ?int $pegawai_id = null;
+    public string $nomor_spt = '';
     public string $tanggal_mulai = '';
     public string $tanggal_selesai = '';
     public string $tujuan = '';
@@ -42,12 +45,28 @@ class SptManager extends Component
     {
         return [
             'pegawai_id' => 'required|exists:pegawais,id',
+            'nomor_spt' => 'nullable|string|max:100',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'tujuan' => 'required|string|max:255',
             'keperluan' => 'required|string',
             'anggaran' => 'nullable|numeric|min:0',
-            'file_undangan' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'file_undangan' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        ];
+    }
+
+    protected function messages(): array
+    {
+        return [
+            'pegawai_id.required' => 'Pilih perangkat desa yang ditugaskan.',
+            'tanggal_mulai.required' => 'Tanggal mulai tugas wajib diisi.',
+            'tanggal_selesai.required' => 'Tanggal selesai tugas wajib diisi.',
+            'tanggal_selesai.after_or_equal' => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
+            'tujuan.required' => 'Tujuan / lokasi kedinasan wajib diisi.',
+            'keperluan.required' => 'Keperluan / agenda kedinasan wajib diisi.',
+            'file_undangan.required' => 'Berkas / Softfile Surat Perintah Tugas (SPT) atau Surat Undangan dinas wajib diunggah.',
+            'file_undangan.file' => 'Berkas harus berupa dokumen valid (PDF, JPG, JPEG, atau PNG).',
+            'file_undangan.max' => 'Ukuran berkas maksimal 5 MB.',
         ];
     }
 
@@ -55,6 +74,43 @@ class SptManager extends Component
     {
         $this->resetForm();
         $this->showModal = true;
+    }
+
+    public function bukaDetailModal(int $id)
+    {
+        $this->detailSpt = SuratPerintahTugas::with(['pegawai.jabatan', 'pembuat'])->findOrFail($id);
+        $this->showDetailModal = true;
+    }
+
+    public function tutupDetailModal()
+    {
+        $this->showDetailModal = false;
+        $this->detailSpt = null;
+    }
+
+    public function deleteSpt(int $id)
+    {
+        $spt = SuratPerintahTugas::with('pegawai')->findOrFail($id);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($spt) {
+            $spt->batalkanKehadiran();
+            if ($spt->file_undangan && \Illuminate\Support\Facades\Storage::disk('public')->exists($spt->file_undangan)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($spt->file_undangan);
+            }
+            $spt->delete();
+
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'user_name' => auth()->user()->name ?? 'Admin',
+                'role' => auth()->user()->role ?? 'Admin',
+                'aktivitas' => "Menghapus penugasan SPT ({$spt->tujuan}) untuk {$spt->pegawai->nama_lengkap}",
+                'modul' => 'Surat Perintah Tugas',
+            ]);
+        });
+
+        $msg = "Data Surat Perintah Tugas berhasil dihapus.";
+        session()->flash('success', $msg);
+        $this->dispatch('notify', message: $msg, type: 'info');
     }
 
     public function createSpt()
@@ -84,15 +140,8 @@ class SptManager extends Component
                 $undanganPath = $this->file_undangan->store('spt-undangan', 'public');
             }
 
-            // Auto-generate nomor SPT: SPT/BULAN/TAHUN/URUTAN
-            $month = Carbon::parse($this->tanggal_mulai)->format('m');
-            $year = Carbon::parse($this->tanggal_mulai)->format('Y');
-            $countThisMonth = SuratPerintahTugas::whereYear('created_at', $year)->whereMonth('created_at', $month)->count() + 1;
-            $nomorSpt = sprintf("SPT/%s/%s/%03d", $month, $year, $countThisMonth);
-
-            $isKades = auth()->user()->isKades();
-            $isAdmin = auth()->user()->isAdmin();
-            $status = ($isKades || $isAdmin) ? 'disetujui' : 'diajukan';
+            // Simpan nomor SPT jika diisi manual oleh admin, atau null jika dikosongkan (tanpa generate dummy)
+            $nomorSpt = !empty(trim($this->nomor_spt)) ? trim($this->nomor_spt) : null;
 
             $spt = SuratPerintahTugas::create([
                 'nomor_spt' => $nomorSpt,
@@ -103,27 +152,23 @@ class SptManager extends Component
                 'keperluan' => $this->keperluan,
                 'file_undangan' => $undanganPath,
                 'anggaran' => $this->anggaran ?? 0,
-                'status' => $status,
-                'disetujui_oleh' => $status === 'disetujui' ? auth()->id() : null,
-                'tanggal_persetujuan' => $status === 'disetujui' ? now() : null,
+                'status' => 'diajukan',
+                'respons_staf' => 'menunggu',
                 'created_by' => auth()->id(),
             ]);
 
-            if ($spt->status === 'disetujui') {
-                $this->applySptAttendance($spt);
-            }
-
             $pegawai = Pegawai::find($this->pegawai_id);
+            $sptLabel = $spt->nomor_spt ? "SPT {$spt->nomor_spt}" : "SPT";
 
             AuditLog::create([
                 'user_id' => auth()->id(),
                 'user_name' => auth()->user()->name ?? 'Admin',
                 'role' => auth()->user()->role ?? 'Admin',
-                'aktivitas' => "Pengajuan SPT Baru {$spt->nomor_spt} untuk {$pegawai->nama_lengkap} (Tujuan: {$spt->tujuan})",
+                'aktivitas' => "Menerbitkan {$sptLabel} untuk {$pegawai->nama_lengkap} (Tujuan: {$spt->tujuan}) — Menunggu Konfirmasi Staf",
                 'modul' => 'Surat Perintah Tugas',
             ]);
 
-            $msg = "Surat Perintah Tugas {$spt->nomor_spt} berhasil dibuat.";
+            $msg = "Surat Perintah Tugas ({$spt->tujuan}) untuk {$pegawai->nama_lengkap} berhasil diterbitkan dan dikirim ke portal staf.";
             session()->flash('success', $msg);
             $this->dispatch('notify', message: $msg, type: 'success');
             $this->dispatch('refresh-notifications');
@@ -137,11 +182,13 @@ class SptManager extends Component
             $spt = SuratPerintahTugas::where('id', $id)->lockForUpdate()->firstOrFail();
             $spt->update([
                 'status' => 'disetujui',
+                'respons_staf' => 'diterima',
                 'disetujui_oleh' => auth()->id(),
                 'tanggal_persetujuan' => now(),
+                'waktu_respons_staf' => $spt->waktu_respons_staf ?? now(),
             ]);
 
-            $this->applySptAttendance($spt);
+            $spt->terapkanKehadiran(null, auth()->id());
 
             AuditLog::create([
                 'user_id' => auth()->id(),
@@ -151,7 +198,7 @@ class SptManager extends Component
                 'modul' => 'Surat Perintah Tugas',
             ]);
 
-            $msg = "SPT {$spt->nomor_spt} telah disetujui Kepala Desa.";
+            $msg = "SPT {$spt->nomor_spt} telah disetujui secara resmi.";
             session()->flash('success', $msg);
             $this->dispatch('notify', message: $msg, type: 'success');
             $this->dispatch('refresh-notifications');
@@ -179,8 +226,8 @@ class SptManager extends Component
         $this->validate([
             'catatanPenolakan' => 'required|string|min:5|max:500',
         ], [
-            'catatanPenolakan.required' => 'Wajib mengisi alasan penolakan SPT.',
-            'catatanPenolakan.min' => 'Alasan penolakan minimal 5 karakter.',
+            'catatanPenolakan.required' => 'Wajib mengisi alasan penolakan/pembatalan SPT.',
+            'catatanPenolakan.min' => 'Alasan minimal 5 karakter.',
         ]);
 
         $id = $this->selectedSptId;
@@ -189,57 +236,27 @@ class SptManager extends Component
             $spt = SuratPerintahTugas::where('id', $id)->lockForUpdate()->firstOrFail();
             $spt->update([
                 'status' => 'ditolak',
+                'respons_staf' => 'ditolak',
                 'disetujui_oleh' => auth()->id(),
-                'keperluan' => $spt->keperluan . ' [Ditolak: ' . $this->catatanPenolakan . ']',
+                'catatan_penolakan' => $this->catatanPenolakan,
             ]);
+
+            $spt->batalkanKehadiran();
 
             AuditLog::create([
                 'user_id' => auth()->id(),
                 'user_name' => auth()->user()->name ?? 'Admin',
                 'role' => auth()->user()->role ?? 'Kepala Desa',
-                'aktivitas' => "Menolak SPT {$spt->nomor_spt} untuk {$spt->pegawai->nama_lengkap} (Alasan: {$this->catatanPenolakan})",
+                'aktivitas' => "Membatalkan/Menolak SPT {$spt->nomor_spt} untuk {$spt->pegawai->nama_lengkap} (Alasan: {$this->catatanPenolakan})",
                 'modul' => 'Surat Perintah Tugas',
             ]);
 
-            $msg = "SPT {$spt->nomor_spt} telah ditolak.";
+            $msg = "SPT {$spt->nomor_spt} telah ditolak/dibatalkan.";
             session()->flash('success', $msg);
             $this->dispatch('notify', message: $msg, type: 'info');
             $this->dispatch('refresh-notifications');
             $this->tutupRejectModal();
         });
-    }
-
-    private function applySptAttendance(SuratPerintahTugas $spt)
-    {
-        $start = Carbon::parse($spt->tanggal_mulai);
-        $end = Carbon::parse($spt->tanggal_selesai);
-
-        while ($start->lte($end)) {
-            $dateStr = $start->toDateString();
-            $existing = Kehadiran::where('pegawai_id', $spt->pegawai_id)
-                ->whereDate('tanggal', $dateStr)
-                ->first();
-
-            if (!$existing) {
-                Kehadiran::create([
-                    'pegawai_id'        => $spt->pegawai_id,
-                    'tanggal'           => $dateStr,
-                    'status'            => 'Hadir',
-                    'sumber_data'       => 'manual_admin',
-                    'diverifikasi_oleh' => $spt->disetujui_oleh ?? auth()->id(),
-                    'keterangan'        => "Surat Perintah Tugas: {$spt->nomor_spt} ({$spt->tujuan})"
-                ]);
-            } elseif (!$existing->jam_masuk) {
-                // Hanya update jika belum ada catatan presensi langsung di kantor
-                $existing->update([
-                    'status'            => 'Hadir',
-                    'sumber_data'       => 'manual_admin',
-                    'diverifikasi_oleh' => $spt->disetujui_oleh ?? auth()->id(),
-                    'keterangan'        => "Surat Perintah Tugas: {$spt->nomor_spt} ({$spt->tujuan})"
-                ]);
-            }
-            $start->addDay();
-        }
     }
 
     public function closeModal()
@@ -252,6 +269,7 @@ class SptManager extends Component
     {
         $this->sptId = null;
         $this->pegawai_id = null;
+        $this->nomor_spt = '';
         $this->tanggal_mulai = Carbon::today()->toDateString();
         $this->tanggal_selesai = Carbon::today()->toDateString();
         $this->tujuan = '';

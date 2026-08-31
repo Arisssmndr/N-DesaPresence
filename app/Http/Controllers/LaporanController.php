@@ -250,4 +250,188 @@ class LaporanController extends Controller
         $filename = "Laporan_Tahunan_Presensi_{$tahun}.pdf";
         return $pdf->stream($filename);
     }
+
+    // =========================================================
+    //  LAPORAN 4: EVALUASI & ANALITIK KEDISIPLINAN APARATUR (PDF KOP RESMI)
+    // =========================================================
+    public function laporanAnalitikPdf(Request $request)
+    {
+        $tahun = (int) $request->input('tahun', date('Y'));
+        $bulan = $request->input('bulan');
+        $bulanInt = ($bulan !== null && $bulan !== '') ? (int) $bulan : null;
+
+        // Base Query Kehadiran
+        $baseQuery = Kehadiran::query()->whereYear('tanggal', $tahun);
+        if ($bulanInt) {
+            $baseQuery->whereMonth('tanggal', $bulanInt);
+        }
+
+        $allKehadiran = (clone $baseQuery)->get();
+        $totalHadir = 0;
+        $totalTepatWaktu = 0;
+        $totalTerlambat = 0;
+        $totalMenitTerlambat = 0;
+        $totalDinasLuar = 0;
+        $totalIzinSakit = 0;
+        $totalAlpa = 0;
+        $totalDurasiMenit = 0;
+        $durasiCount = 0;
+
+        foreach ($allKehadiran as $k) {
+            $st = strtolower($k->status);
+            if (in_array($st, ['hadir', 'tepat waktu', 'terlambat'])) {
+                $totalHadir++;
+                if ($k->durasi_kerja_menit > 0) {
+                    $totalDurasiMenit += $k->durasi_kerja_menit;
+                    $durasiCount++;
+                }
+
+                $menitTelat = $k->terlambat_menit;
+                if ($k->jam_masuk && !$menitTelat) {
+                    $jamClean = substr($k->jam_masuk, 0, 5);
+                    if ($jamClean > '08:00') {
+                        $masukC = Carbon::createFromTimeString($jamClean);
+                        $standarC = Carbon::createFromTimeString('08:00');
+                        $menitTelat = $standarC->diffInMinutes($masukC);
+                    }
+                }
+
+                if ($menitTelat > 0) {
+                    $totalTerlambat++;
+                    $totalMenitTerlambat += $menitTelat;
+                } else {
+                    $totalTepatWaktu++;
+                }
+            } elseif ($st === 'dinas luar') {
+                $totalDinasLuar++;
+                $totalHadir++;
+            } elseif (in_array($st, ['izin', 'sakit'])) {
+                $totalIzinSakit++;
+            } elseif ($st === 'alpa') {
+                $totalAlpa++;
+            }
+        }
+
+        $totalEntriValid = max(1, $totalHadir + $totalIzinSakit + $totalAlpa);
+        $skorIKK = round(
+            (($totalTepatWaktu * 100) + ($totalDinasLuar * 100) + ($totalTerlambat * 80) + ($totalIzinSakit * 70)) / $totalEntriValid,
+            1
+        );
+        $persenTepatWaktu = $totalHadir > 0 ? round(($totalTepatWaktu + $totalDinasLuar) / $totalHadir * 100, 1) : 100;
+        $avgJamKerja = $durasiCount > 0 ? round(($totalDurasiMenit / $durasiCount) / 60, 1) : 7.5;
+
+        // Jadwal Piket
+        $piketQuery = \App\Models\JadwalPiket::whereYear('tanggal_piket', $tahun);
+        if ($bulanInt) {
+            $piketQuery->whereMonth('tanggal_piket', $bulanInt);
+        }
+        $totalPiketJadwal = (clone $piketQuery)->count();
+        $totalPiketHadir = (clone $piketQuery)->where('status', 'hadir')->count();
+        $piketRate = $totalPiketJadwal > 0 ? round(($totalPiketHadir / $totalPiketJadwal) * 100, 1) : 100;
+
+        // Matriks Pegawai
+        $pegawais = Pegawai::with('jabatan')->where('status_aktif', true)->orderBy('nama_lengkap')->get();
+        $employeeMatrix = [];
+        foreach ($pegawais as $p) {
+            $pQuery = Kehadiran::where('pegawai_id', $p->id)->whereYear('tanggal', $tahun);
+            if ($bulanInt) {
+                $pQuery->whereMonth('tanggal', $bulanInt);
+            }
+            $pRecords = $pQuery->get();
+
+            $pHadirTepat = 0;
+            $pHadirTerlambat = 0;
+            $pMenitTerlambat = 0;
+            $pDinasLuar = 0;
+            $pIzinSakit = 0;
+            $pAlpa = 0;
+            $pTotalMenitKerja = 0;
+            $pCountDurasi = 0;
+
+            foreach ($pRecords as $r) {
+                $st = strtolower($r->status);
+                if (in_array($st, ['hadir', 'tepat waktu', 'terlambat'])) {
+                    if ($r->durasi_kerja_menit > 0) {
+                        $pTotalMenitKerja += $r->durasi_kerja_menit;
+                        $pCountDurasi++;
+                    }
+
+                    $telat = $r->terlambat_menit;
+                    if ($r->jam_masuk && !$telat) {
+                        $jamClean = substr($r->jam_masuk, 0, 5);
+                        if ($jamClean > '08:00') {
+                            $masukC = Carbon::createFromTimeString($jamClean);
+                            $standarC = Carbon::createFromTimeString('08:00');
+                            $telat = $standarC->diffInMinutes($masukC);
+                        }
+                    }
+
+                    if ($telat > 0) {
+                        $pHadirTerlambat++;
+                        $pMenitTerlambat += $telat;
+                    } else {
+                        $pHadirTepat++;
+                    }
+                } elseif ($st === 'dinas luar') {
+                    $pDinasLuar++;
+                } elseif (in_array($st, ['izin', 'sakit'])) {
+                    $pIzinSakit++;
+                } elseif ($st === 'alpa') {
+                    $pAlpa++;
+                }
+            }
+
+            $pTotalEntries = max(1, $pHadirTepat + $pHadirTerlambat + $pDinasLuar + $pIzinSakit + $pAlpa);
+            $pScore = round(
+                (($pHadirTepat * 100) + ($pDinasLuar * 100) + ($pHadirTerlambat * 80) + ($pIzinSakit * 70)) / $pTotalEntries,
+                1
+            );
+
+            if ($pScore >= 95 && $pAlpa === 0) {
+                $predikat = 'Sangat Baik (A)';
+                $rekomendasi = 'Kepatuhan Prima (Layak Insentif)';
+            } elseif ($pScore >= 85 && $pAlpa === 0) {
+                $predikat = 'Baik (B)';
+                $rekomendasi = 'Disiplin Memenuhi Standar';
+            } elseif ($pScore >= 75) {
+                $predikat = 'Cukup (C)';
+                $rekomendasi = 'Perlu Peningkatan Disiplin Waktu';
+            } else {
+                $predikat = 'Perlu Pembinaan (D)';
+                $rekomendasi = 'Perlu Konseling / Pembinaan Kades';
+            }
+
+            $avgJamP = $pCountDurasi > 0 ? round(($pTotalMenitKerja / $pCountDurasi) / 60, 1) : 7.5;
+
+            $employeeMatrix[] = [
+                'pegawai'          => $p,
+                'hadir_tepat'      => $pHadirTepat,
+                'hadir_terlambat'  => $pHadirTerlambat,
+                'menit_terlambat'  => $pMenitTerlambat,
+                'dinas_luar'       => $pDinasLuar,
+                'izin_sakit'       => $pIzinSakit,
+                'alpa'             => $pAlpa,
+                'total_kehadiran'  => $pHadirTepat + $pHadirTerlambat + $pDinasLuar,
+                'avg_jam_kerja'    => $avgJamP,
+                'skor'             => $pScore,
+                'predikat'         => $predikat,
+                'rekomendasi'      => $rekomendasi,
+            ];
+        }
+
+        $namaBulan = $bulanInt ? Carbon::create()->month($bulanInt)->translatedFormat('F') : 'Setahun Penuh';
+        $nomorLaporan = sprintf('800.1/%s/PEM-DS/%s/%d', $bulanInt ? str_pad($bulanInt, 2, '0', STR_PAD_LEFT) : 'THN', date('m'), $tahun);
+        $kades  = Pegawai::whereHas('jabatan', fn($q) => $q->where('kode_jabatan', 'KADES'))->first();
+        $sekdes = Pegawai::whereHas('jabatan', fn($q) => $q->where('kode_jabatan', 'SEKDES'))->first();
+
+        $pdf = Pdf::loadView('reports.laporan-analitik-pdf', compact(
+            'tahun', 'namaBulan', 'bulanInt', 'nomorLaporan',
+            'skorIKK', 'persenTepatWaktu', 'avgJamKerja', 'totalMenitTerlambat', 'totalTerlambat', 'totalHadir',
+            'totalPiketHadir', 'totalPiketJadwal', 'piketRate',
+            'employeeMatrix', 'kades', 'sekdes'
+        ))->setPaper('a4', 'portrait');
+
+        $filename = "Laporan_Analitik_Kedisiplinan_{$namaBulan}_{$tahun}.pdf";
+        return $pdf->stream($filename);
+    }
 }

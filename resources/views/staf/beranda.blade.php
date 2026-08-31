@@ -470,32 +470,66 @@
     @endif
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- 4. NOTIFIKASI JADWAL PIKET DESA (H-1 & HARI INI)                       -->
+    <!-- 4. NOTIFIKASI JADWAL PIKET DESA (H-1, HARI INI, & LEPAS PIKET)        -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     @if(isset($notifPikets) && $notifPikets->count() > 0)
-    <div class="space-y-3" x-data="{ activePiketModal: null }">
+    <div class="space-y-3" x-data="{ activePiketModal: null, activePiketType: 'masuk' }">
         @foreach($notifPikets as $piket)
             @php
                 $isToday = $piket->tanggal_piket->isToday();
                 $isTomorrow = $piket->tanggal_piket->isTomorrow();
-                $isSudahAbsen = ($piket->status === 'hadir' || $piket->status === 'lepas_piket');
+                $isYesterday = $piket->tanggal_piket->isYesterday();
+                
+                $isSudahMasuk = $piket->isSudahMasuk();
+                $isSudahPulang = $piket->isSudahPulang();
+                $isSelesaiLengkap = $piket->isSelesaiLengkap();
+                
+                $isWaktuMasukTiba = $piket->isWaktuMasukTiba();
+                $isWaktuPulangTiba = $piket->isWaktuPulangTiba();
+                
+                $isBisaMasuk = $piket->isBisaAbsenMasuk();
+                $isBisaPulang = $piket->isBisaAbsenPulang();
+                
+                $jamMulaiFormat = substr($piket->jam_mulai, 0, 5);
+                $jamSelesaiFormat = substr($piket->jam_selesai, 0, 5);
             @endphp
-            <div class="sadi-card p-4 {{ $isToday ? 'bg-gradient-to-br from-[#064E3B] to-[#04392B] text-white border border-[#C9A84C]' : 'bg-slate-900 text-white border border-slate-700' }} shadow-md relative overflow-hidden rounded-3xl">
+            <div class="sadi-card p-4 {{ $isToday || ($isYesterday && !$isSudahPulang) ? 'bg-gradient-to-br from-[#064E3B] to-[#04392B] text-white border border-[#C9A84C]' : 'bg-slate-900 text-white border border-slate-700' }} shadow-md relative overflow-hidden rounded-3xl">
                 <div class="flex items-start gap-3.5 relative z-10">
-                    <div class="w-9 h-9 rounded-xl {{ $isToday ? 'bg-[#C9A84C] text-[#064E3B]' : 'bg-slate-800 text-amber-400' }} flex items-center justify-center shrink-0 shadow-md">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                        </svg>
+                    <div class="w-10 h-10 rounded-2xl {{ $isSelesaiLengkap ? 'bg-emerald-500 text-white' : ($isBisaMasuk || $isBisaPulang ? 'bg-[#C9A84C] text-[#064E3B] animate-bounce' : ($isSudahMasuk ? 'bg-blue-600 text-white' : 'bg-slate-800 text-amber-400')) }} flex items-center justify-center shrink-0 shadow-md">
+                        @if($isSelesaiLengkap)
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        @elseif($isSudahMasuk && !$isSudahPulang)
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        @else
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        @endif
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider {{ $isToday ? 'bg-[#E2C268] text-[#064E3B]' : 'bg-blue-900 text-blue-200 border border-blue-700' }}">
-                                {{ $isToday ? 'JADWAL PIKET HARI INI' : ($isTomorrow ? 'JADWAL PIKET BESOK (H-1)' : 'JADWAL PIKET DESA') }}
+                        <div class="flex items-center justify-between gap-2 flex-wrap">
+                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider {{ $isToday ? 'bg-[#E2C268] text-[#064E3B]' : ($isYesterday ? 'bg-purple-900 text-purple-200 border border-purple-700' : 'bg-blue-900 text-blue-200 border border-blue-700') }}">
+                                {{ $isToday ? 'JADWAL PIKET HARI INI' : ($isYesterday ? 'PIKET KEMARIN' : ($isTomorrow ? 'JADWAL PIKET BESOK (H-1)' : 'JADWAL PIKET DESA')) }}
                             </span>
-                            @if($isSudahAbsen)
-                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500 text-white shadow-xs">Hadir</span>
+                            
+                            @if($isSelesaiLengkap)
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white shadow-xs">
+                                    ✓ Hadir Lengkap (Masuk & Pulang)
+                                </span>
+                            @elseif($isSudahMasuk && !$isWaktuPulangTiba)
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500 text-white shadow-xs">
+                                    Sedang Bertugas Piket
+                                </span>
+                            @elseif($isBisaPulang)
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-900 animate-pulse">
+                                    ⚠️ Wajib Absen Pulang
+                                </span>
+                            @elseif($isBisaMasuk)
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-900 animate-pulse">
+                                    ⚠️ Wajib Absen Masuk
+                                </span>
                             @else
-                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-400 text-slate-900 animate-pulse">Wajib Hadir</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-700 text-slate-300">
+                                    Terjadwal
+                                </span>
                             @endif
                         </div>
 
@@ -504,32 +538,85 @@
                         </h4>
                         
                         <p class="text-xs text-emerald-100 font-semibold mt-0.5">
-                            Waktu: <span class="text-[#E2C268] font-mono font-bold">{{ \Carbon\Carbon::parse($piket->tanggal_piket)->isoFormat('dddd, D MMMM Y') }} ({{ substr($piket->jam_mulai, 0, 5) }} - {{ substr($piket->jam_selesai, 0, 5) }} WIB)</span>
+                            Waktu Piket: <span class="text-[#E2C268] font-mono font-bold">{{ \Carbon\Carbon::parse($piket->tanggal_piket)->isoFormat('dddd, D MMMM Y') }} ({{ $jamMulaiFormat }} - {{ $jamSelesaiFormat }} WIB)</span>
                         </p>
+
+                        <!-- Log Absensi Real-Time Info -->
+                        <div class="mt-2 grid grid-cols-2 gap-2 text-[11px] bg-black/20 p-2 rounded-xl border border-white/10">
+                            <div class="space-y-0.5">
+                                <span class="text-emerald-300 block text-[10px] uppercase font-bold">1. Absen Masuk:</span>
+                                @if($isSudahMasuk)
+                                    <span class="text-emerald-200 font-mono font-bold flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        {{ $piket->waktu_absen?->format('H:i') }} WIB
+                                    </span>
+                                @else
+                                    <span class="text-slate-400 italic">Belum absen</span>
+                                @endif
+                            </div>
+                            <div class="space-y-0.5">
+                                <span class="text-emerald-300 block text-[10px] uppercase font-bold">2. Absen Pulang:</span>
+                                @if($isSudahPulang)
+                                    <span class="text-emerald-200 font-mono font-bold flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        {{ $piket->waktu_pulang?->format('H:i') }} WIB
+                                    </span>
+                                @else
+                                    <span class="text-slate-400 italic">Belum absen</span>
+                                @endif
+                            </div>
+                        </div>
 
                         <div class="mt-2.5 pt-2 border-t border-emerald-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
                             <div class="text-[10px] text-emerald-300">
                                 <span>Kompensasi:</span>
-                                <strong class="text-white block font-sans">Otomatis Lepas Piket</strong>
+                                <strong class="text-white block font-sans">Otomatis Hadir (Lepas Piket)</strong>
                             </div>
 
-                            @if(!$isSudahAbsen)
-                            <button type="button" @click="activePiketModal = {{ $piket->id }}; setTimeout(() => { initPiketPad({{ $piket->id }}) }, 100);"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#C9A84C] text-[#064E3B] font-outfit text-[11px] font-extrabold shadow hover:bg-[#E2C268] transition cursor-pointer active:scale-95">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                                <span>Tanda Tangan Absen Piket</span>
-                            </button>
-                            @else
-                            <span class="text-[11px] text-emerald-300 font-semibold flex items-center gap-1">
-                                <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                                Telah Absen ({{ $piket->waktu_absen?->format('H:i') }} WIB)
-                            </span>
-                            @endif
+                            <!-- Interactive Action Buttons with Precise Time Gates -->
+                            <div class="flex items-center gap-2">
+                                @if(!$isSudahMasuk)
+                                    @if($isBisaMasuk)
+                                        <button type="button" @click="activePiketModal = {{ $piket->id }}; activePiketType = 'masuk'; setTimeout(() => { initPiketPad({{ $piket->id }}) }, 100);"
+                                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#C9A84C] text-[#064E3B] font-outfit text-xs font-extrabold shadow hover:bg-[#E2C268] transition cursor-pointer active:scale-95">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                                            <span>Tanda Tangan Absen Masuk</span>
+                                        </button>
+                                    @else
+                                        <button type="button" disabled
+                                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800/80 text-slate-400 border border-slate-700 text-[11px] font-semibold cursor-not-allowed"
+                                                title="Absen masuk hanya dapat diisi saat jam mulai piket telah tiba (pukul {{ $jamMulaiFormat }} WIB)">
+                                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                            <span>Masuk Buka Pukul {{ $jamMulaiFormat }} WIB</span>
+                                        </button>
+                                    @endif
+                                @elseif(!$isSudahPulang)
+                                    @if($isBisaPulang)
+                                        <button type="button" @click="activePiketModal = {{ $piket->id }}; activePiketType = 'pulang'; setTimeout(() => { initPiketPad({{ $piket->id }}) }, 100);"
+                                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-outfit text-xs font-extrabold shadow hover:scale-105 transition cursor-pointer active:scale-95 animate-pulse">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                            <span>Tanda Tangan Absen Pulang</span>
+                                        </button>
+                                    @else
+                                        <button type="button" disabled
+                                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-900/60 text-blue-200 border border-blue-700/60 text-[11px] font-semibold cursor-not-allowed"
+                                                title="Absen pulang dapat diisi setelah jam piket selesai (pukul {{ $jamSelesaiFormat }} WIB)">
+                                            <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            <span>Pulang Buka Pukul {{ $jamSelesaiFormat }} WIB</span>
+                                        </button>
+                                    @endif
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-900/60 text-emerald-300 border border-emerald-700/60 text-[11px] font-bold">
+                                        <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        <span>Tugas Piket Selesai</span>
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- MODAL TANDA TANGAN PIKET -->
+                <!-- MODAL TANDA TANGAN PIKET (MASUK / PULANG) -->
                 <div x-show="activePiketModal === {{ $piket->id }}"
                      x-transition.opacity
                      class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
@@ -539,7 +626,12 @@
                          class="bg-white text-slate-800 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 my-6 flex flex-col max-h-[92vh]">
                         
                         <div class="px-5 py-3.5 bg-[#064E3B] text-white flex items-center justify-between border-b border-[#C9A84C]/40 shrink-0">
-                            <h3 class="font-outfit text-sm font-bold text-white">Tanda Tangan Presensi Piket</h3>
+                            <div>
+                                <h3 class="font-outfit text-sm font-bold text-white flex items-center gap-1.5">
+                                    <span x-text="activePiketType === 'pulang' ? 'Tanda Tangan Presensi PULANG Piket' : 'Tanda Tangan Presensi MASUK Piket'"></span>
+                                </h3>
+                                <p class="text-[10px] text-emerald-200 mt-0.5" x-text="activePiketType === 'pulang' ? 'Konfirmasi penyelesaian tugas piket & kepulangan' : 'Konfirmasi kehadiran awal pelaksanaan piket'"></p>
+                            </div>
                             <button type="button" @click="activePiketModal = null" class="p-1 rounded-lg hover:bg-emerald-800 text-emerald-200 hover:text-white transition cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
@@ -548,16 +640,19 @@
                         <form id="form-piket-{{ $piket->id }}" action="{{ route('staf.piket.absen') }}" method="POST" onsubmit="return submitPiketForm(event, {{ $piket->id }})" class="p-4 space-y-3 text-xs">
                             @csrf
                             <input type="hidden" name="piket_id" value="{{ $piket->id }}">
+                            <input type="hidden" name="tipe" :value="activePiketType">
                             <input type="hidden" name="tanda_tangan" id="input-ttd-{{ $piket->id }}">
 
                             <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
                                 <p class="font-bold text-slate-800">{{ $piket->keterangan }}</p>
-                                <p class="text-[11px] text-slate-600">Pelaksanaan: {{ \Carbon\Carbon::parse($piket->tanggal_piket)->isoFormat('dddd, D MMMM Y') }} ({{ substr($piket->jam_mulai, 0, 5) }} - {{ substr($piket->jam_selesai, 0, 5) }} WIB)</p>
+                                <p class="text-[11px] text-slate-600">Pelaksanaan: {{ \Carbon\Carbon::parse($piket->tanggal_piket)->isoFormat('dddd, D MMMM Y') }} ({{ $jamMulaiFormat }} - {{ $jamSelesaiFormat }} WIB)</p>
                             </div>
 
                             <div>
                                 <div class="flex items-center justify-between mb-1">
-                                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Bubuhkan Tanda Tangan Anda</label>
+                                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                        <span x-text="activePiketType === 'pulang' ? 'Bubuhkan TTD Pulang Anda' : 'Bubuhkan TTD Hadir Anda'"></span>
+                                    </label>
                                     <button type="button" onclick="clearPiketPad({{ $piket->id }})" class="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer">Hapus / Ulangi</button>
                                 </div>
                                 <div id="wrapper-piket-{{ $piket->id }}" class="border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 overflow-hidden relative">
@@ -571,7 +666,7 @@
                                 </button>
                                 <button type="submit" class="px-4 py-2 rounded-xl bg-[#064E3B] text-white font-bold hover:bg-[#04392B] transition cursor-pointer flex items-center gap-1.5">
                                     <svg class="w-3.5 h-3.5 text-[#E2C268]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                    <span>Simpan Presensi</span>
+                                    <span x-text="activePiketType === 'pulang' ? 'Simpan Presensi Pulang' : 'Simpan Presensi Masuk'"></span>
                                 </button>
                             </div>
                         </form>
@@ -581,6 +676,8 @@
         @endforeach
     </div>
     @endif
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- 5. MENU LAYANAN LAINNYA (ABSEN LUAR, IZIN SAKIT, SPT)                 -->

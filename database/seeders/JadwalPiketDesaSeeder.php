@@ -7,7 +7,7 @@ use App\Models\Pegawai;
 use App\Models\JadwalPiket;
 use Carbon\Carbon;
 
-class JadwalPiketDummySeeder extends Seeder
+class JadwalPiketDesaSeeder extends Seeder
 {
     public function run(): void
     {
@@ -15,6 +15,7 @@ class JadwalPiketDummySeeder extends Seeder
             return Pegawai::where('nama_lengkap', 'like', "%{$name}%")->value('id');
         };
 
+        // Pemetaan staf resmi desa sesuai jadwal baku
         $polaDesa = [
             1 => array_values(array_filter([$findId('DEDE SUMIRNA'), $findId('RUKANDA')])), // Senin
             2 => array_values(array_filter([$findId('YAYAN TARYANA'), $findId('DEDE LISMAN')])), // Selasa
@@ -25,13 +26,16 @@ class JadwalPiketDummySeeder extends Seeder
             0 => array_values(array_filter([$findId('ZAILANI RAHMAT')])), // Minggu
         ];
 
-        $startDate = Carbon::today()->startOfWeek(Carbon::MONDAY);
+        $start = Carbon::today()->startOfYear();
+        $end   = Carbon::today()->endOfYear();
+
+        $current = $start->copy();
         $totalCreated = 0;
 
-        for ($i = 0; $i < 7; $i++) {
-            $tgl = $startDate->copy()->addDays($i);
-            $dayOfWeek = $tgl->dayOfWeek;
+        while ($current->lte($end)) {
+            $dayOfWeek = $current->dayOfWeek; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
             $stafIds = $polaDesa[$dayOfWeek] ?? [];
+            $dateStr = $current->toDateString();
 
             foreach ($stafIds as $stafId) {
                 if (!$stafId) continue;
@@ -39,7 +43,7 @@ class JadwalPiketDummySeeder extends Seeder
                 JadwalPiket::updateOrCreate(
                     [
                         'pegawai_id'    => $stafId,
-                        'tanggal_piket' => $tgl->toDateString(),
+                        'tanggal_piket' => $dateStr,
                     ],
                     [
                         'jam_mulai'   => '19:00:00',
@@ -51,10 +55,12 @@ class JadwalPiketDummySeeder extends Seeder
                 );
                 $totalCreated++;
             }
+
+            $current->addDay();
         }
 
         if (isset($this->command)) {
-            $this->command->info("Data jadwal piket 1 minggu ({$startDate->format('d/m/Y')} s/d {$startDate->copy()->addDays(6)->format('d/m/Y')}) berhasil dibuat ({$totalCreated} penugasan).");
+            $this->command->info("Jadwal piket baku desa berhasil dibuat sebanyak {$totalCreated} penugasan dari {$start->format('d/m/Y')} s/d {$end->format('d/m/Y')}.");
         }
     }
 }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->time('jam_mulai')->default('19:00:00');
             $table->time('jam_selesai')->default('06:00:00');
             $table->string('keterangan')->default('Piket Jaga Malam Balai Desa');
-            $table->enum('status', ['terjadwal', 'hadir', 'lepas_piket', 'batal'])->default('terjadwal');
+            $table->enum('status', ['terjadwal', 'sedang_piket', 'hadir', 'lepas_piket', 'batal'])->default('terjadwal');
             $table->longText('tanda_tangan')->nullable();
             $table->dateTime('waktu_absen')->nullable();
             $table->string('ip_absen', 45)->nullable();

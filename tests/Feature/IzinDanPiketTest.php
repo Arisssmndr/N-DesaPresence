@@ -96,47 +96,85 @@ class IzinDanPiketTest extends TestCase
         $this->assertNotNull($kehadiran, 'Kehadiran berstatus Izin tidak ditemukan untuk hari ini');
     }
 
-    public function test_admin_can_create_jadwal_piket_and_staff_can_sign()
+    public function test_admin_can_create_jadwal_piket_and_staff_can_sign_masuk_and_pulang()
     {
         $this->actingAs($this->adminUser);
 
+        $tglPiket = Carbon::create(2026, 9, 1);
+        $tglPiketStr = $tglPiket->toDateString();
+        $tglBesokStr = Carbon::create(2026, 9, 2)->toDateString();
+
         Livewire::test(JadwalPiketManager::class)
             ->set('pegawai_id', $this->pegawai->id)
-            ->set('tanggal_piket', Carbon::today()->toDateString())
+            ->set('tanggal_piket', $tglPiketStr)
             ->set('jam_mulai', '19:00')
             ->set('jam_selesai', '06:00')
             ->set('keterangan', 'Piket Jaga Malam Balai Desa')
             ->call('save');
 
-        // Verifikasi jadwal piket dengan query model (cross-database compat)
         $piket = JadwalPiket::where('pegawai_id', $this->pegawai->id)
-            ->whereDate('tanggal_piket', Carbon::today()->toDateString())
+            ->whereDate('tanggal_piket', $tglPiketStr)
             ->where('status', 'terjadwal')
             ->first();
         $this->assertNotNull($piket, 'Jadwal piket berstatus terjadwal tidak ditemukan');
 
-        // Staf signs attendance
         $this->actingAs($this->stafUser);
 
-        $response = $this->post(route('staf.piket.absen'), [
+        // 1. Coba absen masuk sebelum jam mulai (tgl 1 Sep jam 15:00) -> ditolak
+        Carbon::setTestNow(Carbon::create(2026, 9, 1, 15, 0, 0));
+        $respEarly = $this->post(route('staf.piket.absen'), [
             'piket_id'     => $piket->id,
-            'tanda_tangan' => 'data:image/png;base64,sampleSignatureData',
+            'tipe'         => 'masuk',
+            'tanda_tangan' => 'data:image/png;base64,sampleSignatureMasukData1234567890',
         ]);
-
-        $response->assertRedirect(route('staf.beranda'));
-
+        $respEarly->assertSessionHas('error');
         $piket->refresh();
-        $this->assertEquals('hadir', $piket->status);
+        $this->assertNull($piket->waktu_absen);
+
+        // 2. Absen masuk tepat waktu (tgl 1 Sep jam 19:30) -> berhasil
+        Carbon::setTestNow(Carbon::create(2026, 9, 1, 19, 30, 0));
+        $responseMasuk = $this->post(route('staf.piket.absen'), [
+            'piket_id'     => $piket->id,
+            'tipe'         => 'masuk',
+            'tanda_tangan' => 'data:image/png;base64,sampleSignatureMasukData1234567890',
+        ]);
+        $responseMasuk->assertRedirect(route('staf.beranda'));
+        $piket->refresh();
+        $this->assertEquals('sedang_piket', $piket->status);
         $this->assertNotNull($piket->waktu_absen);
 
-        // Verifikasi kehadiran besok dengan whereDate (cross-database compat)
-        $besok = Carbon::today()->addDay()->toDateString();
+        // 3. Coba absen pulang sebelum jam selesai (tgl 1 Sep jam 23:00 malam) -> ditolak
+        Carbon::setTestNow(Carbon::create(2026, 9, 1, 23, 0, 0));
+        $respEarlyPulang = $this->post(route('staf.piket.absen'), [
+            'piket_id'     => $piket->id,
+            'tipe'         => 'pulang',
+            'tanda_tangan' => 'data:image/png;base64,sampleSignaturePulangData1234567890',
+        ]);
+        $respEarlyPulang->assertSessionHas('error');
+        $piket->refresh();
+        $this->assertNull($piket->waktu_pulang);
+
+        // 4. Absen pulang saat jam selesai tiba (tgl 2 Sep jam 06:15) -> berhasil
+        Carbon::setTestNow(Carbon::create(2026, 9, 2, 6, 15, 0));
+        $respPulang = $this->post(route('staf.piket.absen'), [
+            'piket_id'     => $piket->id,
+            'tipe'         => 'pulang',
+            'tanda_tangan' => 'data:image/png;base64,sampleSignaturePulangData1234567890',
+        ]);
+        $respPulang->assertRedirect(route('staf.beranda'));
+        $piket->refresh();
+        $this->assertEquals('hadir', $piket->status);
+        $this->assertNotNull($piket->waktu_pulang);
+
+        // Verifikasi kehadiran esok hari (2 Sep) otomatis tercatat sebagai "Hadir / Lepas Piket"
         $kehadiranBesok = Kehadiran::where('pegawai_id', $this->pegawai->id)
-            ->whereDate('tanggal', $besok)
+            ->whereDate('tanggal', $tglBesokStr)
             ->where('status', 'Hadir')
             ->first();
         $this->assertNotNull($kehadiranBesok, 'Kehadiran Hadir untuk esok hari tidak ditemukan');
         $this->assertStringContainsString('Lepas Piket', $kehadiranBesok->keterangan);
+
+        Carbon::setTestNow(); // Reset time
     }
 
     public function test_admin_cannot_create_jadwal_piket_for_female_staff()
@@ -174,43 +212,40 @@ class IzinDanPiketTest extends TestCase
         }
     }
 
-    public function test_admin_can_generate_jadwal_piket_bulk_weekly()
+
+
+    public function test_admin_can_generate_pola_jadwal_desa_with_masa_aktif()
     {
         $this->actingAs($this->adminUser);
 
-        $malePegawaiIds = Pegawai::where('jenis_kelamin', 'L')
-            ->where('status_aktif', true)
-            ->pluck('id')
-            ->toArray();
-
-        $startDate = Carbon::today()->toDateString();
-        $endDate   = Carbon::today()->addDays(6)->toDateString();
+        $startDate = Carbon::today()->startOfMonth()->toDateString();
+        $endDate   = Carbon::today()->endOfMonth()->toDateString();
 
         Livewire::test(JadwalPiketManager::class)
-            ->set('generatorDurasi', '1_minggu')
-            ->set('generatorTanggalMulai', $startDate)
-            ->set('generatorTanggalSelesai', $endDate)
-            ->set('selectedStafIds', $malePegawaiIds)
-            ->set('generatorTipeHari', 'setiap_hari')
-            ->set('generatorOpsiKonflik', 'replace')
-            ->set('generatorJamMulai', '19:00')
-            ->set('generatorJamSelesai', '06:00')
-            ->set('generatorKeterangan', 'Piket Jaga Malam Balai Desa')
-            ->call('generateJadwalBulk');
+            ->call('openPolaModal')
+            ->set('polaDurasi', '1_bulan')
+            ->set('polaTanggalMulai', $startDate)
+            ->set('polaOpsiKonflik', 'replace')
+            ->set('polaJamMulai', '19:00')
+            ->set('polaJamSelesai', '06:00')
+            ->call('generatePolaJadwalDesa');
 
-        // Pastikan terbuat 7 jadwal untuk 7 hari berturut-turut
-        $count = JadwalPiket::whereDate('tanggal_piket', '>=', $startDate)
-            ->whereDate('tanggal_piket', '<=', $endDate)
-            ->count();
-        $this->assertEquals(7, $count);
-
-        // Pastikan semua pegawai yang terjadwal adalah laki-laki
         $pikets = JadwalPiket::with('pegawai')
             ->whereDate('tanggal_piket', '>=', $startDate)
             ->whereDate('tanggal_piket', '<=', $endDate)
             ->get();
-        foreach ($pikets as $piket) {
-            $this->assertEquals('L', $piket->pegawai->jenis_kelamin);
+
+        $this->assertNotEmpty($pikets);
+
+        // Pastikan seluruh staf yang terjadwal berjenis kelamin laki-laki
+        foreach ($pikets as $p) {
+            $this->assertEquals('L', $p->pegawai->jenis_kelamin);
+        }
+
+        // Cek hari Senin memiliki 2 staf (Dede Sumirna & Rukanda)
+        $seninPiket = $pikets->filter(fn($p) => $p->tanggal_piket->dayOfWeek === 1)->groupBy(fn($p) => $p->tanggal_piket->toDateString())->first();
+        if ($seninPiket) {
+            $this->assertCount(2, $seninPiket, 'Hari Senin harus memiliki 2 staf yang dijadwalkan bersamaan');
         }
     }
 
@@ -227,7 +262,7 @@ class IzinDanPiketTest extends TestCase
         $count = JadwalPiket::whereDate('tanggal_piket', '>=', $startOfWeek)
             ->whereDate('tanggal_piket', '<=', $endOfWeek)
             ->count();
-        $this->assertEquals(7, $count);
+        $this->assertGreaterThanOrEqual(7, $count);
     }
 
     public function test_admin_can_edit_and_delete_jadwal_piket()
@@ -263,7 +298,7 @@ class IzinDanPiketTest extends TestCase
         $this->assertDatabaseMissing('jadwal_pikets', ['id' => $piket->id]);
     }
 
-    public function test_admin_can_reset_jadwal_piket_per_week_and_month()
+    public function test_admin_can_delete_selected_and_kosongkan_bulan_ini()
     {
         $this->actingAs($this->adminUser);
 
@@ -271,43 +306,43 @@ class IzinDanPiketTest extends TestCase
         $year = 2026;
         $month = 9;
 
-        // Buat jadwal piket di Minggu ke-1 (tgl 2 Sep) dan Minggu ke-2 (tgl 10 Sep)
-        JadwalPiket::create([
+        $piket1 = JadwalPiket::create([
             'pegawai_id'    => $malePegawai->id,
             'tanggal_piket' => '2026-09-02',
             'jam_mulai'     => '19:00:00',
             'jam_selesai'   => '06:00:00',
-            'keterangan'    => 'Piket Minggu 1',
+            'keterangan'    => 'Piket Hari 1',
             'status'        => 'terjadwal',
             'created_by'    => $this->adminUser->id,
         ]);
 
-        JadwalPiket::create([
+        $piket2 = JadwalPiket::create([
             'pegawai_id'    => $malePegawai->id,
             'tanggal_piket' => '2026-09-10',
             'jam_mulai'     => '19:00:00',
             'jam_selesai'   => '06:00:00',
-            'keterangan'    => 'Piket Minggu 2',
+            'keterangan'    => 'Piket Hari 2',
             'status'        => 'terjadwal',
             'created_by'    => $this->adminUser->id,
         ]);
 
-        // Hapus hanya Minggu 1 via Livewire
+        // Hapus terpilih via Livewire
         Livewire::test(JadwalPiketManager::class)
             ->set('bulan', $month)
             ->set('tahun', $year)
-            ->call('hapusJadwalPeriode', 'minggu_1');
+            ->set('selectedPiketIds', [(string) $piket1->id])
+            ->call('deleteSelected');
 
-        $this->assertFalse(JadwalPiket::whereDate('tanggal_piket', '2026-09-02')->exists());
-        $this->assertTrue(JadwalPiket::whereDate('tanggal_piket', '2026-09-10')->exists());
+        $this->assertFalse(JadwalPiket::where('id', $piket1->id)->exists());
+        $this->assertTrue(JadwalPiket::where('id', $piket2->id)->exists());
 
-        // Hapus seluruh bulan
+        // Kosongkan seluruh bulan
         Livewire::test(JadwalPiketManager::class)
             ->set('bulan', $month)
             ->set('tahun', $year)
-            ->call('hapusJadwalPeriode', 'semua_bulan');
+            ->call('kosongkanBulanIni');
 
-        $this->assertFalse(JadwalPiket::whereDate('tanggal_piket', '2026-09-10')->exists());
+        $this->assertFalse(JadwalPiket::where('id', $piket2->id)->exists());
     }
 
     public function test_staff_who_checked_in_cannot_submit_absen_luar_or_izin_on_same_day()

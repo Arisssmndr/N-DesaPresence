@@ -175,10 +175,14 @@ class StafPortalController extends Controller
             ->orderBy('tanggal_piket')
             ->get();
 
-        // Cek jika kemarin piket dan hadir -> hari ini Lepas Piket
+        // Cek jika kemarin piket dan selesai hadir/pulang -> hari ini Lepas Piket
         $piketKemarin = \App\Models\JadwalPiket::where('pegawai_id', $pegawai->id)
             ->whereDate('tanggal_piket', Carbon::yesterday())
-            ->where('status', 'hadir')
+            ->where(function ($q) {
+                $q->where('status', 'hadir')
+                  ->orWhere('status', 'lepas_piket')
+                  ->orWhereNotNull('waktu_pulang');
+            })
             ->first();
 
         $isLepasPiketHariIni = false;
@@ -191,7 +195,9 @@ class StafPortalController extends Controller
                     'tanggal'             => $today,
                     'status'              => 'Hadir',
                     'jam_masuk'           => $piketKemarin->waktu_absen ? $piketKemarin->waktu_absen->format('H:i:s') : '07:30:00',
+                    'jam_pulang'          => $piketKemarin->waktu_pulang ? $piketKemarin->waktu_pulang->format('H:i:s') : null,
                     'tanda_tangan_masuk'  => $piketKemarin->tanda_tangan,
+                    'tanda_tangan_pulang' => $piketKemarin->tanda_tangan_pulang,
                     'sumber_data'         => 'manual_admin',
                     'diverifikasi_oleh'   => $piketKemarin->created_by ?? 1,
                     'keterangan'          => 'Lepas Piket (Tugas Piket Malam tgl ' . $piketKemarin->tanggal_piket->format('d/m/Y') . ')'
@@ -200,7 +206,9 @@ class StafPortalController extends Controller
                 $kehadiranHariIni->update([
                     'status'              => 'Hadir',
                     'jam_masuk'           => $piketKemarin->waktu_absen ? $piketKemarin->waktu_absen->format('H:i:s') : '07:30:00',
+                    'jam_pulang'          => $piketKemarin->waktu_pulang ? $piketKemarin->waktu_pulang->format('H:i:s') : null,
                     'tanda_tangan_masuk'  => $piketKemarin->tanda_tangan,
+                    'tanda_tangan_pulang' => $piketKemarin->tanda_tangan_pulang,
                     'keterangan'          => 'Lepas Piket (Tugas Piket Malam tgl ' . $piketKemarin->tanggal_piket->format('d/m/Y') . ')'
                 ]);
             }
@@ -338,6 +346,7 @@ class StafPortalController extends Controller
 
         $validated = $request->validate([
             'piket_id'        => 'required|exists:jadwal_pikets,id',
+            'tipe'            => 'nullable|in:masuk,pulang',
             'tanda_tangan'    => 'required|string',
         ], [
             'tanda_tangan.required' => 'Goreskan tanda tangan digital untuk konfirmasi kehadiran piket.',
@@ -347,37 +356,80 @@ class StafPortalController extends Controller
             ->where('pegawai_id', $pegawai->id)
             ->firstOrFail();
 
+        $tipe = $validated['tipe'] ?? ($piket->isSudahMasuk() ? 'pulang' : 'masuk');
         $clientIp = $this->signatureService->resolveClientIp($request);
 
-        $piket->update([
-            'status'       => 'hadir',
-            'tanda_tangan' => $validated['tanda_tangan'],
-            'waktu_absen'  => now(),
-            'ip_absen'     => $clientIp,
-        ]);
+        if ($tipe === 'masuk') {
+            if (!$piket->isWaktuMasukTiba()) {
+                $jamBuka = substr($piket->jam_mulai, 0, 5);
+                return redirect()->route('staf.beranda')->with('error', "Waktu absen hadir/masuk piket belum dimulai. Absen dibuka mulai pukul {$jamBuka} WIB.");
+            }
+            if ($piket->isSudahMasuk()) {
+                $jamMasuk = $piket->waktu_absen ? $piket->waktu_absen->format('H:i') : '-';
+                return redirect()->route('staf.beranda')->with('info', "Anda sudah melakukan absen masuk piket pada pukul {$jamMasuk} WIB.");
+            }
 
-        // Otomatis tandai presensi hari berikutnya sebagai "Lepas Piket" dengan tanda tangan bukti
-        $besokStr = Carbon::parse($piket->tanggal_piket)->addDay()->toDateString();
-        $kehadiranBesok = Kehadiran::firstOrNew([
-            'pegawai_id' => $pegawai->id,
-            'tanggal'    => $besokStr,
-        ]);
-        $kehadiranBesok->status             = 'Hadir';
-        $kehadiranBesok->jam_masuk          = now()->format('H:i:s');
-        $kehadiranBesok->tanda_tangan_masuk = $validated['tanda_tangan'];
-        $kehadiranBesok->sumber_data        = 'manual_admin';
-        $kehadiranBesok->keterangan         = "Lepas Piket (Tugas Piket Malam tgl " . $piket->tanggal_piket->format('d/m/Y') . ")";
-        $kehadiranBesok->save();
+            $piket->update([
+                'status'       => 'sedang_piket',
+                'tanda_tangan' => $validated['tanda_tangan'],
+                'waktu_absen'  => now(),
+                'ip_absen'     => $clientIp,
+            ]);
 
-        \App\Models\AuditLog::create([
-            'user_id'   => $user->id,
-            'user_name' => $user->name,
-            'role'      => $user->role ?? 'perangkat',
-            'aktivitas' => "Mengisi absensi & tanda tangan piket tanggal " . $piket->tanggal_piket->format('d/m/Y'),
-            'modul'     => 'Jadwal Piket',
-        ]);
+            \App\Models\AuditLog::create([
+                'user_id'   => $user->id,
+                'user_name' => $user->name,
+                'role'      => $user->role ?? 'perangkat',
+                'aktivitas' => "Mengisi absensi MASUK piket tanggal " . $piket->tanggal_piket->format('d/m/Y'),
+                'modul'     => 'Jadwal Piket',
+            ]);
 
-        return redirect()->route('staf.beranda')->with('success', 'Absensi tugas piket berhasil tercatat! Status presensi hari berikutnya otomatis berstatus Lepas Piket.');
+            return redirect()->route('staf.beranda')->with('success', 'Absen MASUK piket berhasil dicatat! Selamat bertugas. Jangan lupa mengisi absen pulang saat jam piket selesai.');
+        } else { // PULANG
+            if (!$piket->isSudahMasuk()) {
+                return redirect()->route('staf.beranda')->with('error', 'Harap lakukan absen masuk piket terlebih dahulu sebelum melakukan absen pulang.');
+            }
+            if (!$piket->isWaktuPulangTiba()) {
+                $jamSelesai = substr($piket->jam_selesai, 0, 5);
+                return redirect()->route('staf.beranda')->with('error', "Waktu piket belum selesai. Absen pulang baru dapat dilakukan mulai pukul {$jamSelesai} WIB.");
+            }
+            if ($piket->isSudahPulang()) {
+                $jamPulang = $piket->waktu_pulang ? $piket->waktu_pulang->format('H:i') : '-';
+                return redirect()->route('staf.beranda')->with('info', "Anda sudah melakukan absen pulang piket pada pukul {$jamPulang} WIB.");
+            }
+
+            $piket->update([
+                'status'               => 'hadir',
+                'tanda_tangan_pulang'  => $validated['tanda_tangan'],
+                'waktu_pulang'         => now(),
+                'ip_pulang'            => $clientIp,
+            ]);
+
+            // Otomatis tandai presensi hari berikutnya sebagai "Lepas Piket (Hadir)" dengan tanda tangan bukti lengkap
+            $tglLepasPiket = $piket->waktu_selesai_datetime->toDateString();
+            $kehadiranLepasPiket = Kehadiran::firstOrNew([
+                'pegawai_id' => $pegawai->id,
+                'tanggal'    => $tglLepasPiket,
+            ]);
+            $kehadiranLepasPiket->status              = 'Hadir';
+            $kehadiranLepasPiket->jam_masuk           = $piket->waktu_absen ? $piket->waktu_absen->format('H:i:s') : '07:30:00';
+            $kehadiranLepasPiket->jam_pulang          = now()->format('H:i:s');
+            $kehadiranLepasPiket->tanda_tangan_masuk  = $piket->tanda_tangan;
+            $kehadiranLepasPiket->tanda_tangan_pulang = $validated['tanda_tangan'];
+            $kehadiranLepasPiket->sumber_data         = 'manual_admin';
+            $kehadiranLepasPiket->keterangan          = "Lepas Piket (Tugas Piket Malam tgl " . $piket->tanggal_piket->format('d/m/Y') . ")";
+            $kehadiranLepasPiket->save();
+
+            \App\Models\AuditLog::create([
+                'user_id'   => $user->id,
+                'user_name' => $user->name,
+                'role'      => $user->role ?? 'perangkat',
+                'aktivitas' => "Mengisi absensi PULANG piket tanggal " . $piket->tanggal_piket->format('d/m/Y') . " (Selesai piket)",
+                'modul'     => 'Jadwal Piket',
+            ]);
+
+            return redirect()->route('staf.beranda')->with('success', 'Absen PULANG piket berhasil dicatat! Tugas piket selesai, status kehadiran Anda otomatis Hadir / Lepas Piket.');
+        }
     }
 
     public function halamanAbsen(Request $request, string $jenis)

@@ -27,6 +27,14 @@
 
     <!-- Right Login Form Panel -->
     <div class="md:col-span-7 bg-[#FAF6F0] p-8 sm:p-12 flex flex-col justify-center relative overflow-hidden">
+        <!-- Top Right Floating Action: Info Sistem & Pengembang -->
+        <a href="{{ route('tentang.aplikasi') }}" 
+           class="absolute top-4 right-4 sm:top-6 sm:right-6 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/90 hover:bg-[#064E3B] text-[#064E3B] hover:text-[#F3E5AB] border border-[#C9A84C]/50 text-xs font-bold shadow-sm hover:shadow-md transition-all duration-200 z-20 group"
+           title="Informasi Sistem & Profil Pengembang (Aris Munandar)">
+            <div class="w-4 h-4 rounded-full bg-[#064E3B] group-hover:bg-[#C9A84C] text-[#F3E5AB] group-hover:text-[#021811] flex items-center justify-center text-[10px] font-black transition-colors">i</div>
+            <span class="hidden sm:inline text-[11px]">Tentang Sistem</span>
+        </a>
+
         <!-- Watermark Logo Kabupaten Tasikmalaya (Watermark Miring Kanan Bawah Skripsi Style) -->
         <div class="absolute -right-8 -bottom-8 sm:-right-12 sm:-bottom-12 md:-right-14 md:-bottom-14 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 pointer-events-none select-none z-0"
              style="transform: rotate(-15deg); opacity: 0.075;">

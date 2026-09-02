@@ -20,13 +20,23 @@
             <p class="text-xs text-emerald-200/90 leading-relaxed max-w-xs">N-DesaPresence — Portal Presensi Mandiri Staf & Perangkat Desa</p>
         </div>
 
-        <div class="relative z-10 text-[11px] text-emerald-300/70 font-medium">
-            KKN 0226 LP3I Tasikmalaya &copy; 2026
+        <div class="relative z-10 text-[11px] text-emerald-300/80 font-medium text-center">
+            Crafted with Passion by <strong>Aris Munandar</strong> | KKN 0226 LP3I Tasikmalaya &copy; 2026
         </div>
     </div>
 
     <!-- Right Login Form Panel -->
     <div class="md:col-span-7 bg-[#FAF6F0] p-8 sm:p-12 flex flex-col justify-center relative overflow-hidden">
+        <!-- Top Right Floating Action: Info Sistem & Pengembang (Gold Theme dengan Teks Hijau) -->
+        <a href="{{ route('tentang.aplikasi') }}" 
+           class="absolute top-4 right-4 sm:top-6 sm:right-6 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#C9A84C] hover:bg-[#b8953a] text-[#064E3B] border border-[#99731C] shadow-md hover:shadow-lg transition-all duration-200 z-20 group cursor-pointer"
+           title="Lembar Dedikasi & Profil Pengembang (Aris Munandar)">
+            <svg class="w-4 h-4 text-[#064E3B] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span class="text-xs font-extrabold tracking-wide text-[#064E3B]">Tentang Sistem</span>
+        </a>
+
         <!-- Watermark Logo Kabupaten Tasikmalaya (Watermark Miring Kanan Bawah Skripsi Style) -->
         <div class="absolute -right-8 -bottom-8 sm:-right-12 sm:-bottom-12 md:-right-14 md:-bottom-14 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 pointer-events-none select-none z-0"
              style="transform: rotate(-15deg); opacity: 0.075;">
@@ -36,12 +46,6 @@
         <div class="max-w-md mx-auto w-full relative z-10">
 
             <div class="mb-8">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#064E3B]/10 border border-[#C9A84C]/30 text-[#064E3B] text-xs font-bold mb-3">
-                    <svg class="w-3.5 h-3.5 text-[#064E3B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                    </svg>
-                    <span>Portal Presensi Staf</span>
-                </div>
                 <h2 class="font-outfit text-2xl font-bold text-[#064E3B]">Masuk Akun Perangkat</h2>
                 <p class="text-xs text-slate-500 mt-1">Masukkan username akun perangkat desa Anda untuk melanjutkan presensi</p>
             </div>
@@ -58,8 +62,10 @@
 
                 <div>
                     <label for="username" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Username Pegawai / Staf</label>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[#064E3B] font-mono font-bold text-base">@</span>
+                    <div class="relative flex items-center">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="text-[#064E3B] font-mono font-bold text-base leading-none">@</span>
+                        </div>
                         <input type="text" id="username" name="username" value="{{ old('username') }}" required autofocus
                             placeholder="contoh: budisantoso"
                             class="w-full pl-10 pr-4 py-3.5 text-sm font-mono rounded-xl bg-white border border-[#C9A84C]/30 focus:outline-none focus:ring-2 focus:ring-[#C9A84C] text-slate-800 shadow-sm transition">

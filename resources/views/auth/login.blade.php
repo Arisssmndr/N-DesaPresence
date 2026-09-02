@@ -20,13 +20,23 @@
             <p class="text-xs text-emerald-200/90 leading-relaxed max-w-xs">N-DesaPresence — Sistem Presensi Digital & Administrasi Pemerintahan Desa</p>
         </div>
 
-        <div class="relative z-10 text-[11px] text-emerald-300/70 font-medium">
-            KKN 0226 LP3I Tasikmalaya &copy; 2026
+        <div class="relative z-10 text-[11px] text-emerald-300/80 font-medium text-center">
+            Crafted with Passion by <strong>Aris Munandar</strong> | KKN 0226 LP3I Tasikmalaya &copy; 2026
         </div>
     </div>
 
     <!-- Right Login Form Panel (Cream/White 60%) -->
     <div class="md:col-span-7 bg-[#FAF6F0] p-8 sm:p-12 flex flex-col justify-center relative overflow-hidden">
+        <!-- Top Right Floating Action: Info Sistem & Pengembang (Gold Theme dengan Teks Hijau) -->
+        <a href="{{ route('tentang.aplikasi') }}" 
+           class="absolute top-4 right-4 sm:top-6 sm:right-6 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#C9A84C] hover:bg-[#b8953a] text-[#064E3B] border border-[#99731C] shadow-md hover:shadow-lg transition-all duration-200 z-20 group cursor-pointer"
+           title="Lembar Dedikasi & Profil Pengembang (Aris Munandar)">
+            <svg class="w-4 h-4 text-[#064E3B] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span class="text-xs font-extrabold tracking-wide text-[#064E3B]">Tentang Sistem</span>
+        </a>
+
         <!-- Watermark Logo Kabupaten Tasikmalaya (Watermark Miring Kanan Bawah Skripsi Style) -->
         <div class="absolute -right-8 -bottom-8 sm:-right-12 sm:-bottom-12 md:-right-14 md:-bottom-14 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 pointer-events-none select-none z-0"
              style="transform: rotate(-15deg); opacity: 0.075;">

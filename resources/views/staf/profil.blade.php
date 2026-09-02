@@ -312,6 +312,27 @@
     </div>
     @endif
 
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- 6. LEMBAR DEDIKASI & PROFIL PENGEMBANG (ARIS MUNANDAR)                  -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <a href="{{ route('tentang.aplikasi') }}" 
+       class="block px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl bg-[#064E3B] hover:bg-[#085a44] border border-[#C9A84C]/50 shadow-sm hover:shadow-md transition-all duration-200 group text-white">
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <h4 class="font-outfit font-extrabold text-sm text-white group-hover:text-[#FFF2C6] transition-colors">
+                    Tentang Sistem
+                </h4>
+                <p class="text-[11px] text-emerald-100 font-mono mt-0.5">
+                    Karya Pengabdian KKN 0226 LP3I
+                </p>
+            </div>
+
+            <div class="w-7 h-7 rounded-lg bg-white/10 group-hover:bg-[#C9A84C] group-hover:text-[#064E3B] text-white flex items-center justify-center transition-all duration-200 shrink-0">
+                <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+            </div>
+        </div>
+    </a>
+
     <!-- Logout Button -->
     <form action="{{ route('staf.logout') }}" method="POST">
         @csrf

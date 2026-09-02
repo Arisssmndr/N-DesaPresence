@@ -15,8 +15,6 @@ class MatriksPresensiTest extends TestCase
 {
     public function test_future_dates_are_not_marked_as_alpa()
     {
-        Carbon::setTestNow(Carbon::create(2026, 8, 20, 10, 0, 0));
-
         $user = \App\Models\User::first();
         if ($user) {
             $this->actingAs($user);
@@ -32,7 +30,7 @@ class MatriksPresensiTest extends TestCase
             $firstPegawaiId = array_key_first($matrix);
             $pegawaiMatrix = $matrix[$firstPegawaiId];
 
-            // Tanggal 31 Agustus 2026 (masa depan jika hari ini 20 Agustus)
+            // Tanggal 31 Agustus 2026 (masa depan jika hari ini <= 22 Agustus)
             // Hari Senin, 31 Agustus 2026 -> harus '-' (bukan 'A')
             $this->assertEquals('-', $pegawaiMatrix[31]);
 
@@ -44,7 +42,5 @@ class MatriksPresensiTest extends TestCase
 
             return true;
         });
-
-        Carbon::setTestNow(); // Reset time
     }
 }

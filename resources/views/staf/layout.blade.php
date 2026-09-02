@@ -154,8 +154,8 @@
     </nav>
     @endauth
 
-    <footer class="text-center py-4 text-[11px] text-slate-400 border-t border-[#C9A84C]/10">
-        Pemerintah Desa Nangtang &copy; 2026 — N-DesaPresence (KKN 0226 LP3I Tasikmalaya)
+    <footer class="text-center py-4 text-[11px] text-slate-500 border-t border-[#C9A84C]/20">
+        Crafted with Passion by <strong>Aris Munandar</strong> | KKN 0226 LP3I Tasikmalaya &copy; 2026
     </footer>
 
     @yield('scripts')

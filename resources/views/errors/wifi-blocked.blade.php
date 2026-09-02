@@ -102,8 +102,8 @@
             </a>
         </div>
 
-        <p class="text-center text-emerald-300/40 text-xs mt-6">
-            N-DesaPresence — KKN 0226 LP3I Tasikmalaya &copy; 2026
+        <p class="text-center text-emerald-300/60 text-xs mt-6">
+            Crafted with Passion by <strong>Aris Munandar</strong> | KKN 0226 LP3I Tasikmalaya &copy; 2026
         </p>
     </div>
 </body>

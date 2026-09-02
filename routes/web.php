@@ -42,6 +42,10 @@ Route::get('/', function () {
     return redirect()->route('staf.login');
 });
 
+// Halaman Lembar Dedikasi & Profil Pengembang (Aris Munandar)
+Route::get('/tentang-aplikasi', function () {
+    return view('tentang-aplikasi');
+})->name('tentang.aplikasi');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STATUS JARINGAN WIFI REAL-TIME (Untuk Polling Status di Beranda Staf)

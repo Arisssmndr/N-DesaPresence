@@ -305,7 +305,7 @@
                 </div>
 
                 <!-- PORTAL ABSENSI LINK (untuk dishare ke staf) -->
-                <div class="mt-2 pt-3 border-t border-emerald-800/40">
+                <div class="mt-2 pt-3 border-t border-emerald-800/40 space-y-1.5">
                     <a href="{{ route('staf.login') }}" target="_blank"
                        class="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-[#C9A84C]/15 border border-[#C9A84C]/30 hover:bg-[#C9A84C]/25 transition-all">
                         <div class="w-6 h-6 rounded-md bg-[#C9A84C] flex items-center justify-center shrink-0">
@@ -321,14 +321,21 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                         </svg>
                     </a>
+
+                    <!-- INFO SISTEM & DEVELOPER LINK -->
+                    <a href="{{ route('tentang.aplikasi') }}"
+                       class="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/25 border border-[#C9A84C]/25 hover:bg-[#C9A84C]/20 transition-all text-xs text-[#FFF2C6]">
+                        <svg class="w-4 h-4 text-[#C9A84C] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span class="text-[11px] font-bold">Tentang Sistem</span>
+                    </a>
                 </div>
 
             </nav>
 
             <!-- Footer Sidebar Info -->
             <div class="p-3 border-t border-emerald-800/50 text-center shrink-0">
-                <p class="text-[11px] text-emerald-200/80 font-medium">KKN 0226 LP3I Tasikmalaya &copy; 2026</p>
-                <p class="text-[10px] text-[#C9A84C] font-semibold">Pemerintah Desa Nangtang</p>
+                <p class="text-[10.5px] text-emerald-200/90 font-medium">Crafted with Passion by <strong>Aris Munandar</strong></p>
+                <p class="text-[9.5px] text-[#C9A84C] font-semibold mt-0.5">KKN 0226 LP3I Tasikmalaya &copy; 2026</p>
             </div>
         </aside>
 

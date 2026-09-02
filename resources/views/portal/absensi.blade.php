@@ -327,7 +327,7 @@
 
     {{-- Footer --}}
     <div class="text-center mt-8 space-y-1">
-        <p class="text-emerald-300/40 text-xs">KKN 0226 LP3I Tasikmalaya &copy; 2026</p>
+        <p class="text-emerald-300/60 text-xs">Crafted with Passion by <strong>Aris Munandar</strong> | KKN 0226 LP3I Tasikmalaya &copy; 2026</p>
         <p class="text-emerald-300/20 text-[10px]">IP: {{ $clientIp }}</p>
     </div>
 

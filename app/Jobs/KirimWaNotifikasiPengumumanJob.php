@@ -17,8 +17,8 @@ class KirimWaNotifikasiPengumumanJob implements ShouldQueue
 {
     use Queueable, InteractsWithQueue, SerializesModels;
 
-    public int $tries = 3;
-    public int $backoff = 60; // Detik sebelum mencoba ulang
+    public int $tries = 2;
+    public int $backoff = 30;
 
     public function __construct(
         public int $pengumumanId,
@@ -50,15 +50,15 @@ class KirimWaNotifikasiPengumumanJob implements ShouldQueue
         $log->nama_penerima = $this->namaPenerima;
         $log->percobaan     = ($log->percobaan ?? 0) + 1;
 
-        // Render pesan
+        // Render pesan pengumuman
         $pesan = $configService->renderPesanPengumuman($pengumuman, $this->namaPenerima);
         $log->pesan = $pesan;
 
-        // Kirim via Fonnte Gateway
+        // Kirim langsung via Fonnte Gateway
         $sendResult = $waService->send($this->nomorHp, $pesan);
 
         $log->status        = $sendResult['status'] ?? 'gagal';
-        $log->response_raw  = is_array($sendResult['raw']) ? json_encode($sendResult['raw']) : (string) $sendResult['raw'];
+        $log->response_raw  = is_array($sendResult['raw']) ? json_encode($sendResult['raw']) : (string) ($sendResult['raw'] ?? '');
         $log->error_message = $sendResult['error'] ?? null;
 
         if ($sendResult['success']) {
@@ -76,10 +76,5 @@ class KirimWaNotifikasiPengumumanJob implements ShouldQueue
             'total_wa_gagal'    => $totalGagal,
             'wa_terkirim_at'    => $totalTerkirim > 0 ? Carbon::now() : $pengumuman->wa_terkirim_at,
         ]);
-
-        // Jika gagal dan masih ada jatah retry, lempar exception agar queue me-retry
-        if (!$sendResult['success'] && $this->attempts() < $this->tries) {
-            throw new \Exception("Pengiriman WA ke {$this->nomorHp} gagal: " . ($sendResult['error'] ?? 'Unknown Error'));
-        }
     }
 }

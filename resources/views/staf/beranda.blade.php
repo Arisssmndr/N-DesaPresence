@@ -227,6 +227,56 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- 2.4. PENGUMUMAN & INFORMASI KEDINASAN RESMI DESA                        -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if(isset($pengumumans) && $pengumumans->count() > 0)
+    <div class="space-y-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-ping"></span>
+                <h3 class="font-outfit text-xs sm:text-sm font-bold text-[#064E3B] uppercase tracking-wider">Pengumuman & Informasi Desa</h3>
+            </div>
+            <span class="text-[11px] font-bold text-slate-400">{{ $pengumumans->count() }} Pengumuman Aktif</span>
+        </div>
+
+        @foreach($pengumumans as $p)
+            <div class="sadi-card p-4 sm:p-5 bg-white border {{ $p->is_pinned ? 'border-[#C9A84C] ring-2 ring-[#C9A84C]/25' : 'border-slate-200' }} rounded-3xl shadow-xs space-y-2.5 {{ $p->kategori_border_bar }}">
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[10.5px]">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        @if($p->is_pinned)
+                            <span class="px-2 py-0.5 rounded-md font-extrabold bg-[#FAF6F0] text-[#064E3B] border border-[#C9A84C]">
+                                ★ DISEMATKAN
+                            </span>
+                        @endif
+                        <span class="px-2.5 py-0.5 rounded-md font-extrabold uppercase tracking-wider border {{ $p->kategori_badge }}">
+                            {{ $p->kategori_label }}
+                        </span>
+                        @if($p->berlaku_hingga)
+                            <span class="text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                                Berlaku s/d {{ $p->berlaku_hingga->isoFormat('D MMM Y') }}
+                            </span>
+                        @endif
+                    </div>
+                    <span class="text-slate-400 font-medium">{{ $p->created_at ? $p->created_at->isoFormat('D MMM Y, HH:mm') : '' }} WIB</span>
+                </div>
+
+                <h4 class="font-outfit font-extrabold text-sm sm:text-base text-[#064E3B] leading-tight">
+                    {{ $p->judul }}
+                </h4>
+
+                <div class="p-3 rounded-2xl bg-slate-50/80 border border-slate-100 text-xs text-slate-700 leading-relaxed whitespace-pre-line">
+                    {{ $p->isi }}
+                </div>
+
+                <div class="pt-1 flex items-center justify-between text-[10.5px] text-slate-400">
+                    <span>Diterbitkan oleh: <strong class="text-slate-600 font-semibold">{{ $p->pembuat->name ?? 'Pemerintah Desa Nangtang' }}</strong></span>
+                </div>
+            </div>
+        @endforeach
+    </div>
+    @endif
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- 2.5. NOTIFIKASI SURAT PERINTAH TUGAS (SPT) MENUNGGU KONFIRMASI STAF    -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     @if(isset($sptMenunggu) && $sptMenunggu->count() > 0)

@@ -47,6 +47,11 @@ class KonfigurasiWhatsApp extends Model
             return (int) $this->value;
         }
 
+        if ($this->tipe === 'json') {
+            $decoded = json_decode((string) $this->value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+
         return $this->value;
     }
 
@@ -57,6 +62,12 @@ class KonfigurasiWhatsApp extends Model
     {
         if ($val === null || $val === '') {
             $this->value = null;
+            return;
+        }
+
+        if (is_array($val)) {
+            $this->tipe = 'json';
+            $this->value = json_encode($val);
             return;
         }
 

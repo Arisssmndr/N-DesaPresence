@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Cache;
 class KonfigurasiWaService
 {
     private const CACHE_KEY = 'konfigurasi_whatsapp_all';
-    private const CACHE_TTL = 3600; // 1 jam
+    private const DEVICES_CACHE_KEY = 'konfigurasi_whatsapp_devices_cache';
+    private const CACHE_TTL = 86400; // 24 jam
 
     /**
      * Ambil nilai konfigurasi berdasarkan key
@@ -45,6 +46,34 @@ class KonfigurasiWaService
         $config->save();
 
         $this->clearCache();
+    }
+
+    /**
+     * Ambil daftar perangkat yang tersimpan di cache lokal
+     */
+    public function getCachedDevices(): array
+    {
+        $cached = Cache::get(self::DEVICES_CACHE_KEY);
+        if (is_array($cached) && !empty($cached)) {
+            return $cached;
+        }
+
+        $fromDb = $this->get('cached_devices_list');
+        if (is_array($fromDb) && !empty($fromDb)) {
+            Cache::put(self::DEVICES_CACHE_KEY, $fromDb, self::CACHE_TTL);
+            return $fromDb;
+        }
+
+        return [];
+    }
+
+    /**
+     * Simpan daftar perangkat ke cache lokal & database
+     */
+    public function setCachedDevices(array $devices): void
+    {
+        Cache::put(self::DEVICES_CACHE_KEY, $devices, self::CACHE_TTL);
+        $this->set('cached_devices_list', $devices, 'Cache daftar perangkat Fonnte WhatsApp');
     }
 
     /**
@@ -90,42 +119,30 @@ class KonfigurasiWaService
     }
 
     /**
-     * Render pesan WhatsApp dari template untuk model Pengumuman
+     * Render pesan WhatsApp resmi untuk model Pengumuman (Bersih, rapi, langsung dari isi)
      */
     public function renderPesanPengumuman(Pengumuman $pengumuman, ?string $namaPenerima = null): string
     {
-        $template = (string) $this->get('wa_template_pengumuman');
-
-        if (empty($template)) {
-            $template = "📢 *PENGUMUMAN DESA NANGTANG*\n\n📌 *Kategori:* {kategori}\n🏷️ *Perihal:* {judul}\n\n{isi}\n\n📅 *Berlaku s/d:* {berlaku_hingga}\n👤 *Diumumkan Oleh:* {pembuat}\n\n_Pesan otomatis N-DesaPresence Desa Nangtang_";
-        }
-
-        $kategoriIcon = match ($pengumuman->kategori) {
-            'penting' => '🚨 PENTING / MENDESAK',
-            'rapat' => '🏛️ RAPAT / MUSYAWARAH DESA',
-            'kegiatan' => '📅 AGENDA KEGIATAN DESA',
-            default => 'ℹ️ INFORMASI KEDINASAN',
-        };
+        $kategoriIcon = $pengumuman->kategori_icon . ' ' . strtoupper($pengumuman->kategori_label);
+        $salam = $namaPenerima ? "Yth. *{$namaPenerima}*,\n\n" : "";
 
         $berlaku = $pengumuman->berlaku_hingga 
-            ? $pengumuman->berlaku_hingga->translatedFormat('d F Y') 
-            : 'Seterusnya / Hingga Dicabut';
+            ? "\n\n📅 *Berlaku s/d:* " . $pengumuman->berlaku_hingga->translatedFormat('d F Y')
+            : '';
 
         $pembuat = $pengumuman->pembuat ? $pengumuman->pembuat->name : 'Pemerintah Desa Nangtang';
 
-        $replacements = [
-            '{nama_penerima}' => $namaPenerima ?? 'Bapak/Ibu Perangkat Desa',
-            '{kategori}' => $kategoriIcon,
-            '{kategori_raw}' => strtoupper($pengumuman->kategori),
-            '{judul}' => $pengumuman->judul,
-            '{isi}' => $pengumuman->isi,
-            '{berlaku_hingga}' => $berlaku,
-            '{pembuat}' => $pembuat,
-            '{tanggal}' => now()->translatedFormat('d F Y H:i') . ' WIB',
-            '{desa}' => 'Desa Nangtang, Kec. Cigalontang, Kab. Tasikmalaya',
-        ];
-
-        return str_replace(array_keys($replacements), array_values($replacements), $template);
+        return "📢 *PENGUMUMAN RESMI PEMERINTAH DESA NANGTANG*\n"
+            . "────────────────────────────\n"
+            . "📌 *Kategori:* {$kategoriIcon}\n"
+            . "🏷️ *Perihal:* *{$pengumuman->judul}*\n\n"
+            . "{$salam}"
+            . "{$pengumuman->isi}"
+            . "{$berlaku}\n\n"
+            . "👤 *Diumumkan Oleh:* {$pembuat}\n"
+            . "🕒 *" . now()->translatedFormat('d M Y, H:i') . " WIB*\n"
+            . "────────────────────────────\n"
+            . "_Pesan otomatis Sistem N-DesaPresence Desa Nangtang_";
     }
 
     /**

@@ -168,6 +168,22 @@ class StafPortalController extends Controller
             ->latest()
             ->get();
 
+        // ─── PENGUMUMAN & INFORMASI RESMI DESA ─────────────────────────────────
+        $pengumumans = \App\Models\Pengumuman::where(function($q) use ($today) {
+                $q->whereNull('berlaku_hingga')
+                  ->orWhereDate('berlaku_hingga', '>=', $today);
+            })
+            ->where(function($q) use ($pegawai) {
+                $q->where('target_penerima', 'semua')
+                  ->orWhere('target_penerima', $pegawai->kategori_pegawai)
+                  ->orWhereJsonContains('pegawai_ids', $pegawai->id)
+                  ->orWhereJsonContains('pegawai_ids', (string) $pegawai->id);
+            })
+            ->orderByDesc('is_pinned')
+            ->latest()
+            ->take(5)
+            ->get();
+
         // ─── JADWAL PIKET DESA (H-1, Hari Ini, & Lepas Piket) ─────────────────
         $notifPikets = \App\Models\JadwalPiket::where('pegawai_id', $pegawai->id)
             ->whereDate('tanggal_piket', '>=', Carbon::yesterday())

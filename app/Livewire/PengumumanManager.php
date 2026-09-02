@@ -24,8 +24,13 @@ class PengumumanManager extends Component
     public string $kategori = 'informasi';
     public bool $is_pinned = false;
     public bool $kirim_wa = false;
-    public string $target_penerima = 'semua';
+    public string $target_penerima = 'perangkat_tetap';
     public ?string $berlaku_hingga = null;
+
+    // Filter Mode: 3 Opsi Terpisah ('semua' | 'bagian' | 'individual')
+    public string $mode_target = 'semua';
+    public array $selected_pegawai_ids = [];
+    public string $search_pegawai = '';
 
     // Log Modal
     public bool $showWaLogModal = false;
@@ -33,13 +38,17 @@ class PengumumanManager extends Component
 
     protected function rules(): array
     {
+        $allowedCategories = implode(',', array_keys(Pengumuman::kategoriList()));
+
         return [
             'judul'           => 'required|string|max:255',
             'isi'             => 'required|string',
-            'kategori'        => 'required|in:rapat,kegiatan,informasi,penting',
+            'kategori'        => "required|in:{$allowedCategories}",
             'kirim_wa'        => 'boolean',
-            'target_penerima' => 'required|in:semua,perangkat_tetap,staf,bpd,kemasyarakatan',
+            'mode_target'     => 'required|in:semua,bagian,individual',
+            'target_penerima' => 'nullable|in:semua,perangkat_tetap,staf,bpd,kemasyarakatan',
             'berlaku_hingga'  => 'nullable|date',
+            'selected_pegawai_ids' => 'array',
         ];
     }
 
@@ -53,13 +62,34 @@ class PengumumanManager extends Component
     {
         $this->validate();
 
+        $targetPenerimaValue = 'semua';
+        $pegawaiIdsToSave = null;
+
+        if ($this->mode_target === 'semua') {
+            $targetPenerimaValue = 'semua';
+            $pegawaiIdsToSave = null;
+        } elseif ($this->mode_target === 'bagian') {
+            $targetPenerimaValue = in_array($this->target_penerima, ['perangkat_tetap', 'staf', 'bpd', 'kemasyarakatan']) 
+                ? $this->target_penerima 
+                : 'perangkat_tetap';
+            $pegawaiIdsToSave = null;
+        } elseif ($this->mode_target === 'individual') {
+            if (empty($this->selected_pegawai_ids) && $this->kirim_wa) {
+                $this->addError('selected_pegawai_ids', 'Pilih minimal 1 orang pegawai untuk mode penerima individual.');
+                return;
+            }
+            $targetPenerimaValue = 'semua';
+            $pegawaiIdsToSave = array_map('intval', array_values($this->selected_pegawai_ids));
+        }
+
         $data = [
             'judul'           => $this->judul,
             'isi'             => $this->isi,
             'kategori'        => $this->kategori,
             'is_pinned'       => $this->is_pinned,
             'kirim_wa'        => $this->kirim_wa,
-            'target_penerima' => $this->target_penerima,
+            'target_penerima' => $targetPenerimaValue,
+            'pegawai_ids'     => $pegawaiIdsToSave,
             'berlaku_hingga'  => $this->berlaku_hingga ?: null,
             'dibuat_oleh'     => auth()->id(),
         ];
@@ -79,7 +109,7 @@ class PengumumanManager extends Component
             $waCount = $this->dispatchWaBroadcast($p, $configService);
         }
 
-        $msg = "Pengumuman '{$p->judul}' berhasil disimpan." . ($waCount > 0 ? " Antrian {$waCount} pesan WhatsApp sedang diproses gateway." : "");
+        $msg = "Pengumuman '{$p->judul}' berhasil disimpan." . ($waCount > 0 ? " {$waCount} pesan WhatsApp telah langsung dikirim ke penerima." : "");
         session()->flash('success', $msg);
         $this->dispatch('notify', message: $msg, type: 'success');
         $this->closeModal();
@@ -95,9 +125,33 @@ class PengumumanManager extends Component
         $this->kategori = $p->kategori;
         $this->is_pinned = (bool) $p->is_pinned;
         $this->kirim_wa = (bool) $p->kirim_wa;
-        $this->target_penerima = $p->target_penerima ?: 'semua';
         $this->berlaku_hingga = $p->berlaku_hingga ? $p->berlaku_hingga->format('Y-m-d') : null;
+
+        if (!empty($p->pegawai_ids) && is_array($p->pegawai_ids)) {
+            $this->mode_target = 'individual';
+            $this->selected_pegawai_ids = array_map('strval', $p->pegawai_ids);
+        } elseif ($p->target_penerima === 'semua' || empty($p->target_penerima)) {
+            $this->mode_target = 'semua';
+            $this->target_penerima = 'perangkat_tetap';
+            $this->selected_pegawai_ids = [];
+        } else {
+            $this->mode_target = 'bagian';
+            $this->target_penerima = $p->target_penerima;
+            $this->selected_pegawai_ids = [];
+        }
+
         $this->showModal = true;
+    }
+
+    public function selectAllPegawai()
+    {
+        $allIds = Pegawai::where('status_aktif', true)->pluck('id')->map(fn($id) => (string) $id)->toArray();
+        $this->selected_pegawai_ids = $allIds;
+    }
+
+    public function deselectAllPegawai()
+    {
+        $this->selected_pegawai_ids = [];
     }
 
     public function broadcastWaManual(int $id, KonfigurasiWaService $configService)
@@ -115,7 +169,7 @@ class PengumumanManager extends Component
             'modul'     => 'Pengumuman',
         ]);
 
-        $msg = "Siaran WhatsApp untuk '{$p->judul}' berhasil dimasukkan ke antrian ({$waCount} penerima).";
+        $msg = "Siaran WhatsApp untuk '{$p->judul}' berhasil dikirim langsung ke {$waCount} penerima.";
         session()->flash('success', $msg);
         $this->dispatch('notify', message: $msg, type: 'success');
     }
@@ -177,13 +231,16 @@ class PengumumanManager extends Component
         $this->kategori = 'informasi';
         $this->is_pinned = false;
         $this->kirim_wa = false;
-        $this->target_penerima = 'semua';
+        $this->target_penerima = 'perangkat_tetap';
+        $this->mode_target = 'semua';
+        $this->selected_pegawai_ids = [];
+        $this->search_pegawai = '';
         $this->berlaku_hingga = null;
         $this->resetValidation();
     }
 
     /**
-     * Dispatch WhatsApp Broadcast Jobs ke antrian background
+     * Kirim Langsung WhatsApp Broadcast ke Penerima
      */
     private function dispatchWaBroadcast(Pengumuman $pengumuman, KonfigurasiWaService $configService): int
     {
@@ -191,7 +248,12 @@ class PengumumanManager extends Component
             ->whereNotNull('no_hp')
             ->where('no_hp', '!=', '');
 
-        if ($pengumuman->target_penerima && $pengumuman->target_penerima !== 'semua') {
+        // 1. Jika mode individual (pegawai_ids terisi)
+        if (!empty($pengumuman->pegawai_ids) && is_array($pengumuman->pegawai_ids)) {
+            $query->whereIn('id', $pengumuman->pegawai_ids);
+        } 
+        // 2. Jika mode kategori/bagian
+        elseif ($pengumuman->target_penerima && $pengumuman->target_penerima !== 'semua') {
             $query->where('kategori_pegawai', $pengumuman->target_penerima);
         }
 
@@ -199,14 +261,18 @@ class PengumumanManager extends Component
         $count = 0;
 
         foreach ($pegawais as $pegawai) {
-            KirimWaNotifikasiPengumumanJob::dispatch(
-                $pengumuman->id,
-                $pegawai->id,
-                $pegawai->user?->id,
-                $pegawai->no_hp,
-                $pegawai->nama_lengkap
-            );
-            $count++;
+            try {
+                KirimWaNotifikasiPengumumanJob::dispatchSync(
+                    $pengumuman->id,
+                    $pegawai->id,
+                    $pegawai->user?->id,
+                    $pegawai->no_hp,
+                    $pegawai->nama_lengkap
+                );
+                $count++;
+            } catch (\Exception $e) {
+                \Log::warning("Gagal mengirim WA pengumuman ke {$pegawai->nama_lengkap} ({$pegawai->no_hp}): " . $e->getMessage());
+            }
         }
 
         return $count;
@@ -220,10 +286,24 @@ class PengumumanManager extends Component
 
         $isWaConfigured = $configService->isEnabled();
 
+        // Pegawai List untuk filter individual di modal
+        $pegawaiQuery = Pegawai::where('status_aktif', true)->with('jabatan')->orderBy('nama_lengkap');
+        if (!empty($this->search_pegawai)) {
+            $s = $this->search_pegawai;
+            $pegawaiQuery->where(function($q) use ($s) {
+                $q->where('nama_lengkap', 'like', "%{$s}%")
+                  ->orWhere('nipd', 'like', "%{$s}%")
+                  ->orWhereHas('jabatan', fn($jq) => $jq->where('nama_jabatan', 'like', "%{$s}%"));
+            });
+        }
+        $pegawaiList = $pegawaiQuery->get();
+
         return view('livewire.pengumuman-manager', [
             'pengumumans'        => Pengumuman::with(['pembuat', 'waLogs'])->orderByDesc('is_pinned')->latest()->paginate(10),
             'selectedPengumuman' => $selectedPengumuman,
             'isWaConfigured'     => $isWaConfigured,
+            'pegawaiList'        => $pegawaiList,
+            'kategoriList'       => Pengumuman::kategoriList(),
         ])->layout('layouts.app', ['title' => 'Pengumuman Desa — N-DesaPresence']);
     }
 }

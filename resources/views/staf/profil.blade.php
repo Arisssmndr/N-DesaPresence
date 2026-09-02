@@ -312,40 +312,6 @@
     </div>
     @endif
 
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- 6. INFORMASI SISTEM & PENGEMBANG (LUXURY WATERMARK & SPEC CARD)         -->
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <a href="{{ route('tentang.aplikasi') }}" 
-       class="block p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#022017] via-[#064E3B] to-[#043327] border-2 border-[#C9A84C]/60 shadow-lg hover:shadow-2xl hover:border-[#C9A84C] transition-all duration-300 group relative overflow-hidden text-white">
-        
-        <!-- Decorative Glow -->
-        <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-[#C9A84C]/20 rounded-full blur-xl pointer-events-none"></div>
-
-        <div class="flex items-center justify-between gap-3 relative z-10">
-            <div class="flex items-center gap-3">
-                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#C9A84C] to-[#99731C] text-[#021811] flex items-center justify-center font-bold shadow-md shrink-0 group-hover:scale-105 transition-transform">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <div>
-                    <div class="flex items-center gap-1.5">
-                        <span class="text-[9.5px] font-bold uppercase tracking-widest text-[#F3E5AB]">SADI v2.0 Enterprise</span>
-                        <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-[#C9A84C]/30 text-[#FFF0BD] font-mono font-bold">INFO</span>
-                    </div>
-                    <h4 class="font-outfit font-extrabold text-sm text-white group-hover:text-[#FFF0BD] transition-colors mt-0.5">
-                        Tentang Sistem & Pengembang
-                    </h4>
-                    <p class="text-[10.5px] text-emerald-200/90 font-mono">
-                        Lead Architect: <strong>Aris Munandar</strong> (LP3I × Desa Nangtang)
-                    </p>
-                </div>
-            </div>
-
-            <div class="w-8 h-8 rounded-xl bg-white/10 group-hover:bg-[#C9A84C] group-hover:text-[#021811] text-white flex items-center justify-center transition-all duration-200 shrink-0">
-                <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-            </div>
-        </div>
-    </a>
-
     <!-- Logout Button -->
     <form action="{{ route('staf.logout') }}" method="POST">
         @csrf

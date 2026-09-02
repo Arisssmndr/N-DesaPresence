@@ -305,7 +305,7 @@
                 </div>
 
                 <!-- PORTAL ABSENSI LINK (untuk dishare ke staf) -->
-                <div class="mt-2 pt-3 border-t border-emerald-800/40 space-y-1.5">
+                <div class="mt-2 pt-3 border-t border-emerald-800/40">
                     <a href="{{ route('staf.login') }}" target="_blank"
                        class="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-[#C9A84C]/15 border border-[#C9A84C]/30 hover:bg-[#C9A84C]/25 transition-all">
                         <div class="w-6 h-6 rounded-md bg-[#C9A84C] flex items-center justify-center shrink-0">
@@ -320,13 +320,6 @@
                         <svg class="w-3 h-3 text-[#C9A84C]/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                         </svg>
-                    </a>
-
-                    <!-- INFO SISTEM & DEVELOPER LINK -->
-                    <a href="{{ route('tentang.aplikasi') }}" target="_blank"
-                       class="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/25 border border-[#C9A84C]/25 hover:bg-[#C9A84C]/20 transition-all text-xs text-[#F3E5AB]">
-                        <svg class="w-4 h-4 text-[#C9A84C] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span class="text-[10.5px] font-bold">Info Sistem & Pengembang</span>
                     </a>
                 </div>
 

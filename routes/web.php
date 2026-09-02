@@ -42,11 +42,6 @@ Route::get('/', function () {
     return redirect()->route('staf.login');
 });
 
-// Halaman Prestisius: Tentang Sistem & Pengembang (Aris Munandar)
-Route::get('/tentang-aplikasi', function () {
-    return view('tentang-aplikasi');
-})->name('tentang.aplikasi');
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STATUS JARINGAN WIFI REAL-TIME (Untuk Polling Status di Beranda Staf)
